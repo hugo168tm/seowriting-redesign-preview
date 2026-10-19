@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Builder 文件庫 · SEOWriting 編輯台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- COPY DESC: shell (appbar + masthead + runbar + tokens from 1-click-blog-post-zh.html) -->
+<!-- COPY DESC: builder is a document library, NOT a form: no left flow rail, single column + top stats strip -->
+<style>
+
+:root{
+  --paper:#FBFAF7; --paper-2:#F4F2EC; --card:#FFFFFF;
+  --ink:#16181D; --ink-2:#4C525C; --ink-3:#767C87;
+  --rule:#E3DFD6; --rule-2:#EFEBE2;
+  --mark:#9B2C2C; --mark-soft:#F3E4E1;
+  --auto:#8A6100; --auto-soft:#F6EEDA;
+  --ok:#1F6F4A; --ok-soft:#E6F1EA;
+  --focus:#2F5D8A;
+  --r:3px; --r-lg:5px;
+  --sh:0 1px 2px rgba(22,24,29,.05), 0 8px 24px -12px rgba(22,24,29,.18);
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --serif:"Noto Serif TC","Songti TC","PingFang TC",Georgia,"Times New Roman",serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sp:4px;
+  --step-0:15px; --step-1:17px; --step-2:21px; --step-3:27px; --step-4:36px; --step-5:52px;
+}
+[data-theme="dark"]{
+  --paper:#15171B; --paper-2:#1B1E23; --card:#1E2126;
+  --ink:#F2F0EA; --ink-2:#B9BEC7; --ink-3:#8C929C;
+  --rule:#2C3037; --rule-2:#242830;
+  --mark:#E2836F; --mark-soft:#33211E;
+  --auto:#D9AE5F; --auto-soft:#2E2618;
+  --ok:#6DBE93; --ok-soft:#1B2A22;
+  --focus:#8FB8E0;
+  --sh:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -18px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%; scrollbar-gutter:stable both-edges}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--sans); font-size:var(--step-0); line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:var(--serif); font-weight:600; letter-spacing:.01em; margin:0}
+code,.mono{font-family:var(--mono); font-size:.86em}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--focus); outline-offset:2px; border-radius:2px}
+[hidden]{display:none!important}
+
+/* ---------- app bar ---------- */
+.appbar{position:sticky; top:0; z-index:40; background:var(--ink); color:#F7F5EF;
+  display:flex; align-items:center; gap:18px; padding:0 18px; height:52px;
+  font-size:13.5px; letter-spacing:.02em}
+[data-theme="dark"] .appbar{background:#0C0E11; border-bottom:1px solid var(--rule)}
+.brand{font-family:var(--serif); font-size:16px; letter-spacing:.04em; white-space:nowrap}
+.brand b{font-weight:700}
+.tools{display:flex; gap:2px; margin-left:6px; overflow:auto; scrollbar-width:none; flex:1; min-width:0; align-items:center}
+.tools::-webkit-scrollbar{display:none}
+.tools a{padding:6px 11px; border-radius:3px; color:rgba(247,245,239,.78); text-decoration:none; white-space:nowrap}
+.tools a:hover{background:rgba(255,255,255,.09); color:#fff}
+.tools a[aria-current="page"]{background:#F7F5EF; color:#16181D; font-weight:500}
+.appbar-right{display:flex; align-items:center; gap:12px; flex:0 0 auto; margin-left:auto}
+.credit-chip{font-family:var(--mono); font-size:12.5px; border:1px solid rgba(255,255,255,.22);
+  border-radius:999px; padding:3px 10px; color:#EDE9E0}
+.theme-btn{background:none; border:1px solid rgba(255,255,255,.22); color:#F7F5EF; font-size:14px;
+  border-radius:3px; width:34px; height:34px; cursor:pointer; line-height:1}
+.theme-btn:hover{background:rgba(255,255,255,.1)}
+.avatar{width:30px;height:30px;border-radius:50%;background:#2A2E35;color:#F7F5EF;
+  display:grid;place-items:center;font-size:12px;font-family:var(--mono)}
+.acct{font-size:13px;color:rgba(247,245,239,.85);white-space:nowrap}
+
+/* ---------- layout (single column, no rail) ---------- */
+main{max-width:1120px; margin:0 auto; padding:34px 40px 140px; min-width:0}
+@media (max-width:640px){ main{padding:22px 18px 150px} }
+
+/* masthead */
+.eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--mark); margin-bottom:10px}
+.masthead{margin-bottom:20px}
+.masthead h1{font-size:var(--step-4); line-height:1.18; letter-spacing:-.01em; margin-bottom:8px}
+@media (max-width:640px){ .masthead h1{font-size:var(--step-3)} }
+.dek{color:var(--ink-2); max-width:64ch; margin:0 0 20px}
+.auth-note{font-size:12px;color:var(--ink-3);font-family:var(--mono);margin:0 0 20px}
+
+/* ---------- top stats strip ---------- */
+.stats{display:flex; gap:26px; flex-wrap:wrap; align-items:stretch; border-top:1px solid var(--ink);
+  border-bottom:1px solid var(--rule); padding:16px 0}
+.stat{min-width:110px; flex:0 1 auto}
+.stat .num{font-family:var(--mono); font-size:var(--step-3); font-variant-numeric:tabular-nums; line-height:1.1}
+.stat .lbl{font-size:12px; color:var(--ink-3); margin-top:3px; letter-spacing:.04em}
+.stat .en{font-family:var(--mono); font-size:10.5px; color:var(--ink-3); opacity:.75}
+@media (max-width:520px){ .stats{gap:18px 20px} .stat{min-width:calc(33.333% - 16px)} }
+
+/* ---------- section toolbar ---------- */
+.sect-head{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:22px 0 12px}
+.sect-head h2{font-size:var(--step-1)}
+.sect-head .count{font-family:var(--mono); font-size:11px; color:var(--ink-3)}
+.sect-head .spacer{flex:1}
+.toggle{display:inline-flex; align-items:center; gap:9px; font-size:13px; color:var(--ink-2); cursor:pointer;
+  padding:7px 11px; border:1px solid var(--rule); border-radius:999px; background:var(--card)}
+.toggle:hover{border-color:var(--ink-3)}
+.toggle input{width:15px; height:15px; accent-color:var(--mark); margin:0; cursor:pointer}
+.toggle.on{background:var(--mark-soft); border-color:var(--mark); color:var(--mark)}
+
+/* ---------- empty state ---------- */
+.empty{border:1px dashed var(--rule); border-radius:var(--r-lg); background:var(--paper-2);
+  padding:40px 26px; text-align:center}
+.empty .icon{font-family:var(--serif); font-size:34px; color:var(--ink-3); margin:0 0 10px}
+.empty h3{font-size:var(--step-2); margin-bottom:6px; color:var(--ink)}
+.empty h3 .en{font-size:12px; color:var(--ink-3); font-family:var(--sans); font-weight:500}
+.empty p.lead-en{font-family:var(--serif); font-size:var(--step-1); color:var(--ink-2);
+  max-width:52ch; margin:0 auto 6px}
+.empty p.zh{color:var(--ink-3); font-size:13.5px; max-width:52ch; margin:0 auto 22px}
+
+/* ---------- demo notice ---------- */
+.demo-notice{display:flex; align-items:center; gap:9px; flex-wrap:wrap; background:var(--auto-soft);
+  border:1px dashed var(--auto); color:var(--auto); border-radius:var(--r); padding:9px 12px;
+  font-size:12.5px; margin-bottom:12px}
+.demo-notice .glyph{font-weight:700; font-family:var(--serif)}
+.demo-notice strong{font-weight:600}
+
+/* ---------- demo list ---------- */
+.doc-list{list-style:none; margin:0; padding:0}
+.doc-item{display:grid; grid-template-columns:1fr auto; gap:8px 18px; align-items:center;
+  border:1px solid var(--rule); border-radius:var(--r); background:var(--card);
+  padding:14px 16px; margin-bottom:8px}
+.doc-main{min-width:0}
+.doc-title{font-size:15px; font-weight:600; display:flex; align-items:baseline; gap:9px; flex-wrap:wrap}
+.doc-title .name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.doc-meta{display:flex; gap:16px; flex-wrap:wrap; margin-top:6px; font-size:12px; color:var(--ink-3)}
+.doc-meta .mono{font-variant-numeric:tabular-nums}
+.tool-tag{background:var(--paper-2); border:1px solid var(--rule-2); border-radius:2px;
+  padding:1px 7px; font-size:11.5px; color:var(--ink-2); white-space:nowrap}
+.pill{font-family:var(--mono); font-size:11px; letter-spacing:.05em; border-radius:999px; padding:2px 9px;
+  white-space:nowrap}
+.pill.done{background:var(--ok-soft); color:var(--ok); border:1px solid var(--ok)}
+.pill.run{background:var(--mark-soft); color:var(--mark); border:1px solid var(--mark)}
+.pill.draft{background:var(--auto-soft); color:var(--auto); border:1px dashed var(--auto)}
+.doc-actions{display:flex; gap:8px; align-items:center; justify-content:flex-end; flex-wrap:wrap}
+
+/* ---------- buttons ---------- */
+.btn{font:inherit; font-size:13.5px; border-radius:var(--r); padding:9px 15px; cursor:pointer;
+  border:1px solid var(--rule); background:var(--card); color:var(--ink); text-decoration:none;
+  transition:background .16s ease, border-color .16s ease, transform .1s ease; display:inline-block}
+.btn:hover{border-color:var(--ink-3); background:var(--paper-2)}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--mark); border-color:var(--mark); color:#fff; font-weight:500}
+.btn-primary:hover{background:#872523; border-color:#872523}
+.btn-sm{font-size:12.5px; padding:6px 11px}
+.btn-ghost{background:none; border-color:transparent; color:var(--ink-2); text-decoration:underline;
+  padding-left:0; padding-right:0}
+.btn-ghost:hover{background:none; border-color:transparent; color:var(--ink)}
+
+/* ---------- runbar ---------- */
+.runbar{position:fixed; left:0; right:0; bottom:0; z-index:35; background:var(--card);
+  border-top:1px solid var(--ink); box-shadow:0 -8px 24px -18px rgba(0,0,0,.5)}
+[data-theme="dark"] .runbar{border-top-color:var(--rule)}
+.runbar-in{max-width:1120px; margin:0 auto; padding:11px 22px; display:flex; align-items:center; gap:18px; flex-wrap:wrap}
+.ledger{display:flex; gap:16px; flex-wrap:wrap; font-family:var(--mono); font-size:12px; color:var(--ink-2)}
+.ledger span.white-space-nowrap{white-space:nowrap}
+.ledger span b{color:var(--ink); font-weight:500}
+.runbar .spacer{flex:1}
+
+footer.page-foot{max-width:1120px; margin:0 auto; padding:26px 40px 96px; color:var(--ink-3);
+  font-size:12px; border-top:1px solid var(--rule); display:flex; gap:16px; flex-wrap:wrap}
+@media (max-width:640px){ footer.page-foot{padding:22px 18px 96px} }
+
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
+
+/* ---------- responsive (last block on purpose) ---------- */
+.appbar{flex-wrap:nowrap}
+@media (max-width:1180px){ .tools a:not([aria-current]){display:none} }
+@media (max-width:900px){
+  main{padding:20px 18px 128px}
+  .credit-chip{display:none}
+  .appbar{padding:0 12px; gap:10px}
+  .runbar-in{padding:9px 14px; gap:10px}
+  .runbar .ledger{display:none}
+}
+@media (max-width:640px){
+  .doc-item{grid-template-columns:1fr}
+  .doc-actions{justify-content:flex-start}
+  .appbar{gap:8px}
+  .brand{font-size:14px}
+  .tools a{padding:6px 8px; font-size:12.5px}
+  .acct{display:none}
+  .empty{padding:30px 16px}
+}
+</style>
+</head>
+<body>
+<header class="appbar">
+  <span class="brand">SEOWriting 編輯台</span>
+  <nav class="tools" aria-label="工具切換" id="tool-nav">
+    <a href="1-click-blog-post-zh.html">一鍵發布</a>
+    <a href="bulk-generation-zh.html">批量生成</a>
+    <a href="super-page-zh.html">Super Page</a>
+    <a href="rewriter-zh.html">改寫工具</a>
+    <a href="builder-zh.html" aria-current="page">Builder</a>
+  </nav>
+  <div class="appbar-right">
+    <button id="theme-toggle" class="theme-btn" type="button" aria-label="切換深色模式">◧</button>
+    <span class="credit-chip" id="ledgerPill">1 credit</span>
+    <span class="avatar" aria-hidden="true">示</span>
+    <span class="acct">示例帳戶</span>
+  </div>
+</header>
+
+<main>
+  <p class="eyebrow">Builder</p>
+  <div class="masthead">
+    <h1>Builder 文件庫</h1>
+    <p class="dek">呢度列出你已建立嘅 document generations。冇任務時，一切由「建立第一篇」開始。</p>
+    <p class="auth-note">工具：builder / 文件：0 / 登入：示例帳戶</p>
+  </div>
+
+  <!-- 頂部統計條：對應原生側欄 0 Builder / Docs / Voices / News 嘅計數語意 -->
+  <div class="stats">
+    <div class="stat"><div class="num">0</div><div class="lbl">文件 <span class="en">Docs</span></div></div>
+    <div class="stat"><div class="num">0</div><div class="lbl">字 <span class="en">Words</span></div></div>
+    <div class="stat"><div class="num">0</div><div class="lbl">排程 <span class="en">Voices · News</span></div></div>
+  </div>
+
+  <!-- 示範資料 toggle：預設 OFF，唔可以假裝係真數據 -->
+  <div class="sect-head">
+    <h2>文件列表</h2>
+    <span class="count">Document generations</span>
+    <span class="spacer"></span>
+    <label class="toggle" id="demo-toggle" for="demo-switch">
+      <input type="checkbox" id="demo-switch" role="switch">
+      <span>顯示示範資料 <span class="mono">demo</span></span>
+    </label>
+  </div>
+
+  <!-- 空狀態（示範資料 OFF 時顯示；英文原文完整保留 + 中文並列） -->
+  <div id="empty-state" class="empty">
+    <div class="icon" aria-hidden="true">◆</div>
+    <h3>尚未啟動任何文件生成 <span class="en">No document generations have been launched yet!</span></h3>
+    <p class="lead-en">Create Articles That Are SEO-Optimized &amp; Ready To Hit The Top of Google Searches.</p>
+    <p class="zh">建立針對 SEO 優化、準備好登上 Google 搜尋頂端嘅文章。揀下方「建立第一篇」開始。</p>
+    <a class="btn btn-primary" href="#" id="btn-empty">建立第一篇 · Create New</a>
+  </div>
+
+  <!-- 示範資料（toggle 開先顯示；播出 3 行，全部屬虛構範例，唔係真數據） -->
+  <div id="demo-block" hidden>
+    <div class="demo-notice"><span class="glyph">※</span><span><strong>示範資料 · 唔係你真實文件</strong> ——以下 3 行係排版示範，純屬虛構，唔代表你帳號入面嘅任何文件。</span></div>
+    <ul class="doc-list" id="doc-list">
+      <li class="doc-item" data-tool="1-click">
+        <div class="doc-main">
+          <div class="doc-title"><span class="name">示範：SEO 趨勢 2026 總覽</span><span class="tool-tag">一鍵發布</span></div>
+          <div class="doc-meta"><span>狀態：</span><span class="pill draft">草稿</span><span class="mono">2,410 字</span><span>更新：昨日</span></div>
+        </div>
+        <div class="doc-actions"><a class="btn btn-sm" href="#">開卷</a><a class="btn btn-sm btn-ghost" href="#">改寫</a></div>
+      </li>
+      <li class="doc-item" data-tool="bulk">
+        <div class="doc-main">
+          <div class="doc-title"><span class="name">示範：香港餐飲品牌批量文章</span><span class="tool-tag">批量生成</span></div>
+          <div class="doc-meta"><span>狀態：</span><span class="pill done">已發布</span><span class="mono">120 篇 · 348,000 字</span><span>更新：3 日前</span></div>
+        </div>
+        <div class="doc-actions"><a class="btn btn-sm" href="#">開卷</a><a class="btn btn-sm btn-ghost" href="#">改寫</a></div>
+      </li>
+      <li class="doc-item" data-tool="super-page">
+        <div class="doc-main">
+          <div class="doc-title"><span class="name">示範：網站服務落地頁</span><span class="tool-tag">Super Page</span></div>
+          <div class="doc-meta"><span>狀態：</span><span class="pill run">生成中</span><span class="mono">— 字</span><span>更新：喺度跑</span></div>
+        </div>
+        <div class="doc-actions"><a class="btn btn-sm" href="#">開卷</a><a class="btn btn-sm btn-ghost" href="#">取消</a></div>
+      </li>
+    </ul>
+  </div>
+</main>
+
+<div class="runbar" role="contentinfo">
+  <div class="runbar-in">
+    <div class="ledger">
+      <span><b id="rb-lbl">0 文件</b><span class="mono"> builder</span></span>
+    </div>
+    <span class="spacer"></span>
+    <a class="btn btn-primary" href="#" id="btn-new">建立第一篇 · Create New</a>
+  </div>
+</div>
+
+<footer class="page-foot"><span>重設計原型 · 純前端 · 唔提交伺服器</span><span>資料來源：seowriting.ai Builder</span></footer>
+
+<script>
+(function(){
+  'use strict';
+  const $ = (s, r=document) => r.querySelector(s);
+  const LS = (() => {
+    try { localStorage.setItem('__probe','1'); localStorage.removeItem('__probe'); return localStorage; }
+    catch (e) { const mem = {}; return { getItem: k => (k in mem ? mem[k] : null),
+      setItem: (k,v) => { mem[k] = String(v); }, removeItem: k => { delete mem[k]; } }; }
+  })();
+
+  /* ---------- demo toggle : show / hide the 3 demo rows ---------- */
+  const sw = $('#demo-switch');
+  const empty = $('#empty-state');
+  const block = $('#demo-block');
+  const toggleLbl = $('#demo-toggle');
+  function syncDemo(){
+    const on = sw.checked;
+    if (block) block.hidden = !on;
+    if (empty) empty.hidden = on;
+    if (toggleLbl) toggleLbl.classList.toggle('on', on);
+  }
+  if (sw){ sw.addEventListener('change', ()=>{ syncDemo(); LS.setItem('sw-builder-demo', sw.checked ? '1' : '0'); }); }
+
+  /* ---------- theme ---------- */
+  $('#theme-toggle')?.addEventListener('click', ()=>{
+    const root = document.documentElement;
+    root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    LS.setItem('sw-theme', root.dataset.theme);
+  });
+  const savedTheme = LS.getItem('sw-theme');
+  if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+
+  /* ---------- restore demo toggle ---------- */
+  if (sw && LS.getItem('sw-builder-demo') === '1'){ sw.checked = true; }
+  syncDemo();
+
+  /* ---------- runbar counter ---------- */
+  const rb = $('#rb-lbl');
+  const on = sw.checked;
+  if (rb) rb.textContent = (on ? '3 文件' : '0 文件');
+
+  /* ---------- CTA (demo only, no navigation) ---------- */
+  const cta = (el)=>{ if (el) el.addEventListener('click', (e)=>{
+    e.preventDefault();
+    const b = el; const t = b.textContent; b.textContent = '建立中…'; setTimeout(()=>{ b.textContent = t; }, 800);
+  }); };
+  cta($('#btn-empty')); cta($('#btn-new'));
+})();
+</script>
+</body>
+</html>
