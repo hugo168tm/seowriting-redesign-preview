@@ -398,6 +398,8 @@ footer.page-foot{max-width:1240px;margin:0 auto;padding:26px 34px 84px;color:var
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
+  /* hidden 必須壓過 .sel-pop{display:flex}，否則所有選單會浮喺版面 */
+  .sel-pop[hidden]{display:none}
 </style>
 </head>
 <body>

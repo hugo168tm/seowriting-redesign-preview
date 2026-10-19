@@ -1,20 +1,1724 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>施工中 · SEOWriting 編輯台</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet">
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>批量生成 · SEOWriting 編輯台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--paper:#FBFAF7;--ink:#16181D;--rule:#E3DFD6;--mark:#9B2C2C}
+
+:root{
+  --paper:#FBFAF7; --paper-2:#F4F2EC; --card:#FFFFFF;
+  --ink:#16181D; --ink-2:#4C525C; --ink-3:#767C87;
+  --rule:#E3DFD6; --rule-2:#EFEBE2;
+  --mark:#9B2C2C; --mark-soft:#F3E4E1;
+  --auto:#8A6100; --auto-soft:#F6EEDA;
+  --ok:#1F6F4A; --ok-soft:#E6F1EA;
+  --focus:#2F5D8A;
+  --r:3px; --r-lg:5px;
+  --sh:0 1px 2px rgba(22,24,29,.05), 0 8px 24px -12px rgba(22,24,29,.18);
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --serif:"Noto Serif TC","Songti TC","PingFang TC",Georgia,"Times New Roman",serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sp:4px;
+  --step-0:15px; --step-1:17px; --step-2:21px; --step-3:27px; --step-4:36px; --step-5:52px;
+}
+[data-theme="dark"]{
+  --paper:#15171B; --paper-2:#1B1E23; --card:#1E2126;
+  --ink:#F2F0EA; --ink-2:#B9BEC7; --ink-3:#8C929C;
+  --rule:#2C3037; --rule-2:#242830;
+  --mark:#E2836F; --mark-soft:#33211E;
+  --auto:#D9AE5F; --auto-soft:#2E2618;
+  --ok:#6DBE93; --ok-soft:#1B2A22;
+  --focus:#8FB8E0;
+  --sh:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -18px rgba(0,0,0,.7);
+}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--paper);color:var(--ink);
-     font-family:"Noto Sans TC",system-ui,sans-serif;padding:32px}
-.card{max-width:520px;border:1px solid var(--rule);background:#fff;padding:40px 36px;text-align:center}
-.eyebrow{font:500 11px/1 ui-monospace,monospace;letter-spacing:.18em;color:var(--mark);text-transform:uppercase}
-h1{font-family:"Noto Serif TC",serif;font-size:30px;margin:14px 0 12px}
-p{color:#5b5f66;line-height:1.75;margin:0 0 22px}
-a{color:var(--ink);border-bottom:1px solid var(--mark);text-decoration:none;padding-bottom:2px}
-</style></head><body><div class="card">
-<div class="eyebrow">Under construction</div>
-<h1>批量生成</h1>
-<p>依家由 Claude Code 用 superpowers brainstorming 流程開發緊，完成後會喺呢個網址出現。</p>
-<p><a href="index.html">← 返去一鍵發布部落格文章</a></p>
-</div></body></html>
+html{-webkit-text-size-adjust:100%; scrollbar-gutter:stable both-edges}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--sans); font-size:var(--step-0); line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:var(--serif); font-weight:600; letter-spacing:.01em; margin:0}
+code,.mono{font-family:var(--mono); font-size:.86em}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--focus); outline-offset:2px; border-radius:2px}
+
+/* ---------- app bar ---------- */
+.appbar{position:sticky; top:0; z-index:40; background:var(--ink); color:#F7F5EF;
+  display:flex; align-items:center; gap:18px; padding:0 18px; height:52px;
+  font-size:13.5px; letter-spacing:.02em}
+[data-theme="dark"] .appbar{background:#0C0E11; border-bottom:1px solid var(--rule)}
+.brand{font-family:var(--serif); font-size:16px; letter-spacing:.04em; white-space:nowrap}
+.brand b{font-weight:700}
+.tools{display:flex; gap:2px; margin-left:6px; overflow:auto; scrollbar-width:none}
+.tools::-webkit-scrollbar{display:none}
+.tool{padding:6px 11px; border-radius:3px; color:#CFCBC2; text-decoration:none; white-space:nowrap}
+.tool:hover{background:rgba(255,255,255,.09); color:#fff}
+.tool[aria-current="page"]{background:#F7F5EF; color:#16181D; font-weight:500}
+.appbar .grow{flex:1}
+.credit-chip{font-family:var(--mono); font-size:12.5px; border:1px solid rgba(255,255,255,.22);
+  border-radius:999px; padding:3px 10px; color:#EDE9E0}
+.icon-btn{background:none; border:1px solid rgba(255,255,255,.2); color:#EDE9E0; width:32px; height:32px;
+  border-radius:3px; cursor:pointer; display:grid; place-items:center; font-size:14px}
+.icon-btn:hover{background:rgba(255,255,255,.1)}
+.avatar{width:30px;height:30px;border-radius:50%;background:#2A2E35;color:#F7F5EF;
+  display:grid;place-items:center;font-size:12px;font-family:var(--mono)}
+
+/* ---------- shell ---------- */
+.shell{display:grid; grid-template-columns:232px minmax(0,1fr); gap:0; max-width:1240px; margin:0 auto}
+
+
+/* ---------- margin rail (signature) ---------- */
+.rail{position:sticky; top:52px; align-self:start; height:calc(100vh - 52px - 66px); display:flex;
+  flex-direction:column; overflow:hidden;
+  padding:26px 16px 16px 22px; border-right:1px solid var(--rule); font-size:13px}
+.rail-scroll{flex:1 1 auto; min-height:0; overflow:auto; padding-right:4px}
+.rail-scroll::-webkit-scrollbar{width:6px}
+.rail-scroll::-webkit-scrollbar-thumb{background:var(--rule); border-radius:3px}
+.rail h2{font-family:var(--sans); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-3); font-weight:500; margin-bottom:12px}
+.rail ol{list-style:none; margin:0; padding:0}
+.rail li{position:relative}
+.rail a{display:flex; align-items:baseline; gap:8px; padding:5px 0 5px 14px; text-decoration:none;
+  color:var(--ink-2); border-left:1px solid var(--rule)}
+.rail a:hover{color:var(--ink)}
+.rail a .num{font-family:var(--mono); font-size:10.5px; color:var(--ink-3)}
+.rail a.on{color:var(--ink); font-weight:600; border-left:2px solid var(--mark); margin-left:-1px; padding-left:13px}
+.rail a.done .num{color:var(--ok)}
+.rail a.on .num{color:var(--mark)}
+.rail a .num{font-variant-numeric:tabular-nums}
+.rail .legend{margin-top:22px; padding-top:14px; border-top:1px solid var(--rule); color:var(--ink-3);
+  font-size:11.5px; line-height:1.6}
+.rail .legend .glyph{color:var(--auto); font-weight:600}
+.rail-card{flex:0 0 auto; margin-top:12px; padding:11px 12px; border:1px solid var(--rule);
+  border-radius:var(--r); background:var(--paper-2)}
+.rail-card h3{font-family:var(--sans); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--ink-3); margin-bottom:8px; font-weight:500}
+.ledger-line{display:flex; justify-content:space-between; align-items:baseline; gap:8px;
+  font-family:var(--mono); font-size:11.5px; color:var(--ink-2); padding:2.5px 0;
+  font-variant-numeric:tabular-nums}
+.ledger-line span:last-child{color:var(--ink); font-weight:500}
+.ledger-line .dots{flex:1; border-bottom:1px dotted var(--rule); transform:translateY(-3px)}
+.ledger-total{display:flex; justify-content:space-between; align-items:baseline; margin-top:8px;
+  padding-top:8px; border-top:1px solid var(--ink); font-family:var(--mono); font-size:15px;
+  color:var(--ink); font-variant-numeric:tabular-nums}
+.ledger-total span:last-child{font-weight:600}
+
+/* ---------- main ---------- */
+main{padding:34px 40px 140px; min-width:0}
+@media (max-width:640px){ main{padding:22px 18px 150px} }
+
+/* masthead — the hero is the headline field itself */
+.masthead{margin-bottom:22px}
+.eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--mark); margin-bottom:10px}
+.masthead h1{font-size:var(--step-5); line-height:1.18; letter-spacing:-.01em; margin-bottom:8px}
+@media (max-width:640px){ .masthead h1{font-size:var(--step-4)} }
+.dek{color:var(--ink-2); max-width:62ch; margin:0 0 22px}
+.headline-field{border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); padding:14px 0 10px;
+  margin-bottom:14px}
+.headline-field .hf-label{padding-right:2px; font-family:var(--mono); font-size:10.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-3); display:flex; justify-content:space-between}
+.headline-field input{width:100%; border:0; background:transparent; color:var(--ink);
+  font-family:var(--serif); font-size:var(--step-3); line-height:1.35; padding:6px 0}
+.headline-field input::placeholder{color:var(--ink-3); font-style:normal; font-weight:400;
+  opacity:1; letter-spacing:0}
+.hf-actions{display:flex; gap:10px; align-items:center; margin-top:6px; flex-wrap:wrap}
+.kw-row{display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-top:16px}
+.kw-field{flex:1 1 260px; min-width:0}
+.kw-field input{width:100%; border:1px solid var(--rule); background:var(--card); border-radius:var(--r);
+  padding:11px 12px; font:inherit; color:var(--ink)}
+.kw-field input:focus{border-color:var(--focus); box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 14%,transparent)}
+.kw-field label{display:block; font-size:12.5px; color:var(--ink-2); margin-bottom:5px}
+
+/* auto summary strip */
+.auto-strip{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:20px}
+.auto-pill{display:inline-flex; align-items:center; gap:7px; border:1px solid var(--auto-soft);
+  background:var(--auto-soft); color:var(--auto); border-radius:999px; padding:4px 11px;
+  font-size:12px; font-weight:500}
+.auto-pill .glyph{font-weight:700; font-family:var(--serif); font-size:13px}
+.auto-pill button{background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;
+  font:inherit;font-size:11.5px;padding:0}
+
+/* panels */
+.panel{border-top:1px solid var(--rule); padding:34px 0 10px}
+#core.panel{padding-top:24px}
+.panel:first-of-type{border-top:1px solid var(--ink)}
+.panel-head{display:flex; align-items:baseline; gap:12px; margin-bottom:14px; padding-bottom:11px;
+  border-bottom:1px solid var(--rule-2); flex-wrap:wrap}
+.panel-head h2{font-size:var(--step-2)}
+.panel-head .idx{font-family:var(--mono); font-size:11px; color:var(--ink-3)}
+.panel-head .en{font-size:11.5px; color:var(--ink-3); letter-spacing:.04em}
+.panel > .lead{color:var(--ink-2); font-size:13.5px; max-width:70ch; margin:0 0 18px}
+
+/* fields */
+.grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px 26px}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid .span-2{grid-column:span 2}
+@media (max-width:760px){ .grid,.grid.three{grid-template-columns:1fr} .grid .span-2{grid-column:auto} }
+.field{min-width:0}
+.field-head{display:flex; align-items:center; gap:8px; margin-bottom:6px; min-height:20px}
+.field-label{font-size:13.5px; font-weight:500; color:var(--ink)}
+.field-key{font-size:10.5px; color:var(--ink-3); background:var(--paper-2); border:1px solid var(--rule-2);
+  border-radius:2px; padding:0 4px}
+.sel-count{font-family:var(--mono); font-size:10.5px; color:var(--ink-3);
+  background:var(--paper-2); border-radius:2px; padding:0 4px}
+.hint{font-size:12px; color:var(--ink-3); margin:6px 0 0; line-height:1.5}
+
+/* custom select */
+.sel{position:relative}
+.sel-btn{width:100%; min-height:44px; display:flex; align-items:center; justify-content:space-between; gap:8px;
+  background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:10px 11px;
+  font:inherit; font-size:13.5px; color:var(--ink); text-align:left; cursor:pointer;
+  transition:border-color .18s ease, box-shadow .18s ease}
+.sel-btn:hover{border-color:var(--ink-3)}
+.sel[data-open="true"] .sel-btn{border-color:var(--focus); box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 14%,transparent)}
+.sel-val{display:flex; flex-direction:column; gap:1px; min-width:0}
+.sel-val:empty::before{content:"未選擇"; color:var(--ink-3)}
+.sel-val > span:first-child{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.sel-en{font-size:11px; color:var(--ink-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.chev{width:16px; height:16px; fill:none; stroke:var(--ink-3); stroke-width:1.6; flex:0 0 auto}
+.sel-pop{position:absolute; z-index:30; top:calc(100% + 4px); left:0; right:0; background:var(--card);
+  border:1px solid var(--rule); border-radius:var(--r-lg); box-shadow:var(--sh); overflow:hidden}
+.sel-search-wrap{padding:8px; border-bottom:1px solid var(--rule-2)}
+.sel-search{width:100%; border:1px solid var(--rule); border-radius:2px; padding:7px 9px; font:inherit;
+  font-size:12.5px; background:var(--paper)}
+.sel-list{list-style:none; margin:0; padding:5px; max-height:264px; overflow:auto}
+.pop-wide .sel-list{max-height:360px}
+.opt{padding:7px 9px; border-radius:2px; cursor:pointer; display:flex; flex-direction:column; gap:1px;
+  font-size:13.5px}
+.opt-zh{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.opt-en{font-size:11px; color:var(--ink-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.opt:hover,.opt.is-active{background:var(--paper-2)}
+.opt.is-cur{color:var(--mark); font-weight:500}
+.opt.is-cur::after{content:"目前"; font-family:var(--mono); font-size:9.5px; color:var(--mark);
+  border:1px solid currentColor; border-radius:2px; padding:0 3px; margin-left:6px; align-self:flex-start}
+
+/* auto card */
+.auto-card{min-height:44px; border:1px dashed var(--auto); background:var(--auto-soft);
+  border-radius:var(--r); padding:8px 11px; display:flex; align-items:center; gap:9px; flex-wrap:wrap}
+.auto-badge{font-family:var(--mono); font-size:10px; letter-spacing:.12em; background:var(--auto);
+  color:var(--paper); border-radius:2px; padding:1px 6px}
+.auto-card .txt{font-size:12.5px; color:var(--auto); font-weight:500}
+.auto-card button{margin-left:auto; background:none; border:0; color:var(--ink-2); font:inherit;
+  font-size:12px; text-decoration:underline; cursor:pointer; padding:0}
+.auto-card button:hover{color:var(--ink)}
+.field[data-auto="false"] .auto-card{display:none}
+.field[data-auto="true"] .manual-wrap{display:none}
+.field[data-auto="false"] .manual-wrap{display:block}
+.field[data-auto="false"] .back-to-auto{display:inline-block}
+
+/* segmented */
+.seg{display:inline-flex; border:1px solid var(--rule); border-radius:var(--r); overflow:hidden;
+  background:var(--card)}
+.seg-btn{border:0; background:none; font:inherit; font-size:13px; color:var(--ink-2); padding:7px 13px; min-height:38px;
+  cursor:pointer; border-right:1px solid var(--rule-2); transition:background .15s ease,color .15s ease}
+.seg-btn:last-child{border-right:0}
+.seg-btn:hover{background:var(--paper-2); color:var(--ink)}
+.seg-btn.is-on{background:var(--ink); color:var(--paper); font-weight:500}
+[data-theme="dark"] .seg-btn.is-on{background:var(--ink); color:#15171B}
+
+/* inputs */
+.inp,textarea.inp{width:100%; border:1px solid var(--rule); background:var(--card); border-radius:var(--r);
+  padding:10px 11px; font:inherit; font-size:13.5px; color:var(--ink); transition:border-color .18s ease}
+.inp:focus{border-color:var(--focus); box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 14%,transparent);
+  outline:none}
+textarea.inp{min-height:84px; resize:vertical; line-height:1.6}
+.inp::placeholder{color:var(--ink-3)}
+.with-counter{position:relative}
+.counter{position:absolute; right:9px; bottom:7px; font-family:var(--mono); font-size:10.5px;
+  color:var(--ink-3); background:var(--card); padding:0 3px}
+.check{display:flex; gap:9px; align-items:flex-start; font-size:13px; color:var(--ink-2); cursor:pointer}
+.check input{margin-top:3px; accent-color:var(--mark); width:15px; height:15px}
+.check b{color:var(--ink); font-weight:500}
+
+/* buttons */
+.btn{font:inherit; font-size:13.5px; border-radius:var(--r); padding:9px 15px; cursor:pointer;
+  border:1px solid var(--rule); background:var(--card); color:var(--ink);
+  transition:background .16s ease, border-color .16s ease, transform .1s ease}
+.btn:hover{border-color:var(--ink-3); background:var(--paper-2)}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--mark); border-color:var(--mark); color:#fff; font-weight:500}
+.btn-primary:hover{background:#872523; border-color:#872523}
+.btn-ghost{background:none; border-color:transparent; color:var(--ink-2); text-decoration:underline;
+  padding-left:0; padding-right:0}
+.btn-sm{font-size:12.5px; padding:6px 10px}
+.btn-row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+
+/* seo keyword block */
+.kw-box{border:1px solid var(--rule); border-radius:var(--r); background:var(--card); padding:11px}
+.kw-chips{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; min-height:24px}
+.chip{display:inline-flex; align-items:center; gap:6px; background:var(--paper-2); border:1px solid var(--rule-2);
+  border-radius:999px; padding:2px 9px; font-size:12.5px}
+.chip button{background:none;border:0;color:var(--ink-3);cursor:pointer;font-size:13px;line-height:1;padding:0}
+.kw-empty{font-size:12.5px; color:var(--auto); background:var(--auto-soft); border:1px dashed var(--auto);
+  border-radius:var(--r); padding:8px 10px}
+.kw-tools{display:flex; gap:8px; align-items:center; margin-top:9px; flex-wrap:wrap}
+
+/* syndication matrix */
+.matrix-wrap{overflow-x:auto}
+.matrix{width:100%; border-collapse:collapse; font-size:13px; min-width:520px}
+.matrix th{text-align:left; font-weight:500; color:var(--ink-3); font-size:11.5px; letter-spacing:.08em;
+  text-transform:uppercase; padding:0 10px 8px 0; border-bottom:1px solid var(--rule)}
+.matrix td{padding:9px 10px 9px 0; border-bottom:1px solid var(--rule-2); vertical-align:middle}
+.matrix tr:last-child td{border-bottom:0}
+.matrix .plat{display:flex; align-items:center; gap:9px}
+.matrix .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-3);flex:0 0 auto}
+.matrix .plat b{font-weight:500}
+.matrix .en{color:var(--ink-3); font-size:11.5px}
+
+/* run bar */
+.runbar{position:fixed; left:0; right:0; bottom:0; z-index:35; background:var(--card);
+  border-top:1px solid var(--ink); box-shadow:0 -8px 24px -18px rgba(0,0,0,.5)}
+[data-theme="dark"] .runbar{border-top-color:var(--rule)}
+.runbar-in{max-width:1240px; margin:0 auto; padding:11px 22px; display:flex; align-items:center; gap:18px;
+  flex-wrap:wrap}
+.ledger{display:flex; gap:16px; flex-wrap:wrap; font-family:var(--mono); font-size:12px; color:var(--ink-2)}
+.ledger span b{color:var(--ink); font-weight:500}
+.runbar .spacer{flex:1}
+.runbar .ledger span{white-space:nowrap}
+.saved{font-size:11.5px; color:var(--ink-3); font-family:var(--mono)}
+.total{font-family:var(--mono); font-size:15px; color:var(--ink)}
+.total b{font-weight:600}
+
+footer.page-foot{max-width:1240px; margin:0 auto; padding:26px 40px 40px; color:var(--ink-3);
+  font-size:12px; border-top:1px solid var(--rule); display:flex; gap:16px; flex-wrap:wrap}
+@media (max-width:640px){ footer.page-foot{padding:22px 18px 40px} }
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
+
+
+/* ---------- outline editor / must-have / info box ---------- */
+.musthave{font-size:10px; letter-spacing:.1em; color:var(--mark); border:1px solid currentColor;
+  border-radius:2px; padding:1px 6px; font-family:var(--mono); text-transform:uppercase}
+.info-box{border:1px solid var(--rule); background:var(--paper-2); border-radius:var(--r);
+  padding:12px 14px; margin-top:4px}
+.info-box > b{font-size:12.5px; letter-spacing:.02em}
+.info-box ul{margin:7px 0 0; padding-left:17px; color:var(--ink-2); font-size:12.5px; line-height:1.75}
+.info-box li b{color:var(--ink); font-weight:500}
+.outline-editor{border:1px solid var(--rule); border-radius:var(--r); background:var(--card); padding:10px}
+.oh-list{list-style:none; margin:0 0 10px; padding:0}
+.oh-row{display:flex; align-items:center; gap:9px; padding:7px 9px; border:1px solid var(--rule-2);
+  border-radius:2px; background:var(--paper); margin-bottom:6px; cursor:grab}
+.oh-row:active{cursor:grabbing}
+.oh-row.is-drag{opacity:.4; border-style:dashed}
+.oh-handle{color:var(--ink-3); font-family:var(--mono); font-size:13px; letter-spacing:-1px; user-select:none}
+.oh-text{flex:1; font-size:13.5px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.oh-del{background:none; border:0; color:var(--ink-3); font-size:15px; line-height:1; cursor:pointer; padding:0 2px}
+.oh-del:hover{color:var(--mark)}
+.oh-tools{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+@media (max-width:900px){ .oh-tools .inp{flex:1 1 140px} }
+
+/* ---------- responsive (last block on purpose) ---------- */
+.appbar{flex-wrap:nowrap}
+.appbar .tools{flex:1 1 auto; min-width:0; overflow:hidden}
+.appbar .credit-chip,.appbar .icon-btn,.appbar .avatar{flex:0 0 auto}
+.credit-chip{white-space:nowrap}
+@media (max-width:1180px){ .tool:not([aria-current]){display:none} }
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .rail{display:none}
+  main{padding:20px 18px 128px}
+  .credit-chip{display:none}
+  .appbar{padding:0 12px; gap:10px}
+  .runbar-in{padding:9px 14px; gap:10px}
+  .runbar .ledger{display:none}
+  .saved{display:none}
+  .masthead h1{font-size:34px}
+  .headline-field input{font-size:22px}
+}
+@media (max-width:520px){
+  .appbar{gap:8px}
+  .brand{font-size:14px}
+  .tool{padding:6px 8px; font-size:12.5px}
+  .runbar-in .total{font-size:14px}
+  .btn{padding:9px 11px; font-size:13px}
+}
+
+
+/* ---------- bulk extras ---------- */
+*{box-sizing:border-box}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+.main{flex:1;min-width:0;padding:0 34px 80px}
+.auth-note{font-size:12px;color:var(--ink-3);font-family:var(--mono);margin:0 0 22px}
+.tools{display:flex;gap:4px;flex:1;align-items:center}
+.tools a{color:rgba(247,245,239,.78);text-decoration:none;font-size:13.5px;padding:8px 11px;border-radius:3px;white-space:nowrap}
+.tools a:hover{color:#fff;background:rgba(255,255,255,.08)}
+.tools a[aria-current="page"]{color:#fff;font-weight:600;border-bottom:2px solid var(--mark)}
+.appbar-right{display:flex;align-items:center;gap:12px}
+.theme-btn{background:none;border:1px solid rgba(255,255,255,.22);color:#F7F5EF;font-size:14px;border-radius:3px;width:34px;height:34px;cursor:pointer;line-height:1}
+.acct{font-size:13px;color:rgba(247,245,239,.85);white-space:nowrap}
+.sel-pop{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:30;background:var(--card);border:1px solid var(--rule);border-radius:var(--r-lg);box-shadow:var(--sh);overflow:hidden;max-height:340px;display:flex;flex-direction:column}
+.sel-list{list-style:none;margin:0;padding:4px;overflow:auto}
+.sel-search-wrap{padding:8px;border-bottom:1px solid var(--rule-2)}
+.sel-search{width:100%;border:1px solid var(--rule);border-radius:2px;padding:7px 9px;font:inherit;font-size:12.5px;background:var(--paper);color:var(--ink)}
+.opt{cursor:pointer;padding:8px 10px;font-size:13px;color:var(--ink);border-radius:2px;display:flex;flex-direction:column;gap:1px}
+.opt[hidden]{display:none}
+.auto-card{min-height:44px;border:1px dashed var(--auto);background:var(--auto-soft);border-radius:var(--r);padding:8px 11px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.auto-mark{font-family:var(--serif);color:var(--auto);font-weight:600}
+.auto-card .txt{font-size:12.5px;color:var(--auto);font-weight:500;flex:1}
+.auto-toggle{margin-left:auto;background:none;border:0;color:var(--ink-2);font:inherit;font-size:12.5px;cursor:pointer;text-decoration:underline;padding:4px}
+.auto-toggle:hover{color:var(--ink)}
+.manual-wrap input,.manual-wrap .sel{margin-top:8px}
+/* input list */
+.in-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0 10px}
+.in-col{border:1px solid var(--rule);border-radius:var(--r);background:var(--paper-2);padding:14px}
+.in-col label{display:block;font-size:13px;font-weight:500;color:var(--ink);margin-bottom:7px}
+.in-col label code{color:var(--ink-3);font-weight:400}
+.in-col textarea{width:100%;border:1px solid var(--rule);background:var(--card);border-radius:var(--r);padding:10px 11px;font:inherit;font-size:13px;color:var(--ink);resize:vertical;min-height:90px}
+.in-col textarea:focus{border-color:var(--focus);box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 14%,transparent)}
+.batch-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.batch-btn{font:inherit;font-size:12.5px;border:1px solid var(--rule);background:var(--card);color:var(--ink);border-radius:var(--r);padding:8px 12px;cursor:pointer;min-height:40px}
+.batch-btn:hover{border-color:var(--ink-3);background:var(--paper)}
+.batch-btn:disabled{opacity:.5;cursor:not-allowed}
+.import-row{margin:0 0 4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.import-btn{font:inherit;font-size:12.5px;border:1px solid var(--rule);background:var(--card);color:var(--ink);border-radius:var(--r);padding:8px 12px;cursor:pointer;min-height:40px}
+.import-btn:hover{border-color:var(--ink-3)}
+.import-name{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.hero-hint{font-size:12px;color:var(--ink-3);margin:4px 0 0;line-height:1.5}
+/* ledger / runbar */
+.ledger{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.ledger span b{color:var(--ink);font-weight:500}
+.ledger-final{font-family:var(--mono);font-size:15px;color:var(--ink)}
+.runbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--paper);border-top:1px solid var(--rule);box-shadow:0 -8px 24px -18px rgba(0,0,0,.5)}
+.runbar-in{max-width:1240px;margin:0 auto;padding:12px 34px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+footer.page-foot{max-width:1240px;margin:0 auto;padding:26px 34px 84px;color:var(--ink-3);font-size:12px;border-top:1px solid var(--rule);display:flex;gap:16px;flex-wrap:wrap}
+.rail nav a.active{color:var(--ink);font-weight:600;border-left:2px solid var(--mark);margin-left:-1px;padding-left:13px}
+.rail nav a.active .num{color:var(--mark)}
+@media (max-width:900px){
+  .rail{display:none !important}
+  .acct{display:none}
+  .main{padding:0 16px 80px}
+  .runbar-in{padding:12px 16px}
+  .tools{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .brand{display:none}
+  .in-grid{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .masthead h1{font-size:var(--step-4)}
+  .runbar-in .ledger{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+  /* hidden 屬性必須壓過 .sel-pop{display:flex}，否則 52 個選單會全部攤開 */
+  .sel-pop[hidden]{display:none}
+</style>
+</head>
+<body>
+<!-- COPY DESC: shell (appbar + runbar + rail + tokens from 1-click-blog-post-zh.html) -->
+<!-- COPY DESC: ui-kit (sel + auto + credit + theme from 1-click-blog-post-zh.html) -->
+<header class="appbar">
+  <span class="brand">SEOWriting 編輯台</span>
+  <nav class="tools" aria-label="工具切換">
+    <a href="1-click-blog-post-zh.html">一鍵發布</a>
+    <a href="bulk-generation-zh.html" aria-current="page">批量生成</a>
+    <a href="super-page-zh.html">Super Page</a>
+    <a href="rewriter-zh.html">改寫工具</a>
+  </nav>
+  <div class="appbar-right">
+    <button id="theme-toggle" class="theme-btn" type="button" aria-label="切換深色模式">◧</button>
+    <span class="credit-chip" id="ledgerPill">0.8 credit</span>
+    <span class="avatar" aria-hidden="true">示</span>
+    <span class="acct">示例帳戶</span>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="rail" aria-label="區塊導覽">
+    <h2>流程</h2>
+    <nav><a href="#core" data-target="core"><span class="num">01</span>核心設定</a><a href="#voice" data-target="voice"><span class="num">02</span>品牌聲音</a><a href="#media" data-target="media"><span class="num">03</span>媒體中心</a><a href="#struct" data-target="struct"><span class="num">04</span>文章結構</a><a href="#ilink" data-target="ilink"><span class="num">05</span>內鏈</a><a href="#elink" data-target="elink"><span class="num">06</span>外鏈</a><a href="#web" data-target="web"><span class="num">07</span>連結互聯網</a><a href="#synd" data-target="synd"><span class="num">08</span>社群轉發</a><a href="#tgt" data-target="tgt"><span class="num">09</span>目標網站</a></nav>
+    <div class="legend"><span class="glyph">※</span> = 由系統自動決定</div>
+    <div class="rail-card">
+      <h3>成本估計</h3>
+      <div class="ledger-line"><span>模型 × N篇</span><span class="dots"></span><span id="lg-total">0.8</span></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <p class="eyebrow">Bulk Article Generation</p>
+    <div class="masthead">
+      <h1>批量生成</h1>
+      <p class="dek">一次過生成並自動發佈最多 100 篇文章。喺下面逐行入標題／關鍵字，或直接匯入 CSV 清單。</p>
+
+      <div class="in-grid">
+        <div class="in-col">
+          <label>標題清單 <code class="field-key">titles</code></label>
+          <textarea id="inp_titles" placeholder="Enter your blog title or topic here（每行一個）"></textarea>
+          <div class="batch-row">
+            <button id="gen_titles" class="batch-btn" type="button">生成標題</button>
+            <button id="stop_gen_titles" class="batch-btn" type="button" disabled>停止</button>
+          </div>
+          <p class="hero-hint">每行一個標題；留空由系統按關鍵字生成。</p>
+        </div>
+        <div class="in-col">
+          <label>關鍵字清單 <code class="field-key">keywords</code></label>
+          <textarea id="inp_kws" placeholder="Enter your main keyword（每行一個）"></textarea>
+          <div class="batch-row">
+            <button id="gen_mk" class="batch-btn" type="button">生成關鍵字</button>
+            <button id="stop_gen_keywords" class="batch-btn" type="button" disabled>停止</button>
+            <button id="gen_outline" class="batch-btn" type="button">生成大綱</button>
+            <button id="stop_gen_outline" class="batch-btn" type="button" disabled>停止</button>
+          </div>
+          <p class="hero-hint">批量模式唔支援指定 URL 搜尋來源；每行一個關鍵字即生成一篇。</p>
+        </div>
+      </div>
+      <div class="import-row">
+        <button id="import-btn" class="import-btn" type="button">匯入 CSV</button>
+        <input id="import_file" type="file" accept=".csv,.txt" hidden>
+        <span id="import-name" class="import-name"></span>
+        <p class="hero-hint">揀完檔只顯示檔名，唔會真正上傳。</p>
+      </div>
+      <p class="auth-note">工具：bulk-generation / batch：on / 登入：示例帳戶</p>
+    </div>
+
+
+    <section class="panel" id="core">
+      <div class="panel-head"><span class="idx">01</span><h2>核心設定</h2><span class="en">Core Settings</span></div>
+      
+        <div class="field" data-dname="lang">
+          <div class="field-label">語言 <code class="field-key">lang</code></div>
+          <div class="sel" data-open="false" data-value="en">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>English (US)</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="en"><span class="opt-zh">English (US)</span></li>
+<li class="opt" data-value="gb"><span class="opt-zh">English (UK)</span></li>
+<li class="opt" data-value="au"><span class="opt-zh">English (Australia)</span></li>
+<li class="opt" data-value="ca"><span class="opt-zh">English (Canada)</span></li>
+<li class="opt" data-value="af"><span class="opt-zh">Afrikaans</span></li>
+<li class="opt" data-value="al"><span class="opt-zh">Albanian</span></li>
+<li class="opt" data-value="sa"><span class="opt-zh">Arabic</span></li>
+<li class="opt" data-value="am"><span class="opt-zh">Armenian</span></li>
+<li class="opt" data-value="az"><span class="opt-zh">Azerbaijani</span></li>
+<li class="opt" data-value="bd"><span class="opt-zh">Bengali</span></li>
+<li class="opt" data-value="bg"><span class="opt-zh">Bulgarian</span></li>
+<li class="opt" data-value="cn"><span class="opt-zh">Chinese (Simplified)</span></li>
+<li class="opt" data-value="c1"><span class="opt-zh">Chinese (Traditional)</span></li>
+<li class="opt" data-value="hr"><span class="opt-zh">Croatian</span></li>
+<li class="opt" data-value="cz"><span class="opt-zh">Czech</span></li>
+<li class="opt" data-value="dk"><span class="opt-zh">Danish</span></li>
+<li class="opt" data-value="nl"><span class="opt-zh">Dutch</span></li>
+<li class="opt" data-value="ee"><span class="opt-zh">Estonian</span></li>
+<li class="opt" data-value="ph"><span class="opt-zh">Filipino</span></li>
+<li class="opt" data-value="fi"><span class="opt-zh">Finnish</span></li>
+<li class="opt" data-value="fr"><span class="opt-zh">French</span></li>
+<li class="opt" data-value="ge"><span class="opt-zh">Georgian</span></li>
+<li class="opt" data-value="de"><span class="opt-zh">German</span></li>
+<li class="opt" data-value="gr"><span class="opt-zh">Greek</span></li>
+<li class="opt" data-value="il"><span class="opt-zh">Hebrew</span></li>
+<li class="opt" data-value="in"><span class="opt-zh">Hindi</span></li>
+<li class="opt" data-value="hu"><span class="opt-zh">Hungarian</span></li>
+<li class="opt" data-value="id"><span class="opt-zh">Indonesian</span></li>
+<li class="opt" data-value="it"><span class="opt-zh">Italian</span></li>
+<li class="opt" data-value="jp"><span class="opt-zh">Japanese</span></li>
+<li class="opt" data-value="kz"><span class="opt-zh">Kazakh</span></li>
+<li class="opt" data-value="kr"><span class="opt-zh">Korean</span></li>
+<li class="opt" data-value="kg"><span class="opt-zh">Kyrgyz</span></li>
+<li class="opt" data-value="lv"><span class="opt-zh">Latvian</span></li>
+<li class="opt" data-value="lt"><span class="opt-zh">Lithuanian</span></li>
+<li class="opt" data-value="mk"><span class="opt-zh">Macedonian</span></li>
+<li class="opt" data-value="my"><span class="opt-zh">Malay</span></li>
+<li class="opt" data-value="no"><span class="opt-zh">Norwegian</span></li>
+<li class="opt" data-value="ir"><span class="opt-zh">Persian</span></li>
+<li class="opt" data-value="pl"><span class="opt-zh">Polish</span></li>
+<li class="opt" data-value="br"><span class="opt-zh">Portuguese (Brazilian)</span></li>
+<li class="opt" data-value="pt"><span class="opt-zh">Portuguese (European)</span></li>
+<li class="opt" data-value="ro"><span class="opt-zh">Romanian</span></li>
+<li class="opt" data-value="ru"><span class="opt-zh">Russian</span></li>
+<li class="opt" data-value="rs"><span class="opt-zh">Serbian</span></li>
+<li class="opt" data-value="lk"><span class="opt-zh">Sinhala</span></li>
+<li class="opt" data-value="sk"><span class="opt-zh">Slovak</span></li>
+<li class="opt" data-value="si"><span class="opt-zh">Slovenian</span></li>
+<li class="opt" data-value="es"><span class="opt-zh">Spanish</span></li>
+<li class="opt" data-value="ke"><span class="opt-zh">Swahili</span></li>
+<li class="opt" data-value="se"><span class="opt-zh">Swedish</span></li>
+<li class="opt" data-value="tj"><span class="opt-zh">Tajik</span></li>
+<li class="opt" data-value="th"><span class="opt-zh">Thai</span></li>
+<li class="opt" data-value="tr"><span class="opt-zh">Turkish</span></li>
+<li class="opt" data-value="tm"><span class="opt-zh">Turkmen</span></li>
+<li class="opt" data-value="ua"><span class="opt-zh">Ukrainian</span></li>
+<li class="opt" data-value="pk"><span class="opt-zh">Urdu</span></li>
+<li class="opt" data-value="uz"><span class="opt-zh">Uzbek</span></li>
+<li class="opt" data-value="vn"><span class="opt-zh">Vietnamese</span></li></ul>
+            </div>
+          </div>
+        </div>
+            <div class="field field-auto" data-dname="type">
+              <div class="field-label">文章類型 <code class="field-key">type</code></div>
+              <div class="auto-card" data-role="auto"><span class="auto-mark">※</span><span class="txt">自動：與 Google 前 10 名一致</span><button class="auto-toggle" type="button" data-role="to-manual">改為手動</button></div>
+              <div class="manual-wrap" data-role="manual" hidden>
+              <div class="sel" data-open="false">
+                <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span></span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+                <div class="sel-pop" hidden>
+                  <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+                  <ul class="sel-list"><li class="opt" data-value="None"><span class="opt-zh">None</span></li>
+<li class="opt" data-value="How-to guide"><span class="opt-zh">How-to guide</span></li>
+<li class="opt" data-value="Listicle"><span class="opt-zh">Listicle</span></li>
+<li class="opt" data-value="Product review"><span class="opt-zh">Product review</span></li>
+<li class="opt" data-value="News"><span class="opt-zh">News</span></li>
+<li class="opt" data-value="Comparison"><span class="opt-zh">Comparison</span></li>
+<li class="opt" data-value="Case study"><span class="opt-zh">Case study</span></li>
+<li class="opt" data-value="Opinion piece"><span class="opt-zh">Opinion piece</span></li>
+<li class="opt" data-value="Tutorial"><span class="opt-zh">Tutorial</span></li>
+<li class="opt" data-value="Roundup post"><span class="opt-zh">Roundup post</span></li>
+<li class="opt" data-value="Q&amp;A page"><span class="opt-zh">Q&A page</span></li></ul>
+                </div>
+              </div><button class="auto-toggle" type="button" data-role="back">改回自動</button></div>
+            </div>
+            <div class="field field-auto" data-dname="size">
+              <div class="field-label">文章尺寸 <code class="field-key">size</code></div>
+              <div class="auto-card" data-role="auto"><span class="auto-mark">※</span><span class="txt">自動：與 Google 前 10 名一致</span><button class="auto-toggle" type="button" data-role="to-manual">改為手動</button></div>
+              <div class="manual-wrap" data-role="manual" hidden>
+              <div class="sel" data-open="false">
+                <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span></span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+                <div class="sel-pop" hidden>
+                  <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+                  <ul class="sel-list"><li class="opt" data-value="xs"><span class="opt-zh">X-Small</span></li>
+<li class="opt" data-value="s"><span class="opt-zh">Small</span></li>
+<li class="opt" data-value="m"><span class="opt-zh">Medium</span></li>
+<li class="opt" data-value="l"><span class="opt-zh">Large</span></li></ul>
+                </div>
+              </div><button class="auto-toggle" type="button" data-role="back">改回自動</button></div>
+            </div>
+        <div class="field" data-dname="tone">
+          <div class="field-label">語氣 <code class="field-key">tone</code></div>
+          <div class="sel" data-open="false" data-value="friendly">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Friendly</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="None"><span class="opt-zh">None</span></li>
+<li class="opt" data-value="friendly"><span class="opt-zh">Friendly</span></li>
+<li class="opt" data-value="professional"><span class="opt-zh">Professional</span></li>
+<li class="opt" data-value="informational"><span class="opt-zh">Informational</span></li>
+<li class="opt" data-value="transactional"><span class="opt-zh">Transactional</span></li>
+<li class="opt" data-value="inspirational"><span class="opt-zh">Inspirational</span></li>
+<li class="opt" data-value="neutral"><span class="opt-zh">Neutral</span></li>
+<li class="opt" data-value="witty"><span class="opt-zh">Witty</span></li>
+<li class="opt" data-value="casual"><span class="opt-zh">Casual</span></li>
+<li class="opt" data-value="authoritative"><span class="opt-zh">Authoritative</span></li>
+<li class="opt" data-value="encouraging"><span class="opt-zh">Encouraging</span></li>
+<li class="opt" data-value="persuasive"><span class="opt-zh">Persuasive</span></li>
+<li class="opt" data-value="poetic"><span class="opt-zh">Poetic</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="quality">
+          <div class="field-label">AI 模型 <code class="field-key">quality</code></div>
+          <div class="sel" data-open="false" data-value="">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span></span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="100"><span class="opt-zh">0.8 credits SEOWriting Engine Mix of models and expertise</span></li>
+<li class="opt" data-value="101"><span class="opt-zh">0.8 credits GPT-6 Luna Fast, light GPT-6 model by OpenAI</span></li>
+<li class="opt" data-value="113"><span class="opt-zh">0.8 credits Claude Haiku 5.5 Fast, light Claude model by Anthropic</span></li>
+<li class="opt" data-value="103"><span class="opt-zh">0.8 credits GLM 5.3 Flash Quick, efficient model by Z.ai</span></li>
+<li class="opt" data-value="-2"><span class="opt-zh">More models 10</span></li>
+<li class="opt" data-value="102"><span class="opt-zh">0.8 credits MiMo-V2.6-Flash Fast open-source model by Xiaomi</span></li>
+<li class="opt" data-value="104"><span class="opt-zh">0.8 credits DeepSeek V4.1 Flash Latest fast model by DeepSeek</span></li>
+<li class="opt" data-value="105"><span class="opt-zh">1.8 credits Gemini 3.8 Flash Smartest Flash model by Google</span></li>
+<li class="opt" data-value="106"><span class="opt-zh">2.8 credits GLM 5.3 Advanced reasoning model by Z.ai</span></li>
+<li class="opt" data-value="107"><span class="opt-zh">2.8 credits Claude Sonnet 5.5 Balanced speed and quality by Anthropic</span></li>
+<li class="opt" data-value="108"><span class="opt-zh">2.8 credits Kimi K3 Powerful reasoning model by Moonshot AI</span></li>
+<li class="opt" data-value="109"><span class="opt-zh">3.8 credits GPT-6.1 Sol Powerful model by OpenAI for in-depth articles</span></li>
+<li class="opt" data-value="110"><span class="opt-zh">3.8 credits Claude Opus 5.5 Premium model by Anthropic for expert content</span></li>
+<li class="opt" data-value="111"><span class="opt-zh">5.8 credits GPT-6 Astra Flagship model by OpenAI for demanding topics</span></li>
+<li class="opt" data-value="112"><span class="opt-zh">5.8 credits Claude Fable 5.1 Top-tier reasoning model by Anthropic</span></li>
+<li class="opt" data-value="-3"><span class="opt-zh">Fewer models 10</span></li>
+<li class="opt" data-value="32"><span class="opt-zh">1 credit Claude Sonnet 5 + Real-Time SERP Based on Claude Sonnet 5 from Anthropic</span></li>
+<li class="opt" data-value="44"><span class="opt-zh">1 credit DeepSeek V4 Pro + Real-Time SERP Based on DeepSeek V4 Pro, 1600B parameters</span></li>
+<li class="opt" data-value="38"><span class="opt-zh">1 credit GPT-6 Luna + Real-Time SERP Powered by OpenAI’s newest GPT-6 Luna</span></li>
+<li class="opt" data-value="-1"><span class="opt-zh">-1</span></li>
+<li class="opt" data-value="10"><span class="opt-zh">1 credit Default Mix of models and expertise</span></li>
+<li class="opt" data-value="29"><span class="opt-zh">1 credit GPT-6 Luna Fast and light version of GPT-6</span></li>
+<li class="opt" data-value="43"><span class="opt-zh">1 credit Gemini 3.6 Flash Lite Latest fast model by Google</span></li>
+<li class="opt" data-value="45"><span class="opt-zh">1 credit DeepSeek V4 Pro 1600B parameters for long, powerful work</span></li>
+<li class="opt" data-value="39"><span class="opt-zh">4 credits GPT-6 Sol Powerful GPT-6 model by OpenAI</span></li>
+<li class="opt" data-value="31"><span class="opt-zh">4 credits Claude Sonnet 5 Latest powerful model by Anthropic</span></li>
+<li class="opt" data-value="41"><span class="opt-zh">10 credits Opus 5.5 Most powerful model by Anthropic</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="point_view">
+          <div class="field-label">視角 <code class="field-key">point_view</code></div>
+          <div class="sel" data-open="false" data-value="0">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>None</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="0"><span class="opt-zh">None</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">First person singular (I, me, my, mine)</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">First person plural (we, us, our, ours)</span></li>
+<li class="opt" data-value="3"><span class="opt-zh">Second person (you, your, yours)</span></li>
+<li class="opt" data-value="4"><span class="opt-zh">Third person (he, she, it, they)</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="readability">
+          <div class="field-label">閱讀難度 <code class="field-key">readability</code></div>
+          <div class="sel" data-open="false" data-value="None">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>None</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="None"><span class="opt-zh">None</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">5th grade, easily understood by 11-year-olds</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">6th grade, conversational language</span></li>
+<li class="opt" data-value="3"><span class="opt-zh">7th grade, fairly easy to read</span></li>
+<li class="opt" data-value="4"><span class="opt-zh">8th & 9th grade, easily understood Recommended</span></li>
+<li class="opt" data-value="5"><span class="opt-zh">10th to 12th grade, fairly difficult to read</span></li>
+<li class="opt" data-value="6"><span class="opt-zh">College, difficult to read</span></li>
+<li class="opt" data-value="7"><span class="opt-zh">College graduate, very difficult to read</span></li>
+<li class="opt" data-value="8"><span class="opt-zh">Professional, extremely difficult to read</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="target_country">
+          <div class="field-label">目標國家／地區 <code class="field-key">target_country</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>United States</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="1"><span class="opt-zh">United States</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">United Kingdom</span></li>
+<li class="opt" data-value="3"><span class="opt-zh">Australia</span></li>
+<li class="opt" data-value="20"><span class="opt-zh">Canada</span></li>
+<li class="opt" data-value="78"><span class="opt-zh">Afghanistan</span></li>
+<li class="opt" data-value="44"><span class="opt-zh">Albania</span></li>
+<li class="opt" data-value="79"><span class="opt-zh">Algeria</span></li>
+<li class="opt" data-value="80"><span class="opt-zh">American Samoa</span></li>
+<li class="opt" data-value="81"><span class="opt-zh">Andorra</span></li>
+<li class="opt" data-value="82"><span class="opt-zh">Angola</span></li>
+<li class="opt" data-value="83"><span class="opt-zh">Anguilla</span></li>
+<li class="opt" data-value="85"><span class="opt-zh">Antigua & Barbuda</span></li>
+<li class="opt" data-value="57"><span class="opt-zh">Argentina</span></li>
+<li class="opt" data-value="46"><span class="opt-zh">Armenia</span></li>
+<li class="opt" data-value="86"><span class="opt-zh">Aruba</span></li>
+<li class="opt" data-value="75"><span class="opt-zh">Austria</span></li>
+<li class="opt" data-value="47"><span class="opt-zh">Azerbaijan</span></li>
+<li class="opt" data-value="87"><span class="opt-zh">Bahamas</span></li>
+<li class="opt" data-value="88"><span class="opt-zh">Bahrain</span></li>
+<li class="opt" data-value="9"><span class="opt-zh">Bangladesh</span></li>
+<li class="opt" data-value="89"><span class="opt-zh">Barbados</span></li>
+<li class="opt" data-value="90"><span class="opt-zh">Belarus</span></li>
+<li class="opt" data-value="91"><span class="opt-zh">Belgium</span></li>
+<li class="opt" data-value="92"><span class="opt-zh">Belize</span></li>
+<li class="opt" data-value="93"><span class="opt-zh">Benin</span></li>
+<li class="opt" data-value="94"><span class="opt-zh">Bermuda</span></li>
+<li class="opt" data-value="95"><span class="opt-zh">Bhutan</span></li>
+<li class="opt" data-value="96"><span class="opt-zh">Bolivia</span></li>
+<li class="opt" data-value="97"><span class="opt-zh">Bosnia & Herzegovina</span></li>
+<li class="opt" data-value="98"><span class="opt-zh">Botswana</span></li>
+<li class="opt" data-value="99"><span class="opt-zh">Bouvet Island</span></li>
+<li class="opt" data-value="8"><span class="opt-zh">Brazil</span></li>
+<li class="opt" data-value="100"><span class="opt-zh">British Indian Ocean Territory</span></li>
+<li class="opt" data-value="101"><span class="opt-zh">British Virgin Islands</span></li>
+<li class="opt" data-value="102"><span class="opt-zh">Brunei</span></li>
+<li class="opt" data-value="37"><span class="opt-zh">Bulgaria</span></li>
+<li class="opt" data-value="103"><span class="opt-zh">Burkina Faso</span></li>
+<li class="opt" data-value="104"><span class="opt-zh">Burundi</span></li>
+<li class="opt" data-value="22"><span class="opt-zh">Cambodia</span></li>
+<li class="opt" data-value="105"><span class="opt-zh">Cameroon</span></li>
+<li class="opt" data-value="106"><span class="opt-zh">Cape Verde</span></li>
+<li class="opt" data-value="107"><span class="opt-zh">Cayman Islands</span></li>
+<li class="opt" data-value="108"><span class="opt-zh">Central African Republic</span></li>
+<li class="opt" data-value="109"><span class="opt-zh">Chad</span></li>
+<li class="opt" data-value="58"><span class="opt-zh">Chile</span></li>
+<li class="opt" data-value="55"><span class="opt-zh">China</span></li>
+<li class="opt" data-value="110"><span class="opt-zh">Christmas Island</span></li>
+<li class="opt" data-value="111"><span class="opt-zh">Cocos (Keeling) Islands</span></li>
+<li class="opt" data-value="59"><span class="opt-zh">Colombia</span></li>
+<li class="opt" data-value="112"><span class="opt-zh">Comoros</span></li>
+<li class="opt" data-value="113"><span class="opt-zh">Congo - Brazzaville</span></li>
+<li class="opt" data-value="114"><span class="opt-zh">Congo - Kinshasa</span></li>
+<li class="opt" data-value="115"><span class="opt-zh">Cook Islands</span></li>
+<li class="opt" data-value="60"><span class="opt-zh">Costa Rica</span></li>
+<li class="opt" data-value="38"><span class="opt-zh">Croatia</span></li>
+<li class="opt" data-value="61"><span class="opt-zh">Cuba</span></li>
+<li class="opt" data-value="21"><span class="opt-zh">Cyprus</span></li>
+<li class="opt" data-value="30"><span class="opt-zh">Czech Republic</span></li>
+<li class="opt" data-value="116"><span class="opt-zh">Côte d’Ivoire</span></li>
+<li class="opt" data-value="33"><span class="opt-zh">Denmark</span></li>
+<li class="opt" data-value="117"><span class="opt-zh">Djibouti</span></li>
+<li class="opt" data-value="118"><span class="opt-zh">Dominica</span></li>
+<li class="opt" data-value="72"><span class="opt-zh">Dominican Republic</span></li>
+<li class="opt" data-value="69"><span class="opt-zh">Ecuador</span></li>
+<li class="opt" data-value="119"><span class="opt-zh">Egypt</span></li>
+<li class="opt" data-value="120"><span class="opt-zh">El Salvador</span></li>
+<li class="opt" data-value="121"><span class="opt-zh">Equatorial Guinea</span></li>
+<li class="opt" data-value="122"><span class="opt-zh">Eritrea</span></li>
+<li class="opt" data-value="42"><span class="opt-zh">Estonia</span></li>
+<li class="opt" data-value="123"><span class="opt-zh">Eswatini</span></li>
+<li class="opt" data-value="124"><span class="opt-zh">Ethiopia</span></li>
+<li class="opt" data-value="126"><span class="opt-zh">Faroe Islands</span></li>
+<li class="opt" data-value="127"><span class="opt-zh">Fiji</span></li>
+<li class="opt" data-value="35"><span class="opt-zh">Finland</span></li>
+<li class="opt" data-value="6"><span class="opt-zh">France</span></li>
+<li class="opt" data-value="128"><span class="opt-zh">French Guiana</span></li>
+<li class="opt" data-value="129"><span class="opt-zh">French Polynesia</span></li>
+<li class="opt" data-value="130"><span class="opt-zh">French Southern Territories</span></li>
+<li class="opt" data-value="131"><span class="opt-zh">Gabon</span></li>
+<li class="opt" data-value="132"><span class="opt-zh">Gambia</span></li>
+<li class="opt" data-value="45"><span class="opt-zh">Georgia</span></li>
+<li class="opt" data-value="5"><span class="opt-zh">Germany</span></li>
+<li class="opt" data-value="133"><span class="opt-zh">Ghana</span></li>
+<li class="opt" data-value="134"><span class="opt-zh">Gibraltar</span></li>
+<li class="opt" data-value="28"><span class="opt-zh">Greece</span></li>
+<li class="opt" data-value="135"><span class="opt-zh">Greenland</span></li>
+<li class="opt" data-value="136"><span class="opt-zh">Grenada</span></li>
+<li class="opt" data-value="137"><span class="opt-zh">Guadeloupe</span></li>
+<li class="opt" data-value="138"><span class="opt-zh">Guam</span></li>
+<li class="opt" data-value="139"><span class="opt-zh">Guatemala</span></li>
+<li class="opt" data-value="140"><span class="opt-zh">Guinea</span></li>
+<li class="opt" data-value="141"><span class="opt-zh">Guinea-Bissau</span></li>
+<li class="opt" data-value="142"><span class="opt-zh">Guyana</span></li>
+<li class="opt" data-value="143"><span class="opt-zh">Haiti</span></li>
+<li class="opt" data-value="144"><span class="opt-zh">Heard & McDonald Islands</span></li>
+<li class="opt" data-value="145"><span class="opt-zh">Honduras</span></li>
+<li class="opt" data-value="146"><span class="opt-zh">Hong Kong</span></li>
+<li class="opt" data-value="29"><span class="opt-zh">Hungary</span></li>
+<li class="opt" data-value="147"><span class="opt-zh">Iceland</span></li>
+<li class="opt" data-value="12"><span class="opt-zh">India</span></li>
+<li class="opt" data-value="11"><span class="opt-zh">Indonesia</span></li>
+<li class="opt" data-value="148"><span class="opt-zh">Iran</span></li>
+<li class="opt" data-value="149"><span class="opt-zh">Iraq</span></li>
+<li class="opt" data-value="150"><span class="opt-zh">Ireland</span></li>
+<li class="opt" data-value="31"><span class="opt-zh">Israel</span></li>
+<li class="opt" data-value="18"><span class="opt-zh">Italy</span></li>
+<li class="opt" data-value="151"><span class="opt-zh">Jamaica</span></li>
+<li class="opt" data-value="10"><span class="opt-zh">Japan</span></li>
+<li class="opt" data-value="152"><span class="opt-zh">Jordan</span></li>
+<li class="opt" data-value="48"><span class="opt-zh">Kazakhstan</span></li>
+<li class="opt" data-value="16"><span class="opt-zh">Kenya</span></li>
+<li class="opt" data-value="153"><span class="opt-zh">Kiribati</span></li>
+<li class="opt" data-value="154"><span class="opt-zh">Kuwait</span></li>
+<li class="opt" data-value="52"><span class="opt-zh">Kyrgyzstan</span></li>
+<li class="opt" data-value="155"><span class="opt-zh">Laos</span></li>
+<li class="opt" data-value="41"><span class="opt-zh">Latvia</span></li>
+<li class="opt" data-value="156"><span class="opt-zh">Lebanon</span></li>
+<li class="opt" data-value="157"><span class="opt-zh">Lesotho</span></li>
+<li class="opt" data-value="158"><span class="opt-zh">Liberia</span></li>
+<li class="opt" data-value="159"><span class="opt-zh">Libya</span></li>
+<li class="opt" data-value="160"><span class="opt-zh">Liechtenstein</span></li>
+<li class="opt" data-value="40"><span class="opt-zh">Lithuania</span></li>
+<li class="opt" data-value="161"><span class="opt-zh">Luxembourg</span></li>
+<li class="opt" data-value="162"><span class="opt-zh">Macao</span></li>
+<li class="opt" data-value="163"><span class="opt-zh">Madagascar</span></li>
+<li class="opt" data-value="164"><span class="opt-zh">Malawi</span></li>
+<li class="opt" data-value="77"><span class="opt-zh">Malaysia</span></li>
+<li class="opt" data-value="165"><span class="opt-zh">Maldives</span></li>
+<li class="opt" data-value="166"><span class="opt-zh">Mali</span></li>
+<li class="opt" data-value="167"><span class="opt-zh">Malta</span></li>
+<li class="opt" data-value="168"><span class="opt-zh">Marshall Islands</span></li>
+<li class="opt" data-value="169"><span class="opt-zh">Martinique</span></li>
+<li class="opt" data-value="170"><span class="opt-zh">Mauritania</span></li>
+<li class="opt" data-value="171"><span class="opt-zh">Mauritius</span></li>
+<li class="opt" data-value="172"><span class="opt-zh">Mayotte</span></li>
+<li class="opt" data-value="62"><span class="opt-zh">Mexico</span></li>
+<li class="opt" data-value="173"><span class="opt-zh">Micronesia</span></li>
+<li class="opt" data-value="174"><span class="opt-zh">Moldova</span></li>
+<li class="opt" data-value="175"><span class="opt-zh">Monaco</span></li>
+<li class="opt" data-value="176"><span class="opt-zh">Mongolia</span></li>
+<li class="opt" data-value="177"><span class="opt-zh">Montserrat</span></li>
+<li class="opt" data-value="178"><span class="opt-zh">Morocco</span></li>
+<li class="opt" data-value="179"><span class="opt-zh">Mozambique</span></li>
+<li class="opt" data-value="180"><span class="opt-zh">Myanmar (Burma)</span></li>
+<li class="opt" data-value="181"><span class="opt-zh">Namibia</span></li>
+<li class="opt" data-value="182"><span class="opt-zh">Nauru</span></li>
+<li class="opt" data-value="183"><span class="opt-zh">Nepal</span></li>
+<li class="opt" data-value="19"><span class="opt-zh">Netherlands</span></li>
+<li class="opt" data-value="184"><span class="opt-zh">New Caledonia</span></li>
+<li class="opt" data-value="185"><span class="opt-zh">New Zealand</span></li>
+<li class="opt" data-value="186"><span class="opt-zh">Nicaragua</span></li>
+<li class="opt" data-value="187"><span class="opt-zh">Niger</span></li>
+<li class="opt" data-value="73"><span class="opt-zh">Nigeria</span></li>
+<li class="opt" data-value="188"><span class="opt-zh">Niue</span></li>
+<li class="opt" data-value="189"><span class="opt-zh">Norfolk Island</span></li>
+<li class="opt" data-value="190"><span class="opt-zh">North Korea</span></li>
+<li class="opt" data-value="49"><span class="opt-zh">North Macedonia</span></li>
+<li class="opt" data-value="191"><span class="opt-zh">Northern Mariana Islands</span></li>
+<li class="opt" data-value="34"><span class="opt-zh">Norway</span></li>
+<li class="opt" data-value="192"><span class="opt-zh">Oman</span></li>
+<li class="opt" data-value="15"><span class="opt-zh">Pakistan</span></li>
+<li class="opt" data-value="193"><span class="opt-zh">Palau</span></li>
+<li class="opt" data-value="194"><span class="opt-zh">Palestine</span></li>
+<li class="opt" data-value="195"><span class="opt-zh">Panama</span></li>
+<li class="opt" data-value="196"><span class="opt-zh">Papua New Guinea</span></li>
+<li class="opt" data-value="197"><span class="opt-zh">Paraguay</span></li>
+<li class="opt" data-value="63"><span class="opt-zh">Peru</span></li>
+<li class="opt" data-value="74"><span class="opt-zh">Philippines</span></li>
+<li class="opt" data-value="198"><span class="opt-zh">Pitcairn Islands</span></li>
+<li class="opt" data-value="23"><span class="opt-zh">Poland</span></li>
+<li class="opt" data-value="7"><span class="opt-zh">Portugal</span></li>
+<li class="opt" data-value="71"><span class="opt-zh">Puerto Rico</span></li>
+<li class="opt" data-value="199"><span class="opt-zh">Qatar</span></li>
+<li class="opt" data-value="27"><span class="opt-zh">Romania</span></li>
+<li class="opt" data-value="54"><span class="opt-zh">Russia</span></li>
+<li class="opt" data-value="200"><span class="opt-zh">Rwanda</span></li>
+<li class="opt" data-value="201"><span class="opt-zh">Réunion</span></li>
+<li class="opt" data-value="202"><span class="opt-zh">Samoa</span></li>
+<li class="opt" data-value="203"><span class="opt-zh">San Marino</span></li>
+<li class="opt" data-value="14"><span class="opt-zh">Saudi Arabia</span></li>
+<li class="opt" data-value="204"><span class="opt-zh">Senegal</span></li>
+<li class="opt" data-value="39"><span class="opt-zh">Serbia</span></li>
+<li class="opt" data-value="205"><span class="opt-zh">Seychelles</span></li>
+<li class="opt" data-value="206"><span class="opt-zh">Sierra Leone</span></li>
+<li class="opt" data-value="67"><span class="opt-zh">Singapore</span></li>
+<li class="opt" data-value="36"><span class="opt-zh">Slovakia</span></li>
+<li class="opt" data-value="43"><span class="opt-zh">Slovenia</span></li>
+<li class="opt" data-value="207"><span class="opt-zh">Solomon Islands</span></li>
+<li class="opt" data-value="208"><span class="opt-zh">Somalia</span></li>
+<li class="opt" data-value="64"><span class="opt-zh">South Africa</span></li>
+<li class="opt" data-value="25"><span class="opt-zh">South Korea</span></li>
+<li class="opt" data-value="4"><span class="opt-zh">Spain</span></li>
+<li class="opt" data-value="65"><span class="opt-zh">Sri Lanka</span></li>
+<li class="opt" data-value="210"><span class="opt-zh">St. Helena</span></li>
+<li class="opt" data-value="211"><span class="opt-zh">St. Kitts & Nevis</span></li>
+<li class="opt" data-value="212"><span class="opt-zh">St. Lucia</span></li>
+<li class="opt" data-value="213"><span class="opt-zh">St. Pierre & Miquelon</span></li>
+<li class="opt" data-value="214"><span class="opt-zh">St. Vincent & Grenadines</span></li>
+<li class="opt" data-value="215"><span class="opt-zh">Sudan</span></li>
+<li class="opt" data-value="216"><span class="opt-zh">Suriname</span></li>
+<li class="opt" data-value="217"><span class="opt-zh">Svalbard & Jan Mayen</span></li>
+<li class="opt" data-value="32"><span class="opt-zh">Sweden</span></li>
+<li class="opt" data-value="218"><span class="opt-zh">Switzerland</span></li>
+<li class="opt" data-value="219"><span class="opt-zh">Syria</span></li>
+<li class="opt" data-value="220"><span class="opt-zh">São Tomé & Príncipe</span></li>
+<li class="opt" data-value="56"><span class="opt-zh">Taiwan</span></li>
+<li class="opt" data-value="53"><span class="opt-zh">Tajikistan</span></li>
+<li class="opt" data-value="221"><span class="opt-zh">Tanzania</span></li>
+<li class="opt" data-value="24"><span class="opt-zh">Thailand</span></li>
+<li class="opt" data-value="222"><span class="opt-zh">Togo</span></li>
+<li class="opt" data-value="223"><span class="opt-zh">Tokelau</span></li>
+<li class="opt" data-value="224"><span class="opt-zh">Tonga</span></li>
+<li class="opt" data-value="225"><span class="opt-zh">Trinidad & Tobago</span></li>
+<li class="opt" data-value="226"><span class="opt-zh">Tunisia</span></li>
+<li class="opt" data-value="51"><span class="opt-zh">Turkmenistan</span></li>
+<li class="opt" data-value="227"><span class="opt-zh">Turks & Caicos Islands</span></li>
+<li class="opt" data-value="228"><span class="opt-zh">Tuvalu</span></li>
+<li class="opt" data-value="17"><span class="opt-zh">Turkey</span></li>
+<li class="opt" data-value="229"><span class="opt-zh">U.S. Outlying Islands</span></li>
+<li class="opt" data-value="230"><span class="opt-zh">U.S. Virgin Islands</span></li>
+<li class="opt" data-value="76"><span class="opt-zh">Uganda</span></li>
+<li class="opt" data-value="66"><span class="opt-zh">Ukraine</span></li>
+<li class="opt" data-value="13"><span class="opt-zh">United Arab Emirates</span></li>
+<li class="opt" data-value="70"><span class="opt-zh">Uruguay</span></li>
+<li class="opt" data-value="50"><span class="opt-zh">Uzbekistan</span></li>
+<li class="opt" data-value="231"><span class="opt-zh">Vanuatu</span></li>
+<li class="opt" data-value="232"><span class="opt-zh">Vatican City</span></li>
+<li class="opt" data-value="68"><span class="opt-zh">Venezuela</span></li>
+<li class="opt" data-value="26"><span class="opt-zh">Vietnam</span></li>
+<li class="opt" data-value="233"><span class="opt-zh">Wallis & Futuna</span></li>
+<li class="opt" data-value="234"><span class="opt-zh">Western Sahara</span></li>
+<li class="opt" data-value="235"><span class="opt-zh">Yemen</span></li>
+<li class="opt" data-value="236"><span class="opt-zh">Zambia</span></li>
+<li class="opt" data-value="237"><span class="opt-zh">Zimbabwe</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="rm_words">
+          <div class="field-label">AI 內容清理 <code class="field-key">rm_words</code></div>
+          <div class="sel" data-open="false" data-value="No AI Words Removal">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>No AI Words Removal</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No AI Words Removal"><span class="opt-zh">No AI Words Removal</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Basic AI Words Removal</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">Extended AI Words Removal</span></li></ul>
+            </div>
+          </div>
+        </div>
+    </section>
+    <section class="panel" id="voice">
+      <div class="panel-head"><span class="idx">02</span><h2>品牌聲音</h2><span class="en">Brand Voice</span></div>
+      
+        <div class="field" data-dname="brand_voice">
+          <div class="field-label">AI 內容清理 <code class="field-key">brand_voice</code></div>
+          <div class="sel" data-open="false" data-value="0">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>None</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="0"><span class="opt-zh">None</span></li>
+<li class="opt" data-value="-1"><span class="opt-zh">+ Create Brand Voice</span></li></ul>
+            </div>
+          </div>
+        </div>
+    </section>
+    <section class="panel" id="media">
+      <div class="panel-head"><span class="idx">03</span><h2>媒體中心</h2><span class="en">Media Hub</span></div>
+      
+        <div class="field" data-dname="images">
+          <div class="field-label">AI 圖片 <code class="field-key">images</code></div>
+          <div class="sel" data-open="false" data-value="None">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>None</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="None"><span class="opt-zh">None</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">0 credits Z-Image</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">0 credits FLUX.1</span></li>
+<li class="opt" data-value="6"><span class="opt-zh">0.1 credits GPT Image 2.5 flare medium</span></li>
+<li class="opt" data-value="4"><span class="opt-zh">0.2 credits Nano Banana 2 Lite</span></li>
+<li class="opt" data-value="5"><span class="opt-zh">0.4 credits Nano Banana 2</span></li>
+<li class="opt" data-value="7"><span class="opt-zh">0.4 credits GPT Image 2.5 flare high</span></li>
+<li class="opt" data-value="8"><span class="opt-zh">0.6 credits GPT Image 2.5 flare xhigh</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="img_quantity">
+          <div class="field-label">圖片數量 <code class="field-key">img_quantity</code></div>
+          <div class="sel" data-open="false" data-value="3">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>3</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="1"><span class="opt-zh">1</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">2</span></li>
+<li class="opt" data-value="3"><span class="opt-zh">3</span></li>
+<li class="opt" data-value="4"><span class="opt-zh">4</span></li>
+<li class="opt" data-value="5"><span class="opt-zh">5</span></li>
+<li class="opt" data-value="6"><span class="opt-zh">6</span></li>
+<li class="opt" data-value="7"><span class="opt-zh">7</span></li>
+<li class="opt" data-value="8"><span class="opt-zh">8</span></li>
+<li class="opt" data-value="9"><span class="opt-zh">9</span></li>
+<li class="opt" data-value="10"><span class="opt-zh">10</span></li>
+<li class="opt" data-value="15"><span class="opt-zh">15</span></li>
+<li class="opt" data-value="20"><span class="opt-zh">20</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="img_size">
+          <div class="field-label">圖片尺寸 <code class="field-key">img_size</code></div>
+          <div class="sel" data-open="false" data-value="6">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>1344×768 (16:9)</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="1"><span class="opt-zh">960×768 (5:4)</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">1024×640 (8:5)</span></li>
+<li class="opt" data-value="3"><span class="opt-zh">1024×768 (4:3)</span></li>
+<li class="opt" data-value="4"><span class="opt-zh">1152×768 (3:2)</span></li>
+<li class="opt" data-value="5"><span class="opt-zh">1280×704 (20:11)</span></li>
+<li class="opt" data-value="6"><span class="opt-zh">1344×768 (16:9)</span></li>
+<li class="opt" data-value="9"><span class="opt-zh">768×1344 (9:16)</span></li>
+<li class="opt" data-value="8"><span class="opt-zh">1024×1024 (1:1)</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="img_style">
+          <div class="field-label">圖片風格 <code class="field-key">img_style</code></div>
+          <div class="sel" data-open="false" data-value="None">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>None</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="None"><span class="opt-zh">None</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Photo</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">Cartoon</span></li>
+<li class="opt" data-value="3"><span class="opt-zh">Cubism</span></li>
+<li class="opt" data-value="4"><span class="opt-zh">Expressionism</span></li>
+<li class="opt" data-value="5"><span class="opt-zh">Cyberpunk</span></li>
+<li class="opt" data-value="6"><span class="opt-zh">Fantasy</span></li>
+<li class="opt" data-value="7"><span class="opt-zh">Cinematic</span></li>
+<li class="opt" data-value="8"><span class="opt-zh">Abstract</span></li>
+<li class="opt" data-value="9"><span class="opt-zh">Impressionism</span></li>
+<li class="opt" data-value="10"><span class="opt-zh">Surrealism</span></li>
+<li class="opt" data-value="11"><span class="opt-zh">Anime</span></li>
+<li class="opt" data-value="12"><span class="opt-zh">Comic Book</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="youtube">
+          <div class="field-label">YouTube 影片 <code class="field-key">youtube</code></div>
+          <div class="sel" data-open="false" data-value="None">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>None</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="None"><span class="opt-zh">None</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="video_quantity">
+          <div class="field-label">影片數量 <code class="field-key">video_quantity</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>1</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="1"><span class="opt-zh">1</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">2</span></li>
+<li class="opt" data-value="3"><span class="opt-zh">3</span></li>
+<li class="opt" data-value="4"><span class="opt-zh">4</span></li>
+<li class="opt" data-value="5"><span class="opt-zh">5</span></li>
+<li class="opt" data-value="6"><span class="opt-zh">6</span></li>
+<li class="opt" data-value="7"><span class="opt-zh">7</span></li>
+<li class="opt" data-value="8"><span class="opt-zh">8</span></li>
+<li class="opt" data-value="9"><span class="opt-zh">9</span></li>
+<li class="opt" data-value="10"><span class="opt-zh">10</span></li>
+<li class="opt" data-value="15"><span class="opt-zh">15</span></li>
+<li class="opt" data-value="20"><span class="opt-zh">20</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="placing_scheme">
+          <div class="field-label">排版 <code class="field-key">placing_scheme</code></div>
+          <div class="sel" data-open="false" data-value="2">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Distribute evenly</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="1"><span class="opt-zh">Sequentially in each section</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">Distribute evenly</span></li>
+<li class="opt" data-value="3"><span class="opt-zh">Alternate image and video</span></li>
+<li class="opt" data-value="4"><span class="opt-zh">Alternate video and image</span></li>
+<li class="opt" data-value="5"><span class="opt-zh">First images, then videos</span></li>
+<li class="opt" data-value="6"><span class="opt-zh">First videos, then images</span></li></ul>
+            </div>
+          </div>
+        </div>
+    </section>
+    <section class="panel" id="struct">
+      <div class="panel-head"><span class="idx">04</span><h2>文章結構</h2><span class="en">Structure</span></div>
+      
+        <div class="field" data-dname="conclusion">
+          <div class="field-label">結尾 <code class="field-key">conclusion</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Yes</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No"><span class="opt-zh">No</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="tables">
+          <div class="field-label">表格 <code class="field-key">tables</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Yes</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No"><span class="opt-zh">No</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="h3">
+          <div class="field-label">H3 <code class="field-key">h3</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Yes</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No"><span class="opt-zh">No</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="lists">
+          <div class="field-label">列表 <code class="field-key">lists</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Yes</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No"><span class="opt-zh">No</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="italic">
+          <div class="field-label">斜體 <code class="field-key">italic</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Yes</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No"><span class="opt-zh">No</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="quotes">
+          <div class="field-label">引言 <code class="field-key">quotes</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Yes</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No"><span class="opt-zh">No</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="key_takeaways">
+          <div class="field-label">重點提要 <code class="field-key">key_takeaways</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Yes</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No"><span class="opt-zh">No</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="faq">
+          <div class="field-label">問答 <code class="field-key">faq</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Yes</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No"><span class="opt-zh">No</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Yes</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">Yes, with Q: A:</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="bold">
+          <div class="field-label">粗體 <code class="field-key">bold</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Yes</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No"><span class="opt-zh">No</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+    </section>
+    <section class="panel" id="ilink">
+      <div class="panel-head"><span class="idx">05</span><h2>內鏈</h2><span class="en">Internal Linking</span></div>
+      
+        <div class="field" data-dname="il_site">
+          <div class="field-label">選擇網站 <code class="field-key">il_site</code></div>
+          <div class="sel" data-open="false" data-value="None">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>None</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="None"><span class="opt-zh">None</span></li>
+<li class="opt" data-value="+"><span class="opt-zh">+ Add a Website</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="internal_links">
+          <div class="field-label">連結數量 <code class="field-key">internal_links</code></div>
+          <div class="sel" data-open="false" data-value="1-2">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>1-2</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="1-2"><span class="opt-zh">1-2</span></li>
+<li class="opt" data-value="3-4"><span class="opt-zh">3-4</span></li>
+<li class="opt" data-value="5-7"><span class="opt-zh">5-7</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="il_place">
+          <div class="field-label">位置 <code class="field-key">il_place</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Evenly Throughout</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="0"><span class="opt-zh">At the Top</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Evenly Throughout</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">At the Bottom</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="il_context">
+          <div class="field-label">語境加強 <code class="field-key">il_context</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Yes</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="2"><span class="opt-zh">None</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="il_link_attr">
+          <div class="field-label">連結屬性 <code class="field-key">il_link_attr</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Dofollow</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="1"><span class="opt-zh">Dofollow</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">Nofollow</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="il_format">
+          <div class="field-label">連結格式 <code class="field-key">il_format</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>In text</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="1"><span class="opt-zh">In text</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">Related articles block</span></li>
+<li class="opt" data-value="3"><span class="opt-zh">In text + Related block</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="il_faq">
+          <div class="field-label">允許 FAQ 連結 <code class="field-key">il_faq</code></div>
+          <div class="sel" data-open="false" data-value="2">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>None</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="2"><span class="opt-zh">None</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+    </section>
+    <section class="panel" id="elink">
+      <div class="panel-head"><span class="idx">06</span><h2>外鏈</h2><span class="en">External Linking</span></div>
+      
+        <div class="field" data-dname="ext_links">
+          <div class="field-label">連結類型 <code class="field-key">ext_links</code></div>
+          <div class="sel" data-open="false" data-value="0">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>None</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="0"><span class="opt-zh">None</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">Automatic</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Custom</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="el_number">
+          <div class="field-label">連結數量 <code class="field-key">el_number</code></div>
+          <div class="sel" data-open="false" data-value="1-2">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>1-2</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="1-2"><span class="opt-zh">1-2</span></li>
+<li class="opt" data-value="3-4"><span class="opt-zh">3-4</span></li>
+<li class="opt" data-value="5-7"><span class="opt-zh">5-7</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="el_place">
+          <div class="field-label">位置 <code class="field-key">el_place</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Evenly Throughout</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="0"><span class="opt-zh">At the Top</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Evenly Throughout</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">At the Bottom</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="el_context">
+          <div class="field-label">語境加強 <code class="field-key">el_context</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Yes</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="2"><span class="opt-zh">None</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="el_link_attr">
+          <div class="field-label">連結屬性 <code class="field-key">el_link_attr</code></div>
+          <div class="sel" data-open="false" data-value="2">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Nofollow</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="1"><span class="opt-zh">Dofollow</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">Nofollow</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="el_format">
+          <div class="field-label">連結格式 <code class="field-key">el_format</code></div>
+          <div class="sel" data-open="false" data-value="1">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>In text</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="1"><span class="opt-zh">In text</span></li>
+<li class="opt" data-value="4"><span class="opt-zh">Sources list</span></li>
+<li class="opt" data-value="5"><span class="opt-zh">In text + Sources list</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="el_faq">
+          <div class="field-label">允許 FAQ 連結 <code class="field-key">el_faq</code></div>
+          <div class="sel" data-open="false" data-value="2">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>None</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="2"><span class="opt-zh">None</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+    </section>
+    <section class="panel" id="web">
+      <div class="panel-head"><span class="idx">07</span><h2>連結互聯網</h2><span class="en">Connect to Web</span></div>
+      
+        <div class="field" data-dname="web">
+          <div class="field-label">存取 <code class="field-key">web</code></div>
+          <div class="sel" data-open="false" data-value="0">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>None</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="0"><span class="opt-zh">None</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="web_source">
+          <div class="field-label">搜尋來源 <code class="field-key">web_source</code></div>
+          <div class="sel" data-open="false" data-value="0">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Real-Time Search</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="0"><span class="opt-zh">Real-Time Search</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Real-Time News</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="web_source_date">
+          <div class="field-label">來源時限 <code class="field-key">web_source_date</code></div>
+          <div class="sel" data-open="false" data-value="All Time">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>All Time</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="All Time"><span class="opt-zh">All Time</span></li>
+<li class="opt" data-value="1D"><span class="opt-zh">Last 24 hours</span></li>
+<li class="opt" data-value="7D"><span class="opt-zh">Last Week</span></li>
+<li class="opt" data-value="1M"><span class="opt-zh">Last Month</span></li>
+<li class="opt" data-value="1Y"><span class="opt-zh">Last Year</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="web_exclude_cb">
+          <div class="field-label">排除網址 <code class="field-key">web_exclude_cb</code></div>
+          <div class="sel" data-open="false" data-value="No">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>No</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No"><span class="opt-zh">No</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+    </section>
+    <section class="panel" id="synd">
+      <div class="panel-head"><span class="idx">08</span><h2>社群轉發</h2><span class="en">Syndication</span></div>
+      
+        <div class="field" data-dname="sc1">
+          <div class="field-label">Twitter發帖 <code class="field-key">sc1</code></div>
+          <div class="sel" data-open="false" data-value="No">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>No</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No"><span class="opt-zh">No</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Single</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">Short Thread</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="sc3">
+          <div class="field-label">LinkedIn發帖 <code class="field-key">sc3</code></div>
+          <div class="sel" data-open="false" data-value="No">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>No</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No"><span class="opt-zh">No</span></li>
+<li class="opt" data-value="3"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="sc4">
+          <div class="field-label">Facebook發帖 <code class="field-key">sc4</code></div>
+          <div class="sel" data-open="false" data-value="No">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>No</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No"><span class="opt-zh">No</span></li>
+<li class="opt" data-value="4"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="sc5">
+          <div class="field-label">電子報 <code class="field-key">sc5</code></div>
+          <div class="sel" data-open="false" data-value="No">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>No</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No"><span class="opt-zh">No</span></li>
+<li class="opt" data-value="5"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="sc6">
+          <div class="field-label">WhatsApp訊息 <code class="field-key">sc6</code></div>
+          <div class="sel" data-open="false" data-value="No">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>No</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No"><span class="opt-zh">No</span></li>
+<li class="opt" data-value="6"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="sc7">
+          <div class="field-label">Pinterest Pin <code class="field-key">sc7</code></div>
+          <div class="sel" data-open="false" data-value="No">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>No</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No"><span class="opt-zh">No</span></li>
+<li class="opt" data-value="7"><span class="opt-zh">Yes</span></li></ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" data-dname="sc_link">
+          <div class="field-label">指向頁連結 <code class="field-key">sc_link</code></div>
+          <div class="sel" data-open="false" data-value="No Link">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>No Link</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="No Link"><span class="opt-zh">No Link</span></li>
+<li class="opt" data-value="1"><span class="opt-zh">Placeholder</span></li>
+<li class="opt" data-value="2"><span class="opt-zh">WordPress Link</span></li>
+<li class="opt" data-value="3"><span class="opt-zh">Custom Link</span></li></ul>
+            </div>
+          </div>
+        </div>
+    </section>
+    <section class="panel" id="tgt">
+      <div class="panel-head"><span class="idx">09</span><h2>目標網站</h2><span class="en">Target Website</span></div>
+      
+        <div class="field" data-dname="pc_site_id">
+          <div class="field-label">選擇網站 <code class="field-key">pc_site_id</code></div>
+          <div class="sel" data-open="false" data-value="None">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>None</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋…" aria-label="搜尋"></div>
+              <ul class="sel-list"><li class="opt" data-value="None"><span class="opt-zh">None</span></li>
+<li class="opt" data-value="add"><span class="opt-zh">+ Add a Website</span></li></ul>
+            </div>
+          </div>
+        </div>
+    </section>
+  </main>
+</div>
+
+<div class="runbar" role="contentinfo">
+  <div class="runbar-in">
+    <div class="ledger"><span><b id="lg-formula">模型 0.8 × 1 篇</b><span class="mono"> =</span></span><span class="ledger-final" id="lg-totalrb">0.8 信用點</span></div>
+    <button id="run" class="btn btn-primary" type="button">批量生成</button>
+  </div>
+</div>
+
+<footer class="page-foot"><span>重設計原型 · 純前端 · 唔提交伺服器</span><span>資料來源：seowriting.ai Bulk Article Generation</span></footer>
+
+<script>
+(function(){
+  'use strict';
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+  const LS = (() => {
+    try { localStorage.setItem('__probe','1'); localStorage.removeItem('__probe'); return localStorage; }
+    catch (e) { const mem = {}; return { getItem: k => (k in mem ? mem[k] : null),
+      setItem: (k,v) => { mem[k] = String(v); }, removeItem: k => { delete mem[k]; } }; }
+  })();
+
+  /* ---------- custom select ---------- */
+  function closeAll(except){
+    $$('.sel[data-open="true"]').forEach(sel=>{
+      if (sel === except) return;
+      sel.dataset.open = 'false';
+      sel.querySelector('.sel-btn').setAttribute('aria-expanded','false');
+      sel.querySelector('.sel-pop').hidden = true;
+    });
+  }
+  $$('.sel').forEach(sel=>{
+    const btn = sel.querySelector('.sel-btn');
+    const pop = sel.querySelector('.sel-pop');
+    const search = sel.querySelector('.sel-search');
+    const list = sel.querySelector('.sel-list');
+    let active = -1;
+    function opts(){ return $$('.opt', list).filter(o=>!o.hidden); }
+    function open(){
+      closeAll(sel); sel.dataset.open = 'true';
+      btn.setAttribute('aria-expanded','true');
+      pop.hidden = false;
+      if (search){ search.value=''; opts().forEach(o=>o.hidden=false); search.focus(); }
+      active = -1;
+    }
+    function close(){ sel.dataset.open = 'false'; btn.setAttribute('aria-expanded','false'); pop.hidden = true; }
+    function pick(el){
+      if (!el) return;
+      $$('.opt', list).forEach(o=>{ o.classList.remove('is-cur'); o.removeAttribute('aria-selected'); });
+      el.classList.add('is-cur'); el.setAttribute('aria-selected','true');
+      const zh = el.querySelector('.opt-zh').textContent;
+      const en = el.dataset.en;
+      const val = $('.sel-val', btn); val.innerHTML = '';
+      const z = document.createElement('span'); z.textContent = zh; val.appendChild(z);
+      if (en && en !== zh){ const e = document.createElement('span'); e.className='sel-en'; e.textContent = en; val.appendChild(e); }
+      sel.dataset.value = el.dataset.value;
+      sel.dataset.text = zh;
+      close(); btn.focus();
+      updateCredits(); save();
+    }
+    btn.addEventListener('click', ()=> sel.dataset.open === 'true' ? close() : open());
+    btn.addEventListener('keydown', e=>{
+      if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); }
+    });
+    list.addEventListener('click', e=>{ const el = e.target.closest('.opt'); if (el) pick(el); });
+    list.addEventListener('mousemove', e=>{
+      const el = e.target.closest('.opt'); if (!el) return;
+      opts().forEach(o=>o.classList.remove('is-active')); el.classList.add('is-active');
+    });
+    if (search){
+      search.addEventListener('input', ()=>{
+        const q = search.value.trim().toLowerCase();
+        opts().forEach(o=>{
+          const en = (o.dataset.en||'').toLowerCase();
+          const zh = o.querySelector('.opt-zh').textContent.toLowerCase();
+          o.hidden = q && !(en.includes(q) || zh.includes(q));
+        });
+        active = -1;
+      });
+      search.addEventListener('keydown', e=>{
+        if (e.key === 'ArrowDown'){ e.preventDefault(); move(1); }
+        if (e.key === 'Enter'){ e.preventDefault(); const a = opts()[active]; pick(a || opts()[0]); }
+      });
+    }
+    function move(dd){
+      const list2 = opts(); if (!list2.length) return;
+      active = (active + dd + list2.length) % list2.length;
+      list2.forEach(o=>o.classList.remove('is-active'));
+      const el = list2[active]; el.classList.add('is-active');
+      el.scrollIntoView({block:'nearest'});
+    }
+    sel.addEventListener('keydown', e=>{
+      if (pop.hidden) return;
+      if (e.key === 'ArrowDown'){ e.preventDefault(); move(1); }
+      if (e.key === 'ArrowUp'){ e.preventDefault(); move(-1); }
+      if (e.key === 'Escape'){ e.preventDefault(); close(); btn.focus(); }
+    });
+    sel.addEventListener('keydown', e=>{
+      if (pop.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp')){ e.preventDefault(); open(); }
+    });
+  });
+  document.addEventListener('click', e=>{ if (!e.target.closest('.sel')) closeAll(null); });
+  document.addEventListener('keydown', e=>{ if (e.key === 'Escape') closeAll(null); });
+
+  /* ---------- AUTO fields: type + size (reversible) ---------- */
+  $$('.field-auto').forEach(f=>{
+    const setManual = (manual)=>{ $('[data-role=auto]', f).hidden = manual; $('[data-role=manual]', f).hidden = !manual; save(); };
+    f.addEventListener('click', e=>{
+      const r = e.target.closest('[data-role]'); if (!r || !r.dataset.role) return;
+      if (r.dataset.role === 'to-manual') setManual(true);
+      if (r.dataset.role === 'back') setManual(false);
+    });
+  });
+
+  /* ---------- credits: model credit x N lines ---------- */
+  function selText(dname){
+    const s = document.querySelector('[data-dname="'+dname+'"] .sel');
+    if (!s) return '';
+    const v = s.querySelector('.sel-val > span:first-child');
+    return v ? v.textContent : '';
+  }
+  function modelCredit(){
+    const m = /([\d.]+)\s*credit/.exec(selText('quality'));
+    return m ? parseFloat(m[1]) : 0.8;
+  }
+  function lineCount(){
+    const v = $('#inp_titles').value.trim();
+    if (!v) return 1;
+    return v.split('\n').filter(x=>x.trim()).length;
+  }
+  function updateCredits(){
+    const per = modelCredit();
+    const n = lineCount();
+    const total = +(per * n).toFixed(1);
+    const a = $('#lg-total'); if (a) a.textContent = total;
+    const b = $('#lg-formula'); if (b) b.textContent = '模型 ' + per + ' × ' + n + ' 篇';
+    const c = $('#lg-totalrb'); if (c) c.textContent = total + ' 信用點';
+    const p = $('#ledgerPill'); if (p) p.textContent = total + (total!==1?' credits':' credit');
+  }
+  $('#inp_titles')?.addEventListener('input', updateCredits);
+
+  /* ---------- batch buttons demo ---------- */
+  [[ 'gen_titles','stop_gen_titles','生成標題'],['gen_mk','stop_gen_keywords','生成關鍵字'],['gen_outline','stop_gen_outline','生成大綱']].forEach(([gid,sid,txt])=>{
+    const g = $('#'+gid), s = $('#'+sid); if (!g) return;
+    g.addEventListener('click', ()=>{ g.textContent = txt + '中…'; g.disabled = true; s.disabled = false; });
+    s.addEventListener('click', ()=>{ s.disabled = true; g.textContent = txt; g.disabled = false; });
+  });
+
+  /* ---------- import demo ---------- */
+  $('#import-btn')?.addEventListener('click', ()=> $('#import_file')?.click());
+  $('#import_file')?.addEventListener('change', e=>{
+    const f = e.target.files && e.target.files[0];
+    $('#import-name').textContent = f ? f.name : '';
+  });
+
+  /* ---------- theme ---------- */
+  $('#theme-toggle')?.addEventListener('click', ()=>{
+    const root = document.documentElement;
+    root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    LS.setItem('sw-theme', root.dataset.theme);
+  });
+  const savedTheme = LS.getItem('sw-theme');
+  if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+
+  /* ---------- persistence ---------- */
+  const KEY = 'sw-bulk-generation-zh';
+  function save(){
+    const state = { inp_titles: $('#inp_titles').value, inp_kws: $('#inp_kws').value };
+    $$('.sel').forEach(s=>{ const f = s.closest('.field'); if (f) state[f.dataset.dname] = s.dataset.value ?? ''; });
+    $$('.field-auto').forEach(f=>{ state['auto:'+f.dataset.dname] = $('[data-role=manual]', f).hidden ? 0 : 1; });
+    LS.setItem(KEY, JSON.stringify(state));
+  }
+  function restore(){
+    let state; try { state = JSON.parse(LS.getItem(KEY) || 'null'); } catch(e){ return; }
+    if (!state) return;
+    if (state.inp_titles) $('#inp_titles').value = state.inp_titles;
+    if (state.inp_kws) $('#inp_kws').value = state.inp_kws;
+    $$('.sel').forEach(s=>{
+      const f = s.closest('.field'); const v = state[f.dataset.dname]; if (!v) return;
+      let opt = null; s.querySelectorAll('.opt').forEach(o=>{ if (o.dataset.value === v) opt = o; });
+      if (opt) opt.click();
+    });
+    $$('.field-auto').forEach(f=>{
+      if (state['auto:'+f.dataset.dname]){ $('[data-role=auto]', f).hidden = true; $('[data-role=manual]', f).hidden = false; }
+    });
+  }
+  restore(); updateCredits();
+
+  /* ---------- rail scrollspy (verified algorithm) ---------- */
+  const railLinks = $$('.rail nav a');
+  const panels = $$('.panel');
+  const setActive = id => railLinks.forEach(a => {
+    const is = a.dataset.target === id;
+    a.classList.toggle('active', is);
+    if (is) a.setAttribute('aria-current','true'); else a.removeAttribute('aria-current');
+  });
+  const spy = () => {
+    const line = window.scrollY + 150;
+    let cur = panels[0].id;
+    for (const p of panels) {
+      const top = p.getBoundingClientRect().top + window.scrollY;
+      if (top - 8 <= line) cur = p.id;
+    }
+    if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 4) cur = panels[panels.length-1].id;
+    setActive(cur);
+  };
+  let ticking = false;
+  addEventListener('scroll', () => { if (ticking) return; ticking = true; requestAnimationFrame(() => { spy(); ticking = false; }); }, { passive: true });
+  spy();
+  railLinks.forEach(a=>a.addEventListener('click', e=>{
+    e.preventDefault();
+    const t = document.getElementById(a.dataset.target);
+    if (t) t.scrollIntoView({behavior:'smooth', block:'start'});
+  }));
+
+  /* ---------- demo action ---------- */
+  $('#run')?.addEventListener('click', ()=>{
+    if (!$('#inp_titles').value.trim() && !$('#inp_kws').value.trim()){ $('#inp_titles').focus(); alert('先入至少一列標題或關鍵字，先可以批量生成。'); return; }
+    const btn = $('#run'); btn.disabled = true; btn.textContent = '批量生成中…';
+    setTimeout(()=>{ btn.disabled = false; btn.textContent = '批量生成'; }, 1100);
+  });
+})();
+</script>
+</body>
+</html>
