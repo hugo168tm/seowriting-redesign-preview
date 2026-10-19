@@ -1,0 +1,2329 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>一鍵發布部落格文章 · SEOWriting 編輯台</title>
+<meta name="description" content="1-Click Blog Post 繁體中文介面重設計：完整保留原生頁面 11 個區塊、52 個下拉選單與全部選項。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FBFAF7; --paper-2:#F4F2EC; --card:#FFFFFF;
+  --ink:#16181D; --ink-2:#4C525C; --ink-3:#767C87;
+  --rule:#E3DFD6; --rule-2:#EFEBE2;
+  --mark:#9B2C2C; --mark-soft:#F3E4E1;
+  --auto:#8A6100; --auto-soft:#F6EEDA;
+  --ok:#1F6F4A; --ok-soft:#E6F1EA;
+  --focus:#2F5D8A;
+  --r:3px; --r-lg:5px;
+  --sh:0 1px 2px rgba(22,24,29,.05), 0 8px 24px -12px rgba(22,24,29,.18);
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --serif:"Noto Serif TC","Songti TC","PingFang TC",Georgia,"Times New Roman",serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sp:4px;
+  --step-0:15px; --step-1:17px; --step-2:21px; --step-3:27px; --step-4:36px; --step-5:52px;
+}
+[data-theme="dark"]{
+  --paper:#15171B; --paper-2:#1B1E23; --card:#1E2126;
+  --ink:#F2F0EA; --ink-2:#B9BEC7; --ink-3:#8C929C;
+  --rule:#2C3037; --rule-2:#242830;
+  --mark:#E2836F; --mark-soft:#33211E;
+  --auto:#D9AE5F; --auto-soft:#2E2618;
+  --ok:#6DBE93; --ok-soft:#1B2A22;
+  --focus:#8FB8E0;
+  --sh:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -18px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%; scrollbar-gutter:stable both-edges}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--sans); font-size:var(--step-0); line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:var(--serif); font-weight:600; letter-spacing:.01em; margin:0}
+code,.mono{font-family:var(--mono); font-size:.86em}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--focus); outline-offset:2px; border-radius:2px}
+
+/* ---------- app bar ---------- */
+.appbar{position:sticky; top:0; z-index:40; background:var(--ink); color:#F7F5EF;
+  display:flex; align-items:center; gap:18px; padding:0 18px; height:52px;
+  font-size:13.5px; letter-spacing:.02em}
+[data-theme="dark"] .appbar{background:#0C0E11; border-bottom:1px solid var(--rule)}
+.brand{font-family:var(--serif); font-size:16px; letter-spacing:.04em; white-space:nowrap}
+.brand b{font-weight:700}
+.tools{display:flex; gap:2px; margin-left:6px; overflow:auto; scrollbar-width:none}
+.tools::-webkit-scrollbar{display:none}
+.tool{padding:6px 11px; border-radius:3px; color:#CFCBC2; text-decoration:none; white-space:nowrap}
+.tool:hover{background:rgba(255,255,255,.09); color:#fff}
+.tool[aria-current="page"]{background:#F7F5EF; color:#16181D; font-weight:500}
+.appbar .grow{flex:1}
+.credit-chip{font-family:var(--mono); font-size:12.5px; border:1px solid rgba(255,255,255,.22);
+  border-radius:999px; padding:3px 10px; color:#EDE9E0}
+.icon-btn{background:none; border:1px solid rgba(255,255,255,.2); color:#EDE9E0; width:32px; height:32px;
+  border-radius:3px; cursor:pointer; display:grid; place-items:center; font-size:14px}
+.icon-btn:hover{background:rgba(255,255,255,.1)}
+.avatar{width:30px;height:30px;border-radius:50%;background:#2A2E35;color:#F7F5EF;
+  display:grid;place-items:center;font-size:12px;font-family:var(--mono)}
+
+/* ---------- shell ---------- */
+.shell{display:grid; grid-template-columns:232px minmax(0,1fr); gap:0; max-width:1240px; margin:0 auto}
+
+
+/* ---------- margin rail (signature) ---------- */
+.rail{position:sticky; top:52px; align-self:start; height:calc(100vh - 52px - 66px); display:flex;
+  flex-direction:column; overflow:hidden;
+  padding:26px 16px 16px 22px; border-right:1px solid var(--rule); font-size:13px}
+.rail-scroll{flex:1 1 auto; min-height:0; overflow:auto; padding-right:4px}
+.rail-scroll::-webkit-scrollbar{width:6px}
+.rail-scroll::-webkit-scrollbar-thumb{background:var(--rule); border-radius:3px}
+.rail h2{font-family:var(--sans); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-3); font-weight:500; margin-bottom:12px}
+.rail ol{list-style:none; margin:0; padding:0}
+.rail li{position:relative}
+.rail a{display:flex; align-items:baseline; gap:8px; padding:5px 0 5px 14px; text-decoration:none;
+  color:var(--ink-2); border-left:1px solid var(--rule)}
+.rail a:hover{color:var(--ink)}
+.rail a .num{font-family:var(--mono); font-size:10.5px; color:var(--ink-3)}
+.rail a.on{color:var(--ink); font-weight:600; border-left:2px solid var(--mark); margin-left:-1px; padding-left:13px}
+.rail a.done .num{color:var(--ok)}
+.rail a.on .num{color:var(--mark)}
+.rail a .num{font-variant-numeric:tabular-nums}
+.rail .legend{margin-top:22px; padding-top:14px; border-top:1px solid var(--rule); color:var(--ink-3);
+  font-size:11.5px; line-height:1.6}
+.rail .legend .glyph{color:var(--auto); font-weight:600}
+.rail-card{flex:0 0 auto; margin-top:12px; padding:11px 12px; border:1px solid var(--rule);
+  border-radius:var(--r); background:var(--paper-2)}
+.rail-card h3{font-family:var(--sans); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--ink-3); margin-bottom:8px; font-weight:500}
+.ledger-line{display:flex; justify-content:space-between; align-items:baseline; gap:8px;
+  font-family:var(--mono); font-size:11.5px; color:var(--ink-2); padding:2.5px 0;
+  font-variant-numeric:tabular-nums}
+.ledger-line span:last-child{color:var(--ink); font-weight:500}
+.ledger-line .dots{flex:1; border-bottom:1px dotted var(--rule); transform:translateY(-3px)}
+.ledger-total{display:flex; justify-content:space-between; align-items:baseline; margin-top:8px;
+  padding-top:8px; border-top:1px solid var(--ink); font-family:var(--mono); font-size:15px;
+  color:var(--ink); font-variant-numeric:tabular-nums}
+.ledger-total span:last-child{font-weight:600}
+
+/* ---------- main ---------- */
+main{padding:34px 40px 140px; min-width:0}
+@media (max-width:640px){ main{padding:22px 18px 150px} }
+
+/* masthead — the hero is the headline field itself */
+.masthead{margin-bottom:22px}
+.eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--mark); margin-bottom:10px}
+.masthead h1{font-size:var(--step-5); line-height:1.18; letter-spacing:-.01em; margin-bottom:8px}
+@media (max-width:640px){ .masthead h1{font-size:var(--step-4)} }
+.dek{color:var(--ink-2); max-width:62ch; margin:0 0 22px}
+.headline-field{border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); padding:14px 0 10px;
+  margin-bottom:14px}
+.headline-field .hf-label{padding-right:2px; font-family:var(--mono); font-size:10.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-3); display:flex; justify-content:space-between}
+.headline-field input{width:100%; border:0; background:transparent; color:var(--ink);
+  font-family:var(--serif); font-size:var(--step-3); line-height:1.35; padding:6px 0}
+.headline-field input::placeholder{color:var(--ink-3); font-style:normal; font-weight:400;
+  opacity:1; letter-spacing:0}
+.hf-actions{display:flex; gap:10px; align-items:center; margin-top:6px; flex-wrap:wrap}
+.kw-row{display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-top:16px}
+.kw-field{flex:1 1 260px; min-width:0}
+.kw-field input{width:100%; border:1px solid var(--rule); background:var(--card); border-radius:var(--r);
+  padding:11px 12px; font:inherit; color:var(--ink)}
+.kw-field input:focus{border-color:var(--focus); box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 14%,transparent)}
+.kw-field label{display:block; font-size:12.5px; color:var(--ink-2); margin-bottom:5px}
+
+/* auto summary strip */
+.auto-strip{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:20px}
+.auto-pill{display:inline-flex; align-items:center; gap:7px; border:1px solid var(--auto-soft);
+  background:var(--auto-soft); color:var(--auto); border-radius:999px; padding:4px 11px;
+  font-size:12px; font-weight:500}
+.auto-pill .glyph{font-weight:700; font-family:var(--serif); font-size:13px}
+.auto-pill button{background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;
+  font:inherit;font-size:11.5px;padding:0}
+
+/* panels */
+.panel{border-top:1px solid var(--rule); padding:34px 0 10px}
+#core.panel{padding-top:24px}
+.panel:first-of-type{border-top:1px solid var(--ink)}
+.panel-head{display:flex; align-items:baseline; gap:12px; margin-bottom:14px; padding-bottom:11px;
+  border-bottom:1px solid var(--rule-2); flex-wrap:wrap}
+.panel-head h2{font-size:var(--step-2)}
+.panel-head .idx{font-family:var(--mono); font-size:11px; color:var(--ink-3)}
+.panel-head .en{font-size:11.5px; color:var(--ink-3); letter-spacing:.04em}
+.panel > .lead{color:var(--ink-2); font-size:13.5px; max-width:70ch; margin:0 0 18px}
+
+/* fields */
+.grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px 26px}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid .span-2{grid-column:span 2}
+@media (max-width:760px){ .grid,.grid.three{grid-template-columns:1fr} .grid .span-2{grid-column:auto} }
+.field{min-width:0}
+.field-head{display:flex; align-items:center; gap:8px; margin-bottom:6px; min-height:20px}
+.field-label{font-size:13.5px; font-weight:500; color:var(--ink)}
+.field-key{font-size:10.5px; color:var(--ink-3); background:var(--paper-2); border:1px solid var(--rule-2);
+  border-radius:2px; padding:0 4px}
+.sel-count{font-family:var(--mono); font-size:10.5px; color:var(--ink-3);
+  background:var(--paper-2); border-radius:2px; padding:0 4px}
+.hint{font-size:12px; color:var(--ink-3); margin:6px 0 0; line-height:1.5}
+
+/* custom select */
+.sel{position:relative}
+.sel-btn{width:100%; min-height:44px; display:flex; align-items:center; justify-content:space-between; gap:8px;
+  background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:10px 11px;
+  font:inherit; font-size:13.5px; color:var(--ink); text-align:left; cursor:pointer;
+  transition:border-color .18s ease, box-shadow .18s ease}
+.sel-btn:hover{border-color:var(--ink-3)}
+.sel[data-open="true"] .sel-btn{border-color:var(--focus); box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 14%,transparent)}
+.sel-val{display:flex; flex-direction:column; gap:1px; min-width:0}
+.sel-val:empty::before{content:"未選擇"; color:var(--ink-3)}
+.sel-val > span:first-child{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.sel-en{font-size:11px; color:var(--ink-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.chev{width:16px; height:16px; fill:none; stroke:var(--ink-3); stroke-width:1.6; flex:0 0 auto}
+.sel-pop{position:absolute; z-index:30; top:calc(100% + 4px); left:0; right:0; background:var(--card);
+  border:1px solid var(--rule); border-radius:var(--r-lg); box-shadow:var(--sh); overflow:hidden}
+.sel-search-wrap{padding:8px; border-bottom:1px solid var(--rule-2)}
+.sel-search{width:100%; border:1px solid var(--rule); border-radius:2px; padding:7px 9px; font:inherit;
+  font-size:12.5px; background:var(--paper)}
+.sel-list{list-style:none; margin:0; padding:5px; max-height:264px; overflow:auto}
+.pop-wide .sel-list{max-height:360px}
+.opt{padding:7px 9px; border-radius:2px; cursor:pointer; display:flex; flex-direction:column; gap:1px;
+  font-size:13.5px}
+.opt-zh{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.opt-en{font-size:11px; color:var(--ink-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.opt:hover,.opt.is-active{background:var(--paper-2)}
+.opt.is-cur{color:var(--mark); font-weight:500}
+.opt.is-cur::after{content:"目前"; font-family:var(--mono); font-size:9.5px; color:var(--mark);
+  border:1px solid currentColor; border-radius:2px; padding:0 3px; margin-left:6px; align-self:flex-start}
+
+/* auto card */
+.auto-card{min-height:44px; border:1px dashed var(--auto); background:var(--auto-soft);
+  border-radius:var(--r); padding:8px 11px; display:flex; align-items:center; gap:9px; flex-wrap:wrap}
+.auto-badge{font-family:var(--mono); font-size:10px; letter-spacing:.12em; background:var(--auto);
+  color:var(--paper); border-radius:2px; padding:1px 6px}
+.auto-card .txt{font-size:12.5px; color:var(--auto); font-weight:500}
+.auto-card button{margin-left:auto; background:none; border:0; color:var(--ink-2); font:inherit;
+  font-size:12px; text-decoration:underline; cursor:pointer; padding:0}
+.auto-card button:hover{color:var(--ink)}
+.field[data-auto="false"] .auto-card{display:none}
+.field[data-auto="true"] .manual-wrap{display:none}
+.field[data-auto="false"] .manual-wrap{display:block}
+.field[data-auto="false"] .back-to-auto{display:inline-block}
+
+/* segmented */
+.seg{display:inline-flex; border:1px solid var(--rule); border-radius:var(--r); overflow:hidden;
+  background:var(--card)}
+.seg-btn{border:0; background:none; font:inherit; font-size:13px; color:var(--ink-2); padding:7px 13px; min-height:38px;
+  cursor:pointer; border-right:1px solid var(--rule-2); transition:background .15s ease,color .15s ease}
+.seg-btn:last-child{border-right:0}
+.seg-btn:hover{background:var(--paper-2); color:var(--ink)}
+.seg-btn.is-on{background:var(--ink); color:var(--paper); font-weight:500}
+[data-theme="dark"] .seg-btn.is-on{background:var(--ink); color:#15171B}
+
+/* inputs */
+.inp,textarea.inp{width:100%; border:1px solid var(--rule); background:var(--card); border-radius:var(--r);
+  padding:10px 11px; font:inherit; font-size:13.5px; color:var(--ink); transition:border-color .18s ease}
+.inp:focus{border-color:var(--focus); box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 14%,transparent);
+  outline:none}
+textarea.inp{min-height:84px; resize:vertical; line-height:1.6}
+.inp::placeholder{color:var(--ink-3)}
+.with-counter{position:relative}
+.counter{position:absolute; right:9px; bottom:7px; font-family:var(--mono); font-size:10.5px;
+  color:var(--ink-3); background:var(--card); padding:0 3px}
+.check{display:flex; gap:9px; align-items:flex-start; font-size:13px; color:var(--ink-2); cursor:pointer}
+.check input{margin-top:3px; accent-color:var(--mark); width:15px; height:15px}
+.check b{color:var(--ink); font-weight:500}
+
+/* buttons */
+.btn{font:inherit; font-size:13.5px; border-radius:var(--r); padding:9px 15px; cursor:pointer;
+  border:1px solid var(--rule); background:var(--card); color:var(--ink);
+  transition:background .16s ease, border-color .16s ease, transform .1s ease}
+.btn:hover{border-color:var(--ink-3); background:var(--paper-2)}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--mark); border-color:var(--mark); color:#fff; font-weight:500}
+.btn-primary:hover{background:#872523; border-color:#872523}
+.btn-ghost{background:none; border-color:transparent; color:var(--ink-2); text-decoration:underline;
+  padding-left:0; padding-right:0}
+.btn-sm{font-size:12.5px; padding:6px 10px}
+.btn-row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+
+/* seo keyword block */
+.kw-box{border:1px solid var(--rule); border-radius:var(--r); background:var(--card); padding:11px}
+.kw-chips{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; min-height:24px}
+.chip{display:inline-flex; align-items:center; gap:6px; background:var(--paper-2); border:1px solid var(--rule-2);
+  border-radius:999px; padding:2px 9px; font-size:12.5px}
+.chip button{background:none;border:0;color:var(--ink-3);cursor:pointer;font-size:13px;line-height:1;padding:0}
+.kw-empty{font-size:12.5px; color:var(--auto); background:var(--auto-soft); border:1px dashed var(--auto);
+  border-radius:var(--r); padding:8px 10px}
+.kw-tools{display:flex; gap:8px; align-items:center; margin-top:9px; flex-wrap:wrap}
+
+/* syndication matrix */
+.matrix-wrap{overflow-x:auto}
+.matrix{width:100%; border-collapse:collapse; font-size:13px; min-width:520px}
+.matrix th{text-align:left; font-weight:500; color:var(--ink-3); font-size:11.5px; letter-spacing:.08em;
+  text-transform:uppercase; padding:0 10px 8px 0; border-bottom:1px solid var(--rule)}
+.matrix td{padding:9px 10px 9px 0; border-bottom:1px solid var(--rule-2); vertical-align:middle}
+.matrix tr:last-child td{border-bottom:0}
+.matrix .plat{display:flex; align-items:center; gap:9px}
+.matrix .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-3);flex:0 0 auto}
+.matrix .plat b{font-weight:500}
+.matrix .en{color:var(--ink-3); font-size:11.5px}
+
+/* run bar */
+.runbar{position:fixed; left:0; right:0; bottom:0; z-index:35; background:var(--card);
+  border-top:1px solid var(--ink); box-shadow:0 -8px 24px -18px rgba(0,0,0,.5)}
+[data-theme="dark"] .runbar{border-top-color:var(--rule)}
+.runbar-in{max-width:1240px; margin:0 auto; padding:11px 22px; display:flex; align-items:center; gap:18px;
+  flex-wrap:wrap}
+.ledger{display:flex; gap:16px; flex-wrap:wrap; font-family:var(--mono); font-size:12px; color:var(--ink-2)}
+.ledger span b{color:var(--ink); font-weight:500}
+.runbar .spacer{flex:1}
+.runbar .ledger span{white-space:nowrap}
+.saved{font-size:11.5px; color:var(--ink-3); font-family:var(--mono)}
+.total{font-family:var(--mono); font-size:15px; color:var(--ink)}
+.total b{font-weight:600}
+
+footer.page-foot{max-width:1240px; margin:0 auto; padding:26px 40px 40px; color:var(--ink-3);
+  font-size:12px; border-top:1px solid var(--rule); display:flex; gap:16px; flex-wrap:wrap}
+@media (max-width:640px){ footer.page-foot{padding:22px 18px 40px} }
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
+
+
+/* ---------- outline editor / must-have / info box ---------- */
+.musthave{font-size:10px; letter-spacing:.1em; color:var(--mark); border:1px solid currentColor;
+  border-radius:2px; padding:1px 6px; font-family:var(--mono); text-transform:uppercase}
+.info-box{border:1px solid var(--rule); background:var(--paper-2); border-radius:var(--r);
+  padding:12px 14px; margin-top:4px}
+.info-box > b{font-size:12.5px; letter-spacing:.02em}
+.info-box ul{margin:7px 0 0; padding-left:17px; color:var(--ink-2); font-size:12.5px; line-height:1.75}
+.info-box li b{color:var(--ink); font-weight:500}
+.outline-editor{border:1px solid var(--rule); border-radius:var(--r); background:var(--card); padding:10px}
+.oh-list{list-style:none; margin:0 0 10px; padding:0}
+.oh-row{display:flex; align-items:center; gap:9px; padding:7px 9px; border:1px solid var(--rule-2);
+  border-radius:2px; background:var(--paper); margin-bottom:6px; cursor:grab}
+.oh-row:active{cursor:grabbing}
+.oh-row.is-drag{opacity:.4; border-style:dashed}
+.oh-handle{color:var(--ink-3); font-family:var(--mono); font-size:13px; letter-spacing:-1px; user-select:none}
+.oh-text{flex:1; font-size:13.5px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.oh-del{background:none; border:0; color:var(--ink-3); font-size:15px; line-height:1; cursor:pointer; padding:0 2px}
+.oh-del:hover{color:var(--mark)}
+.oh-tools{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+@media (max-width:900px){ .oh-tools .inp{flex:1 1 140px} }
+
+/* ---------- responsive (last block on purpose) ---------- */
+.appbar{flex-wrap:nowrap}
+.appbar .tools{flex:1 1 auto; min-width:0; overflow:hidden}
+.appbar .credit-chip,.appbar .icon-btn,.appbar .avatar{flex:0 0 auto}
+.credit-chip{white-space:nowrap}
+@media (max-width:1180px){ .tool:not([aria-current]){display:none} }
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .rail{display:none}
+  main{padding:20px 18px 128px}
+  .credit-chip{display:none}
+  .appbar{padding:0 12px; gap:10px}
+  .runbar-in{padding:9px 14px; gap:10px}
+  .runbar .ledger{display:none}
+  .saved{display:none}
+  .masthead h1{font-size:34px}
+  .headline-field input{font-size:22px}
+}
+@media (max-width:520px){
+  .appbar{gap:8px}
+  .brand{font-size:14px}
+  .tool{padding:6px 8px; font-size:12.5px}
+  .runbar-in .total{font-size:14px}
+  .btn{padding:9px 11px; font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<header class="appbar">
+  <div class="brand">SEO<b>Writing</b></div>
+  <nav class="tools" aria-label="工具">
+    <a class="tool" href="#" aria-current="page">一鍵部落格文章</a>
+    <a class="tool" href="#">批量文章生成</a>
+    <a class="tool" href="#">Super Page</a>
+    <a class="tool" href="#">改寫工具</a>
+    <a class="tool" href="#">Builder</a>
+  </nav>
+  <div class="grow"></div>
+  <span class="credit-chip" title="目前方案剩餘信用點">1,240 信用點</span>
+  <button class="icon-btn" id="theme-toggle" aria-label="切換深色模式" title="切換深色模式">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+      <circle cx="12" cy="12" r="8"></circle><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" stroke="none"></path></svg>
+  </button>
+  <span class="avatar" title="示例帳戶 · Free">示</span>
+</header>
+
+<div class="shell">
+  <nav class="rail" aria-label="設定流程">
+    <div class="rail-scroll">
+    <h2>設定流程</h2>
+    <ol>
+          <li><a href="#core" data-target="core"><span class="num">01</span>核心設定</a></li>
+          <li><a href="#voice" data-target="voice"><span class="num">02</span>品牌聲音</a></li>
+          <li><a href="#details" data-target="details"><span class="num">03</span>要包含的細節</a></li>
+          <li><a href="#media" data-target="media"><span class="num">04</span>媒體中心</a></li>
+          <li><a href="#structure" data-target="structure"><span class="num">05</span>文章結構</a></li>
+          <li><a href="#seo" data-target="seo"><span class="num">06</span>SEO 關鍵字</a></li>
+          <li><a href="#ilink" data-target="ilink"><span class="num">07</span>內部連結</a></li>
+          <li><a href="#elink" data-target="elink"><span class="num">08</span>外部連結</a></li>
+          <li><a href="#web" data-target="web"><span class="num">09</span>連接網絡</a></li>
+          <li><a href="#synd" data-target="synd"><span class="num">10</span>多平台轉發</a></li>
+          <li><a href="#outline" data-target="outline"><span class="num">11</span>大綱編輯器</a></li>
+          <li><a href="#publish" data-target="publish"><span class="num">12</span>發佈</a></li>
+    </ol>
+    <div class="legend">
+      <span class="glyph">※</span> = 由系統自動決定
+    </div>
+    </div>
+    <div class="rail-card">
+      <h3>信用點估算</h3>
+      <div class="ledger-total" style="border-top:0; margin-top:0; padding-top:0">
+        <span>合計</span><span id="lg-total">0.9</span></div>
+      <p class="hint mono" style="margin:6px 0 0; font-size:11px">
+        模型 <span id="lg-model">0.8</span> · 評分 <span id="lg-score">0.1</span> ·
+        圖片 <span id="lg-img">0</span></p>
+    </div>
+  </nav>
+
+  <main>
+    <header class="masthead">
+      <div class="eyebrow">工具 01 · 1-Click Blog Post</div>
+      <h1>一鍵發布部落格文章</h1>
+      <p class="dek">你只需要一個標題或主關鍵字。系統會掃 Google 前 10 名、拆解對手結構，
+        再寫成一篇可以直接發佈的文章。</p>
+
+      <div class="headline-field">
+        <div class="hf-label"><span>文章標題</span><span><span id="title-count">0</span>/100</span></div>
+        <input id="inp_title" name="title" maxlength="100" type="text"
+               placeholder="今天要寫什麼？例：2026 年被動收入完整指南" aria-label="文章標題">
+        <div class="hf-actions">
+          <button type="button" class="btn btn-sm" id="gen_title">幫我想標題</button>
+          <span class="hint" style="margin:0">留空嘅話，系統會用主關鍵字自動生成標題。</span>
+        </div>
+      </div>
+
+      <div class="kw-row">
+        <div class="kw-field">
+          <label for="main_keyword">主關鍵字</label>
+          <input id="main_keyword" name="keyword" type="text"
+                 placeholder="例：被動收入 香港" autocomplete="off">
+        </div>
+        <button type="button" class="btn" id="kw-suggest">關鍵字建議</button>
+      </div>
+
+      <div class="auto-strip">
+        <span class="auto-pill"><span class="glyph">※</span>
+          4 項由系統自動決定：文章類型 · 文章尺寸 · NLP 關鍵字 · 大綱</span>
+        <button type="button" class="btn btn-sm btn-ghost" data-jump="core">逐項調整 →</button>
+      </div>
+    </header>
+
+    <form id="gen-form" novalidate>
+    <section class="panel" id="core" aria-labelledby="core-h">
+      <div class="panel-head">
+        <span class="idx">01</span>
+        <h2 id="core-h">核心設定</h2>
+        <span class="en">Core Settings</span>
+      </div>
+      <p class="lead">語言、文章類型、尺寸、語氣、模型與目標國家。呢 9 個選單決定整篇文章嘅骨架。</p>
+      <div class="grid">
+      <div class="field field-auto" data-dname="type" data-auto="true">
+        <div class="field-head"><label class="field-label">文章類型</label>
+          <code class="field-key">type</code></div>
+        <div class="auto-card">
+          <span class="auto-badge">AUTO</span>
+          <span class="txt">與 Google 前 10 名一致</span>
+          <button type="button" class="to-manual">改為手動</button>
+        </div>
+        <div class="manual-wrap">
+        <div class="field-head">
+          <label class="field-label">文章類型</label>
+          
+          <code class="field-key">type</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">matched to Google's top 10</span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt" data-value="" data-en="None"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+<li role="option" class="opt" data-value="How-to guide" data-en="How-to guide"><span class="opt-zh">教學指南</span><span class="opt-en">How-to guide</span></li>
+<li role="option" class="opt" data-value="Listicle" data-en="Listicle"><span class="opt-zh">清單式文章</span><span class="opt-en">Listicle</span></li>
+<li role="option" class="opt" data-value="Product review" data-en="Product review"><span class="opt-zh">產品評測</span><span class="opt-en">Product review</span></li>
+<li role="option" class="opt" data-value="News" data-en="News"><span class="opt-zh">新聞</span><span class="opt-en">News</span></li>
+<li role="option" class="opt" data-value="Comparison" data-en="Comparison"><span class="opt-zh">比較</span><span class="opt-en">Comparison</span></li>
+<li role="option" class="opt" data-value="Case study" data-en="Case study"><span class="opt-zh">案例研究</span><span class="opt-en">Case study</span></li>
+<li role="option" class="opt" data-value="Opinion piece" data-en="Opinion piece"><span class="opt-zh">觀點評論</span><span class="opt-en">Opinion piece</span></li>
+<li role="option" class="opt" data-value="Tutorial" data-en="Tutorial"><span class="opt-zh">操作教學</span><span class="opt-en">Tutorial</span></li>
+<li role="option" class="opt" data-value="Roundup post" data-en="Roundup post"><span class="opt-zh">彙整文</span><span class="opt-en">Roundup post</span></li>
+<li role="option" class="opt" data-value="Q&amp;A page" data-en="Q&A page"><span class="opt-zh">問答頁</span><span class="opt-en">Q&A page</span></li>
+            </ul>
+          </div>
+        
+        </div>
+        <button type="button" class="btn btn-sm back-to-auto" hidden>改回自動</button>
+      </div>
+      <div class="field field-auto" data-dname="size" data-auto="true">
+        <div class="field-head"><label class="field-label">文章尺寸</label>
+          <code class="field-key">size</code></div>
+        <div class="auto-card">
+          <span class="auto-badge">AUTO</span>
+          <span class="txt">與 Google 前 10 名一致</span>
+          <button type="button" class="to-manual">改為手動</button>
+        </div>
+        <div class="manual-wrap">
+        <div class="field-head">
+          <label class="field-label">文章尺寸</label>
+          
+          <code class="field-key">size</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val"></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt" data-value="xs" data-en="X-Small"><span class="opt-zh">特小</span><span class="opt-en">X-Small</span></li>
+<li role="option" class="opt" data-value="s" data-en="Small"><span class="opt-zh">小</span><span class="opt-en">Small</span></li>
+<li role="option" class="opt" data-value="m" data-en="Medium"><span class="opt-zh">中</span><span class="opt-en">Medium</span></li>
+<li role="option" class="opt" data-value="l" data-en="Large"><span class="opt-zh">大</span><span class="opt-en">Large</span></li>
+            </ul>
+          </div>
+        
+        </div>
+        <button type="button" class="btn btn-sm back-to-auto" hidden>改回自動</button>
+      </div>
+      <div class="field" data-dname="lang">
+        <div class="field-head">
+          <label class="field-label">語言</label>
+          <span class="sel-count">59</span>
+          <code class="field-key">lang</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">英文（美國）<span class="sel-en">English (US)</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            <div class="sel-search-wrap"><input class="sel-search" type="search" placeholder="搜尋…" aria-label="搜尋選項"></div>
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="en" data-en="English (US)" aria-selected="true"><span class="opt-zh">英文（美國）</span><span class="opt-en">English (US)</span></li>
+<li role="option" class="opt" data-value="gb" data-en="English (UK)"><span class="opt-zh">英文（英國）</span><span class="opt-en">English (UK)</span></li>
+<li role="option" class="opt" data-value="au" data-en="English (Australia)"><span class="opt-zh">英文（澳洲）</span><span class="opt-en">English (Australia)</span></li>
+<li role="option" class="opt" data-value="ca" data-en="English (Canada)"><span class="opt-zh">英文（加拿大）</span><span class="opt-en">English (Canada)</span></li>
+<li role="option" class="opt" data-value="af" data-en="Afrikaans"><span class="opt-zh">南非荷蘭語</span><span class="opt-en">Afrikaans</span></li>
+<li role="option" class="opt" data-value="al" data-en="Albanian"><span class="opt-zh">阿爾巴尼亞語</span><span class="opt-en">Albanian</span></li>
+<li role="option" class="opt" data-value="sa" data-en="Arabic"><span class="opt-zh">阿拉伯語</span><span class="opt-en">Arabic</span></li>
+<li role="option" class="opt" data-value="am" data-en="Armenian"><span class="opt-zh">亞美尼亞語</span><span class="opt-en">Armenian</span></li>
+<li role="option" class="opt" data-value="az" data-en="Azerbaijani"><span class="opt-zh">亞塞拜然語</span><span class="opt-en">Azerbaijani</span></li>
+<li role="option" class="opt" data-value="bd" data-en="Bengali"><span class="opt-zh">孟加拉語</span><span class="opt-en">Bengali</span></li>
+<li role="option" class="opt" data-value="bg" data-en="Bulgarian"><span class="opt-zh">保加利亞語</span><span class="opt-en">Bulgarian</span></li>
+<li role="option" class="opt" data-value="cn" data-en="Chinese (Simplified)"><span class="opt-zh">中文（簡體）</span><span class="opt-en">Chinese (Simplified)</span></li>
+<li role="option" class="opt" data-value="c1" data-en="Chinese (Traditional)"><span class="opt-zh">中文（繁體）</span><span class="opt-en">Chinese (Traditional)</span></li>
+<li role="option" class="opt" data-value="hr" data-en="Croatian"><span class="opt-zh">克羅埃西亞語</span><span class="opt-en">Croatian</span></li>
+<li role="option" class="opt" data-value="cz" data-en="Czech"><span class="opt-zh">捷克語</span><span class="opt-en">Czech</span></li>
+<li role="option" class="opt" data-value="dk" data-en="Danish"><span class="opt-zh">丹麥語</span><span class="opt-en">Danish</span></li>
+<li role="option" class="opt" data-value="nl" data-en="Dutch"><span class="opt-zh">荷蘭語</span><span class="opt-en">Dutch</span></li>
+<li role="option" class="opt" data-value="ee" data-en="Estonian"><span class="opt-zh">愛沙尼亞語</span><span class="opt-en">Estonian</span></li>
+<li role="option" class="opt" data-value="ph" data-en="Filipino"><span class="opt-zh">菲律賓語</span><span class="opt-en">Filipino</span></li>
+<li role="option" class="opt" data-value="fi" data-en="Finnish"><span class="opt-zh">芬蘭語</span><span class="opt-en">Finnish</span></li>
+<li role="option" class="opt" data-value="fr" data-en="French"><span class="opt-zh">法語</span><span class="opt-en">French</span></li>
+<li role="option" class="opt" data-value="ge" data-en="Georgian"><span class="opt-zh">喬治亞語</span><span class="opt-en">Georgian</span></li>
+<li role="option" class="opt" data-value="de" data-en="German"><span class="opt-zh">德語</span><span class="opt-en">German</span></li>
+<li role="option" class="opt" data-value="gr" data-en="Greek"><span class="opt-zh">希臘語</span><span class="opt-en">Greek</span></li>
+<li role="option" class="opt" data-value="il" data-en="Hebrew"><span class="opt-zh">希伯來語</span><span class="opt-en">Hebrew</span></li>
+<li role="option" class="opt" data-value="in" data-en="Hindi"><span class="opt-zh">印地語</span><span class="opt-en">Hindi</span></li>
+<li role="option" class="opt" data-value="hu" data-en="Hungarian"><span class="opt-zh">匈牙利語</span><span class="opt-en">Hungarian</span></li>
+<li role="option" class="opt" data-value="id" data-en="Indonesian"><span class="opt-zh">印尼語</span><span class="opt-en">Indonesian</span></li>
+<li role="option" class="opt" data-value="it" data-en="Italian"><span class="opt-zh">義大利語</span><span class="opt-en">Italian</span></li>
+<li role="option" class="opt" data-value="jp" data-en="Japanese"><span class="opt-zh">日語</span><span class="opt-en">Japanese</span></li>
+<li role="option" class="opt" data-value="kz" data-en="Kazakh"><span class="opt-zh">哈薩克語</span><span class="opt-en">Kazakh</span></li>
+<li role="option" class="opt" data-value="kr" data-en="Korean"><span class="opt-zh">韓語</span><span class="opt-en">Korean</span></li>
+<li role="option" class="opt" data-value="kg" data-en="Kyrgyz"><span class="opt-zh">吉爾吉斯語</span><span class="opt-en">Kyrgyz</span></li>
+<li role="option" class="opt" data-value="lv" data-en="Latvian"><span class="opt-zh">拉脫維亞語</span><span class="opt-en">Latvian</span></li>
+<li role="option" class="opt" data-value="lt" data-en="Lithuanian"><span class="opt-zh">立陶宛語</span><span class="opt-en">Lithuanian</span></li>
+<li role="option" class="opt" data-value="mk" data-en="Macedonian"><span class="opt-zh">馬其頓語</span><span class="opt-en">Macedonian</span></li>
+<li role="option" class="opt" data-value="my" data-en="Malay"><span class="opt-zh">馬來語</span><span class="opt-en">Malay</span></li>
+<li role="option" class="opt" data-value="no" data-en="Norwegian"><span class="opt-zh">挪威語</span><span class="opt-en">Norwegian</span></li>
+<li role="option" class="opt" data-value="ir" data-en="Persian"><span class="opt-zh">波斯語</span><span class="opt-en">Persian</span></li>
+<li role="option" class="opt" data-value="pl" data-en="Polish"><span class="opt-zh">波蘭語</span><span class="opt-en">Polish</span></li>
+<li role="option" class="opt" data-value="br" data-en="Portuguese (Brazilian)"><span class="opt-zh">葡萄牙語（巴西）</span><span class="opt-en">Portuguese (Brazilian)</span></li>
+<li role="option" class="opt" data-value="pt" data-en="Portuguese (European)"><span class="opt-zh">葡萄牙語（歐洲）</span><span class="opt-en">Portuguese (European)</span></li>
+<li role="option" class="opt" data-value="ro" data-en="Romanian"><span class="opt-zh">羅馬尼亞語</span><span class="opt-en">Romanian</span></li>
+<li role="option" class="opt" data-value="ru" data-en="Russian"><span class="opt-zh">俄語</span><span class="opt-en">Russian</span></li>
+<li role="option" class="opt" data-value="rs" data-en="Serbian"><span class="opt-zh">塞爾維亞語</span><span class="opt-en">Serbian</span></li>
+<li role="option" class="opt" data-value="lk" data-en="Sinhala"><span class="opt-zh">僧伽羅語</span><span class="opt-en">Sinhala</span></li>
+<li role="option" class="opt" data-value="sk" data-en="Slovak"><span class="opt-zh">斯洛伐克語</span><span class="opt-en">Slovak</span></li>
+<li role="option" class="opt" data-value="si" data-en="Slovenian"><span class="opt-zh">斯洛維尼亞語</span><span class="opt-en">Slovenian</span></li>
+<li role="option" class="opt" data-value="es" data-en="Spanish"><span class="opt-zh">西班牙語</span><span class="opt-en">Spanish</span></li>
+<li role="option" class="opt" data-value="ke" data-en="Swahili"><span class="opt-zh">斯瓦希里語</span><span class="opt-en">Swahili</span></li>
+<li role="option" class="opt" data-value="se" data-en="Swedish"><span class="opt-zh">瑞典語</span><span class="opt-en">Swedish</span></li>
+<li role="option" class="opt" data-value="tj" data-en="Tajik"><span class="opt-zh">塔吉克語</span><span class="opt-en">Tajik</span></li>
+<li role="option" class="opt" data-value="th" data-en="Thai"><span class="opt-zh">泰語</span><span class="opt-en">Thai</span></li>
+<li role="option" class="opt" data-value="tr" data-en="Turkish"><span class="opt-zh">土耳其語</span><span class="opt-en">Turkish</span></li>
+<li role="option" class="opt" data-value="tm" data-en="Turkmen"><span class="opt-zh">土庫曼語</span><span class="opt-en">Turkmen</span></li>
+<li role="option" class="opt" data-value="ua" data-en="Ukrainian"><span class="opt-zh">烏克蘭語</span><span class="opt-en">Ukrainian</span></li>
+<li role="option" class="opt" data-value="pk" data-en="Urdu"><span class="opt-zh">烏爾都語</span><span class="opt-en">Urdu</span></li>
+<li role="option" class="opt" data-value="uz" data-en="Uzbek"><span class="opt-zh">烏茲別克語</span><span class="opt-en">Uzbek</span></li>
+<li role="option" class="opt" data-value="vn" data-en="Vietnamese"><span class="opt-zh">越南語</span><span class="opt-en">Vietnamese</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="tone">
+        <div class="field-head">
+          <label class="field-label">語氣</label>
+          <span class="sel-count">13</span>
+          <code class="field-key">tone</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">親切<span class="sel-en">Friendly</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            <div class="sel-search-wrap"><input class="sel-search" type="search" placeholder="搜尋…" aria-label="搜尋選項"></div>
+            <ul class="sel-list">
+<li role="option" class="opt" data-value="" data-en="None"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+<li role="option" class="opt is-cur" data-value="friendly" data-en="Friendly" aria-selected="true"><span class="opt-zh">親切</span><span class="opt-en">Friendly</span></li>
+<li role="option" class="opt" data-value="professional" data-en="Professional"><span class="opt-zh">專業</span><span class="opt-en">Professional</span></li>
+<li role="option" class="opt" data-value="informational" data-en="Informational"><span class="opt-zh">資訊性</span><span class="opt-en">Informational</span></li>
+<li role="option" class="opt" data-value="transactional" data-en="Transactional"><span class="opt-zh">交易導向</span><span class="opt-en">Transactional</span></li>
+<li role="option" class="opt" data-value="inspirational" data-en="Inspirational"><span class="opt-zh">激勵人心</span><span class="opt-en">Inspirational</span></li>
+<li role="option" class="opt" data-value="neutral" data-en="Neutral"><span class="opt-zh">中性</span><span class="opt-en">Neutral</span></li>
+<li role="option" class="opt" data-value="witty" data-en="Witty"><span class="opt-zh">機智</span><span class="opt-en">Witty</span></li>
+<li role="option" class="opt" data-value="casual" data-en="Casual"><span class="opt-zh">輕鬆隨意</span><span class="opt-en">Casual</span></li>
+<li role="option" class="opt" data-value="authoritative" data-en="Authoritative"><span class="opt-zh">權威</span><span class="opt-en">Authoritative</span></li>
+<li role="option" class="opt" data-value="encouraging" data-en="Encouraging"><span class="opt-zh">鼓勵</span><span class="opt-en">Encouraging</span></li>
+<li role="option" class="opt" data-value="persuasive" data-en="Persuasive"><span class="opt-zh">說服</span><span class="opt-en">Persuasive</span></li>
+<li role="option" class="opt" data-value="poetic" data-en="Poetic"><span class="opt-zh">詩意</span><span class="opt-en">Poetic</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="quality">
+        <div class="field-head">
+          <label class="field-label">AI 模型</label>
+          <span class="sel-count">27</span>
+          <code class="field-key">quality</code>
+        </div>
+        <div class="sel pop-wide" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">0.8 信用點｜SEOWriting Engine（多模型混合）<span class="sel-en">0.8 credits SEOWriting Engine Mix of models and expertise</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            <div class="sel-search-wrap"><input class="sel-search" type="search" placeholder="搜尋…" aria-label="搜尋選項"></div>
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="100" data-en="0.8 credits SEOWriting Engine Mix of models and expertise" aria-selected="true"><span class="opt-zh">0.8 信用點｜SEOWriting Engine（多模型混合）</span><span class="opt-en">0.8 credits SEOWriting Engine Mix of models and expertise</span></li>
+<li role="option" class="opt" data-value="101" data-en="0.8 credits GPT-6 Luna Fast, light GPT-6 model by OpenAI"><span class="opt-zh">0.8 信用點｜GPT-6 Luna（OpenAI 輕快版）</span><span class="opt-en">0.8 credits GPT-6 Luna Fast, light GPT-6 model by OpenAI</span></li>
+<li role="option" class="opt" data-value="113" data-en="0.8 credits Claude Haiku 5.5 Fast, light Claude model by Anthropic"><span class="opt-zh">0.8 信用點｜Claude Haiku 5.5（Anthropic 輕快版）</span><span class="opt-en">0.8 credits Claude Haiku 5.5 Fast, light Claude model by Anthropic</span></li>
+<li role="option" class="opt" data-value="103" data-en="0.8 credits GLM 5.3 Flash Quick, efficient model by Z.ai"><span class="opt-zh">0.8 信用點｜GLM 5.3 Flash（Z.ai 快速高效）</span><span class="opt-en">0.8 credits GLM 5.3 Flash Quick, efficient model by Z.ai</span></li>
+<li role="option" class="opt" data-value="-2" data-en="More models 10"><span class="opt-zh">展開更多模型（+10）</span><span class="opt-en">More models 10</span></li>
+<li role="option" class="opt" data-value="102" data-en="0.8 credits MiMo-V2.6-Flash Fast open-source model by Xiaomi"><span class="opt-zh">0.8 信用點｜MiMo-V2.6-Flash（小米開源快模型）</span><span class="opt-en">0.8 credits MiMo-V2.6-Flash Fast open-source model by Xiaomi</span></li>
+<li role="option" class="opt" data-value="104" data-en="0.8 credits DeepSeek V4.1 Flash Latest fast model by DeepSeek"><span class="opt-zh">0.8 信用點｜DeepSeek V4.1 Flash（DeepSeek 最新快模型）</span><span class="opt-en">0.8 credits DeepSeek V4.1 Flash Latest fast model by DeepSeek</span></li>
+<li role="option" class="opt" data-value="105" data-en="1.8 credits Gemini 3.8 Flash Smartest Flash model by Google"><span class="opt-zh">1.8 信用點｜Gemini 3.8 Flash（Google 最聰明 Flash）</span><span class="opt-en">1.8 credits Gemini 3.8 Flash Smartest Flash model by Google</span></li>
+<li role="option" class="opt" data-value="106" data-en="2.8 credits GLM 5.3 Advanced reasoning model by Z.ai"><span class="opt-zh">2.8 信用點｜GLM 5.3（Z.ai 進階推理）</span><span class="opt-en">2.8 credits GLM 5.3 Advanced reasoning model by Z.ai</span></li>
+<li role="option" class="opt" data-value="107" data-en="2.8 credits Claude Sonnet 5.5 Balanced speed and quality by Anthropic"><span class="opt-zh">2.8 信用點｜Claude Sonnet 5.5（速度質素平衡）</span><span class="opt-en">2.8 credits Claude Sonnet 5.5 Balanced speed and quality by Anthropic</span></li>
+<li role="option" class="opt" data-value="108" data-en="2.8 credits Kimi K3 Powerful reasoning model by Moonshot AI"><span class="opt-zh">2.8 信用點｜Kimi K3（Moonshot 強推理）</span><span class="opt-en">2.8 credits Kimi K3 Powerful reasoning model by Moonshot AI</span></li>
+<li role="option" class="opt" data-value="109" data-en="3.8 credits GPT-6.1 Sol Powerful model by OpenAI for in-depth articles"><span class="opt-zh">3.8 信用點｜GPT-6.1 Sol（OpenAI 深度長文）</span><span class="opt-en">3.8 credits GPT-6.1 Sol Powerful model by OpenAI for in-depth articles</span></li>
+<li role="option" class="opt" data-value="110" data-en="3.8 credits Claude Opus 5.5 Premium model by Anthropic for expert content"><span class="opt-zh">3.8 信用點｜Claude Opus 5.5（專家級內容）</span><span class="opt-en">3.8 credits Claude Opus 5.5 Premium model by Anthropic for expert content</span></li>
+<li role="option" class="opt" data-value="111" data-en="5.8 credits GPT-6 Astra Flagship model by OpenAI for demanding topics"><span class="opt-zh">5.8 信用點｜GPT-6 Astra（OpenAI 旗艦，高難度題材）</span><span class="opt-en">5.8 credits GPT-6 Astra Flagship model by OpenAI for demanding topics</span></li>
+<li role="option" class="opt" data-value="112" data-en="5.8 credits Claude Fable 5.1 Top-tier reasoning model by Anthropic"><span class="opt-zh">5.8 信用點｜Claude Fable 5.1（Anthropic 頂級推理）</span><span class="opt-en">5.8 credits Claude Fable 5.1 Top-tier reasoning model by Anthropic</span></li>
+<li role="option" class="opt" data-value="-3" data-en="Fewer models 10"><span class="opt-zh">收起模型（-10）</span><span class="opt-en">Fewer models 10</span></li>
+<li role="option" class="opt" data-value="32" data-en="1 credit Claude Sonnet 5 + Real-Time SERP Based on Claude Sonnet 5 from Anthropic"><span class="opt-zh">1 信用點｜Claude Sonnet 5 + 即時 SERP（基於 Anthropic Claude Sonnet 5）</span><span class="opt-en">1 credit Claude Sonnet 5 + Real-Time SERP Based on Claude Sonnet 5 from Anthropic</span></li>
+<li role="option" class="opt" data-value="44" data-en="1 credit DeepSeek V4 Pro + Real-Time SERP Based on DeepSeek V4 Pro, 1600B parameters"><span class="opt-zh">1 信用點｜DeepSeek V4 Pro + 即時 SERP（1600B 參數）</span><span class="opt-en">1 credit DeepSeek V4 Pro + Real-Time SERP Based on DeepSeek V4 Pro, 1600B parameters</span></li>
+<li role="option" class="opt" data-value="38" data-en="1 credit GPT-6 Luna + Real-Time SERP Powered by OpenAI’s newest GPT-6 Luna"><span class="opt-zh">1 信用點｜GPT-6 Luna + 即時 SERP（OpenAI 最新 GPT-6 Luna）</span><span class="opt-en">1 credit GPT-6 Luna + Real-Time SERP Powered by OpenAI’s newest GPT-6 Luna</span></li>
+<li role="option" class="opt" data-value="-1" data-en=""><span class="opt-zh"></span></li>
+<li role="option" class="opt" data-value="10" data-en="1 credit Default Mix of models and expertise"><span class="opt-zh">1 信用點｜預設（多模型混合）</span><span class="opt-en">1 credit Default Mix of models and expertise</span></li>
+<li role="option" class="opt" data-value="29" data-en="1 credit GPT-6 Luna Fast and light version of GPT-6"><span class="opt-zh">1 信用點｜GPT-6 Luna（GPT-6 輕快版）</span><span class="opt-en">1 credit GPT-6 Luna Fast and light version of GPT-6</span></li>
+<li role="option" class="opt" data-value="43" data-en="1 credit Gemini 3.6 Flash Lite Latest fast model by Google"><span class="opt-zh">1 信用點｜Gemini 3.6 Flash Lite（Google 最新快模型）</span><span class="opt-en">1 credit Gemini 3.6 Flash Lite Latest fast model by Google</span></li>
+<li role="option" class="opt" data-value="45" data-en="1 credit DeepSeek V4 Pro 1600B parameters for long, powerful work"><span class="opt-zh">1 信用點｜DeepSeek V4 Pro（1600B，長文強力）</span><span class="opt-en">1 credit DeepSeek V4 Pro 1600B parameters for long, powerful work</span></li>
+<li role="option" class="opt" data-value="39" data-en="4 credits GPT-6 Sol Powerful GPT-6 model by OpenAI"><span class="opt-zh">4 信用點｜GPT-6 Sol（OpenAI 強力 GPT-6）</span><span class="opt-en">4 credits GPT-6 Sol Powerful GPT-6 model by OpenAI</span></li>
+<li role="option" class="opt" data-value="31" data-en="4 credits Claude Sonnet 5 Latest powerful model by Anthropic"><span class="opt-zh">4 信用點｜Claude Sonnet 5（Anthropic 最新強模型）</span><span class="opt-en">4 credits Claude Sonnet 5 Latest powerful model by Anthropic</span></li>
+<li role="option" class="opt" data-value="41" data-en="10 credits Opus 5.5 Most powerful model by Anthropic"><span class="opt-zh">10 信用點｜Opus 5.5（Anthropic 最強）</span><span class="opt-en">10 credits Opus 5.5 Most powerful model by Anthropic</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="point_view">
+        <div class="field-head">
+          <label class="field-label">人稱／敘述視角</label>
+          
+          <code class="field-key">point_view</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">無<span class="sel-en">None</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="0" data-en="None" aria-selected="true"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+<li role="option" class="opt" data-value="1" data-en="First person singular (I, me, my, mine)"><span class="opt-zh">第一人稱單數（我／我的）</span><span class="opt-en">First person singular (I, me, my, mine)</span></li>
+<li role="option" class="opt" data-value="2" data-en="First person plural (we, us, our, ours)"><span class="opt-zh">第一人稱複數（我們）</span><span class="opt-en">First person plural (we, us, our, ours)</span></li>
+<li role="option" class="opt" data-value="3" data-en="Second person (you, your, yours)"><span class="opt-zh">第二人稱（你／你們）</span><span class="opt-en">Second person (you, your, yours)</span></li>
+<li role="option" class="opt" data-value="4" data-en="Third person (he, she, it, they)"><span class="opt-zh">第三人稱（他／她／它／他們）</span><span class="opt-en">Third person (he, she, it, they)</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="readability">
+        <div class="field-head">
+          <label class="field-label">可讀性等級</label>
+          
+          <code class="field-key">readability</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">無<span class="sel-en">None</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="" data-en="None" aria-selected="true"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+<li role="option" class="opt" data-value="1" data-en="5th grade, easily understood by 11-year-olds"><span class="opt-zh">小五程度（11 歲都易明）</span><span class="opt-en">5th grade, easily understood by 11-year-olds</span></li>
+<li role="option" class="opt" data-value="2" data-en="6th grade, conversational language"><span class="opt-zh">小六程度（口語化）</span><span class="opt-en">6th grade, conversational language</span></li>
+<li role="option" class="opt" data-value="3" data-en="7th grade, fairly easy to read"><span class="opt-zh">中一程度（相當易讀）</span><span class="opt-en">7th grade, fairly easy to read</span></li>
+<li role="option" class="opt" data-value="4" data-en="8th & 9th grade, easily understood Recommended"><span class="opt-zh">中二至中三（易明，站方推薦）</span><span class="opt-en">8th & 9th grade, easily understood Recommended</span></li>
+<li role="option" class="opt" data-value="5" data-en="10th to 12th grade, fairly difficult to read"><span class="opt-zh">中四至中六（偏難）</span><span class="opt-en">10th to 12th grade, fairly difficult to read</span></li>
+<li role="option" class="opt" data-value="6" data-en="College, difficult to read"><span class="opt-zh">大學程度（難讀）</span><span class="opt-en">College, difficult to read</span></li>
+<li role="option" class="opt" data-value="7" data-en="College graduate, very difficult to read"><span class="opt-zh">大學畢業程度（相當難讀）</span><span class="opt-en">College graduate, very difficult to read</span></li>
+<li role="option" class="opt" data-value="8" data-en="Professional, extremely difficult to read"><span class="opt-zh">專業程度（極難讀）</span><span class="opt-en">Professional, extremely difficult to read</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="target_country">
+        <div class="field-head">
+          <label class="field-label">目標國家</label>
+          <span class="sel-count">234</span>
+          <code class="field-key">target_country</code>
+        </div>
+        <div class="sel pop-wide" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">美國<span class="sel-en">United States</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            <div class="sel-search-wrap"><input class="sel-search" type="search" placeholder="搜尋…" aria-label="搜尋選項"></div>
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="1" data-en="United States" aria-selected="true"><span class="opt-zh">美國</span><span class="opt-en">United States</span></li>
+<li role="option" class="opt" data-value="2" data-en="United Kingdom"><span class="opt-zh">英國</span><span class="opt-en">United Kingdom</span></li>
+<li role="option" class="opt" data-value="3" data-en="Australia"><span class="opt-zh">澳洲</span><span class="opt-en">Australia</span></li>
+<li role="option" class="opt" data-value="20" data-en="Canada"><span class="opt-zh">加拿大</span><span class="opt-en">Canada</span></li>
+<li role="option" class="opt" data-value="78" data-en="Afghanistan"><span class="opt-zh">阿富汗</span><span class="opt-en">Afghanistan</span></li>
+<li role="option" class="opt" data-value="44" data-en="Albania"><span class="opt-zh">阿爾巴尼亞</span><span class="opt-en">Albania</span></li>
+<li role="option" class="opt" data-value="79" data-en="Algeria"><span class="opt-zh">阿爾及利亞</span><span class="opt-en">Algeria</span></li>
+<li role="option" class="opt" data-value="80" data-en="American Samoa"><span class="opt-zh">American Samoa</span></li>
+<li role="option" class="opt" data-value="81" data-en="Andorra"><span class="opt-zh">Andorra</span></li>
+<li role="option" class="opt" data-value="82" data-en="Angola"><span class="opt-zh">Angola</span></li>
+<li role="option" class="opt" data-value="83" data-en="Anguilla"><span class="opt-zh">Anguilla</span></li>
+<li role="option" class="opt" data-value="85" data-en="Antigua & Barbuda"><span class="opt-zh">Antigua & Barbuda</span></li>
+<li role="option" class="opt" data-value="57" data-en="Argentina"><span class="opt-zh">阿根廷</span><span class="opt-en">Argentina</span></li>
+<li role="option" class="opt" data-value="46" data-en="Armenia"><span class="opt-zh">Armenia</span></li>
+<li role="option" class="opt" data-value="86" data-en="Aruba"><span class="opt-zh">Aruba</span></li>
+<li role="option" class="opt" data-value="75" data-en="Austria"><span class="opt-zh">奧地利</span><span class="opt-en">Austria</span></li>
+<li role="option" class="opt" data-value="47" data-en="Azerbaijan"><span class="opt-zh">Azerbaijan</span></li>
+<li role="option" class="opt" data-value="87" data-en="Bahamas"><span class="opt-zh">Bahamas</span></li>
+<li role="option" class="opt" data-value="88" data-en="Bahrain"><span class="opt-zh">Bahrain</span></li>
+<li role="option" class="opt" data-value="9" data-en="Bangladesh"><span class="opt-zh">孟加拉</span><span class="opt-en">Bangladesh</span></li>
+<li role="option" class="opt" data-value="89" data-en="Barbados"><span class="opt-zh">Barbados</span></li>
+<li role="option" class="opt" data-value="90" data-en="Belarus"><span class="opt-zh">Belarus</span></li>
+<li role="option" class="opt" data-value="91" data-en="Belgium"><span class="opt-zh">比利時</span><span class="opt-en">Belgium</span></li>
+<li role="option" class="opt" data-value="92" data-en="Belize"><span class="opt-zh">Belize</span></li>
+<li role="option" class="opt" data-value="93" data-en="Benin"><span class="opt-zh">Benin</span></li>
+<li role="option" class="opt" data-value="94" data-en="Bermuda"><span class="opt-zh">Bermuda</span></li>
+<li role="option" class="opt" data-value="95" data-en="Bhutan"><span class="opt-zh">Bhutan</span></li>
+<li role="option" class="opt" data-value="96" data-en="Bolivia"><span class="opt-zh">Bolivia</span></li>
+<li role="option" class="opt" data-value="97" data-en="Bosnia & Herzegovina"><span class="opt-zh">Bosnia & Herzegovina</span></li>
+<li role="option" class="opt" data-value="98" data-en="Botswana"><span class="opt-zh">Botswana</span></li>
+<li role="option" class="opt" data-value="99" data-en="Bouvet Island"><span class="opt-zh">Bouvet Island</span></li>
+<li role="option" class="opt" data-value="8" data-en="Brazil"><span class="opt-zh">巴西</span><span class="opt-en">Brazil</span></li>
+<li role="option" class="opt" data-value="100" data-en="British Indian Ocean Territory"><span class="opt-zh">British Indian Ocean Territory</span></li>
+<li role="option" class="opt" data-value="101" data-en="British Virgin Islands"><span class="opt-zh">British Virgin Islands</span></li>
+<li role="option" class="opt" data-value="102" data-en="Brunei"><span class="opt-zh">Brunei</span></li>
+<li role="option" class="opt" data-value="37" data-en="Bulgaria"><span class="opt-zh">Bulgaria</span></li>
+<li role="option" class="opt" data-value="103" data-en="Burkina Faso"><span class="opt-zh">Burkina Faso</span></li>
+<li role="option" class="opt" data-value="104" data-en="Burundi"><span class="opt-zh">Burundi</span></li>
+<li role="option" class="opt" data-value="22" data-en="Cambodia"><span class="opt-zh">柬埔寨</span><span class="opt-en">Cambodia</span></li>
+<li role="option" class="opt" data-value="105" data-en="Cameroon"><span class="opt-zh">Cameroon</span></li>
+<li role="option" class="opt" data-value="106" data-en="Cape Verde"><span class="opt-zh">Cape Verde</span></li>
+<li role="option" class="opt" data-value="107" data-en="Cayman Islands"><span class="opt-zh">Cayman Islands</span></li>
+<li role="option" class="opt" data-value="108" data-en="Central African Republic"><span class="opt-zh">Central African Republic</span></li>
+<li role="option" class="opt" data-value="109" data-en="Chad"><span class="opt-zh">Chad</span></li>
+<li role="option" class="opt" data-value="58" data-en="Chile"><span class="opt-zh">智利</span><span class="opt-en">Chile</span></li>
+<li role="option" class="opt" data-value="55" data-en="China"><span class="opt-zh">中國</span><span class="opt-en">China</span></li>
+<li role="option" class="opt" data-value="110" data-en="Christmas Island"><span class="opt-zh">Christmas Island</span></li>
+<li role="option" class="opt" data-value="111" data-en="Cocos (Keeling) Islands"><span class="opt-zh">Cocos (Keeling) Islands</span></li>
+<li role="option" class="opt" data-value="59" data-en="Colombia"><span class="opt-zh">哥倫比亞</span><span class="opt-en">Colombia</span></li>
+<li role="option" class="opt" data-value="112" data-en="Comoros"><span class="opt-zh">Comoros</span></li>
+<li role="option" class="opt" data-value="113" data-en="Congo - Brazzaville"><span class="opt-zh">Congo - Brazzaville</span></li>
+<li role="option" class="opt" data-value="114" data-en="Congo - Kinshasa"><span class="opt-zh">Congo - Kinshasa</span></li>
+<li role="option" class="opt" data-value="115" data-en="Cook Islands"><span class="opt-zh">Cook Islands</span></li>
+<li role="option" class="opt" data-value="60" data-en="Costa Rica"><span class="opt-zh">Costa Rica</span></li>
+<li role="option" class="opt" data-value="38" data-en="Croatia"><span class="opt-zh">克羅埃西亞</span><span class="opt-en">Croatia</span></li>
+<li role="option" class="opt" data-value="61" data-en="Cuba"><span class="opt-zh">Cuba</span></li>
+<li role="option" class="opt" data-value="21" data-en="Cyprus"><span class="opt-zh">Cyprus</span></li>
+<li role="option" class="opt" data-value="30" data-en="Czech Republic"><span class="opt-zh">捷克</span><span class="opt-en">Czech Republic</span></li>
+<li role="option" class="opt" data-value="116" data-en="Côte d’Ivoire"><span class="opt-zh">Côte d’Ivoire</span></li>
+<li role="option" class="opt" data-value="33" data-en="Denmark"><span class="opt-zh">丹麥</span><span class="opt-en">Denmark</span></li>
+<li role="option" class="opt" data-value="117" data-en="Djibouti"><span class="opt-zh">Djibouti</span></li>
+<li role="option" class="opt" data-value="118" data-en="Dominica"><span class="opt-zh">Dominica</span></li>
+<li role="option" class="opt" data-value="72" data-en="Dominican Republic"><span class="opt-zh">Dominican Republic</span></li>
+<li role="option" class="opt" data-value="69" data-en="Ecuador"><span class="opt-zh">Ecuador</span></li>
+<li role="option" class="opt" data-value="119" data-en="Egypt"><span class="opt-zh">埃及</span><span class="opt-en">Egypt</span></li>
+<li role="option" class="opt" data-value="120" data-en="El Salvador"><span class="opt-zh">El Salvador</span></li>
+<li role="option" class="opt" data-value="121" data-en="Equatorial Guinea"><span class="opt-zh">Equatorial Guinea</span></li>
+<li role="option" class="opt" data-value="122" data-en="Eritrea"><span class="opt-zh">Eritrea</span></li>
+<li role="option" class="opt" data-value="42" data-en="Estonia"><span class="opt-zh">愛沙尼亞</span><span class="opt-en">Estonia</span></li>
+<li role="option" class="opt" data-value="123" data-en="Eswatini"><span class="opt-zh">Eswatini</span></li>
+<li role="option" class="opt" data-value="124" data-en="Ethiopia"><span class="opt-zh">Ethiopia</span></li>
+<li role="option" class="opt" data-value="126" data-en="Faroe Islands"><span class="opt-zh">Faroe Islands</span></li>
+<li role="option" class="opt" data-value="127" data-en="Fiji"><span class="opt-zh">Fiji</span></li>
+<li role="option" class="opt" data-value="35" data-en="Finland"><span class="opt-zh">芬蘭</span><span class="opt-en">Finland</span></li>
+<li role="option" class="opt" data-value="6" data-en="France"><span class="opt-zh">法國</span><span class="opt-en">France</span></li>
+<li role="option" class="opt" data-value="128" data-en="French Guiana"><span class="opt-zh">French Guiana</span></li>
+<li role="option" class="opt" data-value="129" data-en="French Polynesia"><span class="opt-zh">French Polynesia</span></li>
+<li role="option" class="opt" data-value="130" data-en="French Southern Territories"><span class="opt-zh">French Southern Territories</span></li>
+<li role="option" class="opt" data-value="131" data-en="Gabon"><span class="opt-zh">Gabon</span></li>
+<li role="option" class="opt" data-value="132" data-en="Gambia"><span class="opt-zh">Gambia</span></li>
+<li role="option" class="opt" data-value="45" data-en="Georgia"><span class="opt-zh">Georgia</span></li>
+<li role="option" class="opt" data-value="5" data-en="Germany"><span class="opt-zh">德國</span><span class="opt-en">Germany</span></li>
+<li role="option" class="opt" data-value="133" data-en="Ghana"><span class="opt-zh">Ghana</span></li>
+<li role="option" class="opt" data-value="134" data-en="Gibraltar"><span class="opt-zh">Gibraltar</span></li>
+<li role="option" class="opt" data-value="28" data-en="Greece"><span class="opt-zh">希臘</span><span class="opt-en">Greece</span></li>
+<li role="option" class="opt" data-value="135" data-en="Greenland"><span class="opt-zh">Greenland</span></li>
+<li role="option" class="opt" data-value="136" data-en="Grenada"><span class="opt-zh">Grenada</span></li>
+<li role="option" class="opt" data-value="137" data-en="Guadeloupe"><span class="opt-zh">Guadeloupe</span></li>
+<li role="option" class="opt" data-value="138" data-en="Guam"><span class="opt-zh">Guam</span></li>
+<li role="option" class="opt" data-value="139" data-en="Guatemala"><span class="opt-zh">Guatemala</span></li>
+<li role="option" class="opt" data-value="140" data-en="Guinea"><span class="opt-zh">Guinea</span></li>
+<li role="option" class="opt" data-value="141" data-en="Guinea-Bissau"><span class="opt-zh">Guinea-Bissau</span></li>
+<li role="option" class="opt" data-value="142" data-en="Guyana"><span class="opt-zh">Guyana</span></li>
+<li role="option" class="opt" data-value="143" data-en="Haiti"><span class="opt-zh">Haiti</span></li>
+<li role="option" class="opt" data-value="144" data-en="Heard & McDonald Islands"><span class="opt-zh">Heard & McDonald Islands</span></li>
+<li role="option" class="opt" data-value="145" data-en="Honduras"><span class="opt-zh">Honduras</span></li>
+<li role="option" class="opt" data-value="146" data-en="Hong Kong"><span class="opt-zh">香港</span><span class="opt-en">Hong Kong</span></li>
+<li role="option" class="opt" data-value="29" data-en="Hungary"><span class="opt-zh">匈牙利</span><span class="opt-en">Hungary</span></li>
+<li role="option" class="opt" data-value="147" data-en="Iceland"><span class="opt-zh">冰島</span><span class="opt-en">Iceland</span></li>
+<li role="option" class="opt" data-value="12" data-en="India"><span class="opt-zh">印度</span><span class="opt-en">India</span></li>
+<li role="option" class="opt" data-value="11" data-en="Indonesia"><span class="opt-zh">印尼</span><span class="opt-en">Indonesia</span></li>
+<li role="option" class="opt" data-value="148" data-en="Iran"><span class="opt-zh">Iran</span></li>
+<li role="option" class="opt" data-value="149" data-en="Iraq"><span class="opt-zh">Iraq</span></li>
+<li role="option" class="opt" data-value="150" data-en="Ireland"><span class="opt-zh">愛爾蘭</span><span class="opt-en">Ireland</span></li>
+<li role="option" class="opt" data-value="31" data-en="Israel"><span class="opt-zh">以色列</span><span class="opt-en">Israel</span></li>
+<li role="option" class="opt" data-value="18" data-en="Italy"><span class="opt-zh">義大利</span><span class="opt-en">Italy</span></li>
+<li role="option" class="opt" data-value="151" data-en="Jamaica"><span class="opt-zh">Jamaica</span></li>
+<li role="option" class="opt" data-value="10" data-en="Japan"><span class="opt-zh">日本</span><span class="opt-en">Japan</span></li>
+<li role="option" class="opt" data-value="152" data-en="Jordan"><span class="opt-zh">Jordan</span></li>
+<li role="option" class="opt" data-value="48" data-en="Kazakhstan"><span class="opt-zh">哈薩克</span><span class="opt-en">Kazakhstan</span></li>
+<li role="option" class="opt" data-value="16" data-en="Kenya"><span class="opt-zh">肯亞</span><span class="opt-en">Kenya</span></li>
+<li role="option" class="opt" data-value="153" data-en="Kiribati"><span class="opt-zh">Kiribati</span></li>
+<li role="option" class="opt" data-value="154" data-en="Kuwait"><span class="opt-zh">科威特</span><span class="opt-en">Kuwait</span></li>
+<li role="option" class="opt" data-value="52" data-en="Kyrgyzstan"><span class="opt-zh">Kyrgyzstan</span></li>
+<li role="option" class="opt" data-value="155" data-en="Laos"><span class="opt-zh">Laos</span></li>
+<li role="option" class="opt" data-value="41" data-en="Latvia"><span class="opt-zh">拉脫維亞</span><span class="opt-en">Latvia</span></li>
+<li role="option" class="opt" data-value="156" data-en="Lebanon"><span class="opt-zh">Lebanon</span></li>
+<li role="option" class="opt" data-value="157" data-en="Lesotho"><span class="opt-zh">Lesotho</span></li>
+<li role="option" class="opt" data-value="158" data-en="Liberia"><span class="opt-zh">Liberia</span></li>
+<li role="option" class="opt" data-value="159" data-en="Libya"><span class="opt-zh">Libya</span></li>
+<li role="option" class="opt" data-value="160" data-en="Liechtenstein"><span class="opt-zh">Liechtenstein</span></li>
+<li role="option" class="opt" data-value="40" data-en="Lithuania"><span class="opt-zh">立陶宛</span><span class="opt-en">Lithuania</span></li>
+<li role="option" class="opt" data-value="161" data-en="Luxembourg"><span class="opt-zh">盧森堡</span><span class="opt-en">Luxembourg</span></li>
+<li role="option" class="opt" data-value="162" data-en="Macao"><span class="opt-zh">澳門</span><span class="opt-en">Macao</span></li>
+<li role="option" class="opt" data-value="163" data-en="Madagascar"><span class="opt-zh">Madagascar</span></li>
+<li role="option" class="opt" data-value="164" data-en="Malawi"><span class="opt-zh">Malawi</span></li>
+<li role="option" class="opt" data-value="77" data-en="Malaysia"><span class="opt-zh">馬來西亞</span><span class="opt-en">Malaysia</span></li>
+<li role="option" class="opt" data-value="165" data-en="Maldives"><span class="opt-zh">Maldives</span></li>
+<li role="option" class="opt" data-value="166" data-en="Mali"><span class="opt-zh">Mali</span></li>
+<li role="option" class="opt" data-value="167" data-en="Malta"><span class="opt-zh">Malta</span></li>
+<li role="option" class="opt" data-value="168" data-en="Marshall Islands"><span class="opt-zh">Marshall Islands</span></li>
+<li role="option" class="opt" data-value="169" data-en="Martinique"><span class="opt-zh">Martinique</span></li>
+<li role="option" class="opt" data-value="170" data-en="Mauritania"><span class="opt-zh">Mauritania</span></li>
+<li role="option" class="opt" data-value="171" data-en="Mauritius"><span class="opt-zh">Mauritius</span></li>
+<li role="option" class="opt" data-value="172" data-en="Mayotte"><span class="opt-zh">Mayotte</span></li>
+<li role="option" class="opt" data-value="62" data-en="Mexico"><span class="opt-zh">墨西哥</span><span class="opt-en">Mexico</span></li>
+<li role="option" class="opt" data-value="173" data-en="Micronesia"><span class="opt-zh">Micronesia</span></li>
+<li role="option" class="opt" data-value="174" data-en="Moldova"><span class="opt-zh">Moldova</span></li>
+<li role="option" class="opt" data-value="175" data-en="Monaco"><span class="opt-zh">Monaco</span></li>
+<li role="option" class="opt" data-value="176" data-en="Mongolia"><span class="opt-zh">Mongolia</span></li>
+<li role="option" class="opt" data-value="177" data-en="Montserrat"><span class="opt-zh">Montserrat</span></li>
+<li role="option" class="opt" data-value="178" data-en="Morocco"><span class="opt-zh">Morocco</span></li>
+<li role="option" class="opt" data-value="179" data-en="Mozambique"><span class="opt-zh">Mozambique</span></li>
+<li role="option" class="opt" data-value="180" data-en="Myanmar (Burma)"><span class="opt-zh">Myanmar (Burma)</span></li>
+<li role="option" class="opt" data-value="181" data-en="Namibia"><span class="opt-zh">Namibia</span></li>
+<li role="option" class="opt" data-value="182" data-en="Nauru"><span class="opt-zh">Nauru</span></li>
+<li role="option" class="opt" data-value="183" data-en="Nepal"><span class="opt-zh">Nepal</span></li>
+<li role="option" class="opt" data-value="19" data-en="Netherlands"><span class="opt-zh">荷蘭</span><span class="opt-en">Netherlands</span></li>
+<li role="option" class="opt" data-value="184" data-en="New Caledonia"><span class="opt-zh">New Caledonia</span></li>
+<li role="option" class="opt" data-value="185" data-en="New Zealand"><span class="opt-zh">紐西蘭</span><span class="opt-en">New Zealand</span></li>
+<li role="option" class="opt" data-value="186" data-en="Nicaragua"><span class="opt-zh">Nicaragua</span></li>
+<li role="option" class="opt" data-value="187" data-en="Niger"><span class="opt-zh">Niger</span></li>
+<li role="option" class="opt" data-value="73" data-en="Nigeria"><span class="opt-zh">奈及利亞</span><span class="opt-en">Nigeria</span></li>
+<li role="option" class="opt" data-value="188" data-en="Niue"><span class="opt-zh">Niue</span></li>
+<li role="option" class="opt" data-value="189" data-en="Norfolk Island"><span class="opt-zh">Norfolk Island</span></li>
+<li role="option" class="opt" data-value="190" data-en="North Korea"><span class="opt-zh">North Korea</span></li>
+<li role="option" class="opt" data-value="49" data-en="North Macedonia"><span class="opt-zh">North Macedonia</span></li>
+<li role="option" class="opt" data-value="191" data-en="Northern Mariana Islands"><span class="opt-zh">Northern Mariana Islands</span></li>
+<li role="option" class="opt" data-value="34" data-en="Norway"><span class="opt-zh">挪威</span><span class="opt-en">Norway</span></li>
+<li role="option" class="opt" data-value="192" data-en="Oman"><span class="opt-zh">Oman</span></li>
+<li role="option" class="opt" data-value="15" data-en="Pakistan"><span class="opt-zh">巴基斯坦</span><span class="opt-en">Pakistan</span></li>
+<li role="option" class="opt" data-value="193" data-en="Palau"><span class="opt-zh">Palau</span></li>
+<li role="option" class="opt" data-value="194" data-en="Palestine"><span class="opt-zh">Palestine</span></li>
+<li role="option" class="opt" data-value="195" data-en="Panama"><span class="opt-zh">Panama</span></li>
+<li role="option" class="opt" data-value="196" data-en="Papua New Guinea"><span class="opt-zh">Papua New Guinea</span></li>
+<li role="option" class="opt" data-value="197" data-en="Paraguay"><span class="opt-zh">Paraguay</span></li>
+<li role="option" class="opt" data-value="63" data-en="Peru"><span class="opt-zh">秘魯</span><span class="opt-en">Peru</span></li>
+<li role="option" class="opt" data-value="74" data-en="Philippines"><span class="opt-zh">菲律賓</span><span class="opt-en">Philippines</span></li>
+<li role="option" class="opt" data-value="198" data-en="Pitcairn Islands"><span class="opt-zh">Pitcairn Islands</span></li>
+<li role="option" class="opt" data-value="23" data-en="Poland"><span class="opt-zh">波蘭</span><span class="opt-en">Poland</span></li>
+<li role="option" class="opt" data-value="7" data-en="Portugal"><span class="opt-zh">葡萄牙</span><span class="opt-en">Portugal</span></li>
+<li role="option" class="opt" data-value="71" data-en="Puerto Rico"><span class="opt-zh">Puerto Rico</span></li>
+<li role="option" class="opt" data-value="199" data-en="Qatar"><span class="opt-zh">卡達</span><span class="opt-en">Qatar</span></li>
+<li role="option" class="opt" data-value="27" data-en="Romania"><span class="opt-zh">羅馬尼亞</span><span class="opt-en">Romania</span></li>
+<li role="option" class="opt" data-value="54" data-en="Russia"><span class="opt-zh">俄羅斯</span><span class="opt-en">Russia</span></li>
+<li role="option" class="opt" data-value="200" data-en="Rwanda"><span class="opt-zh">Rwanda</span></li>
+<li role="option" class="opt" data-value="201" data-en="Réunion"><span class="opt-zh">Réunion</span></li>
+<li role="option" class="opt" data-value="202" data-en="Samoa"><span class="opt-zh">Samoa</span></li>
+<li role="option" class="opt" data-value="203" data-en="San Marino"><span class="opt-zh">San Marino</span></li>
+<li role="option" class="opt" data-value="14" data-en="Saudi Arabia"><span class="opt-zh">沙烏地阿拉伯</span><span class="opt-en">Saudi Arabia</span></li>
+<li role="option" class="opt" data-value="204" data-en="Senegal"><span class="opt-zh">Senegal</span></li>
+<li role="option" class="opt" data-value="39" data-en="Serbia"><span class="opt-zh">塞爾維亞</span><span class="opt-en">Serbia</span></li>
+<li role="option" class="opt" data-value="205" data-en="Seychelles"><span class="opt-zh">Seychelles</span></li>
+<li role="option" class="opt" data-value="206" data-en="Sierra Leone"><span class="opt-zh">Sierra Leone</span></li>
+<li role="option" class="opt" data-value="67" data-en="Singapore"><span class="opt-zh">新加坡</span><span class="opt-en">Singapore</span></li>
+<li role="option" class="opt" data-value="36" data-en="Slovakia"><span class="opt-zh">斯洛伐克</span><span class="opt-en">Slovakia</span></li>
+<li role="option" class="opt" data-value="43" data-en="Slovenia"><span class="opt-zh">斯洛維尼亞</span><span class="opt-en">Slovenia</span></li>
+<li role="option" class="opt" data-value="207" data-en="Solomon Islands"><span class="opt-zh">Solomon Islands</span></li>
+<li role="option" class="opt" data-value="208" data-en="Somalia"><span class="opt-zh">Somalia</span></li>
+<li role="option" class="opt" data-value="64" data-en="South Africa"><span class="opt-zh">南非</span><span class="opt-en">South Africa</span></li>
+<li role="option" class="opt" data-value="25" data-en="South Korea"><span class="opt-zh">南韓</span><span class="opt-en">South Korea</span></li>
+<li role="option" class="opt" data-value="4" data-en="Spain"><span class="opt-zh">西班牙</span><span class="opt-en">Spain</span></li>
+<li role="option" class="opt" data-value="65" data-en="Sri Lanka"><span class="opt-zh">斯里蘭卡</span><span class="opt-en">Sri Lanka</span></li>
+<li role="option" class="opt" data-value="210" data-en="St. Helena"><span class="opt-zh">St. Helena</span></li>
+<li role="option" class="opt" data-value="211" data-en="St. Kitts & Nevis"><span class="opt-zh">St. Kitts & Nevis</span></li>
+<li role="option" class="opt" data-value="212" data-en="St. Lucia"><span class="opt-zh">St. Lucia</span></li>
+<li role="option" class="opt" data-value="213" data-en="St. Pierre & Miquelon"><span class="opt-zh">St. Pierre & Miquelon</span></li>
+<li role="option" class="opt" data-value="214" data-en="St. Vincent & Grenadines"><span class="opt-zh">St. Vincent & Grenadines</span></li>
+<li role="option" class="opt" data-value="215" data-en="Sudan"><span class="opt-zh">Sudan</span></li>
+<li role="option" class="opt" data-value="216" data-en="Suriname"><span class="opt-zh">Suriname</span></li>
+<li role="option" class="opt" data-value="217" data-en="Svalbard & Jan Mayen"><span class="opt-zh">Svalbard & Jan Mayen</span></li>
+<li role="option" class="opt" data-value="32" data-en="Sweden"><span class="opt-zh">瑞典</span><span class="opt-en">Sweden</span></li>
+<li role="option" class="opt" data-value="218" data-en="Switzerland"><span class="opt-zh">瑞士</span><span class="opt-en">Switzerland</span></li>
+<li role="option" class="opt" data-value="219" data-en="Syria"><span class="opt-zh">Syria</span></li>
+<li role="option" class="opt" data-value="220" data-en="São Tomé & Príncipe"><span class="opt-zh">São Tomé & Príncipe</span></li>
+<li role="option" class="opt" data-value="56" data-en="Taiwan"><span class="opt-zh">台灣</span><span class="opt-en">Taiwan</span></li>
+<li role="option" class="opt" data-value="53" data-en="Tajikistan"><span class="opt-zh">Tajikistan</span></li>
+<li role="option" class="opt" data-value="221" data-en="Tanzania"><span class="opt-zh">Tanzania</span></li>
+<li role="option" class="opt" data-value="24" data-en="Thailand"><span class="opt-zh">泰國</span><span class="opt-en">Thailand</span></li>
+<li role="option" class="opt" data-value="222" data-en="Togo"><span class="opt-zh">Togo</span></li>
+<li role="option" class="opt" data-value="223" data-en="Tokelau"><span class="opt-zh">Tokelau</span></li>
+<li role="option" class="opt" data-value="224" data-en="Tonga"><span class="opt-zh">Tonga</span></li>
+<li role="option" class="opt" data-value="225" data-en="Trinidad & Tobago"><span class="opt-zh">Trinidad & Tobago</span></li>
+<li role="option" class="opt" data-value="226" data-en="Tunisia"><span class="opt-zh">Tunisia</span></li>
+<li role="option" class="opt" data-value="51" data-en="Turkmenistan"><span class="opt-zh">Turkmenistan</span></li>
+<li role="option" class="opt" data-value="227" data-en="Turks & Caicos Islands"><span class="opt-zh">Turks & Caicos Islands</span></li>
+<li role="option" class="opt" data-value="228" data-en="Tuvalu"><span class="opt-zh">Tuvalu</span></li>
+<li role="option" class="opt" data-value="17" data-en="Turkey"><span class="opt-zh">土耳其</span><span class="opt-en">Turkey</span></li>
+<li role="option" class="opt" data-value="229" data-en="U.S. Outlying Islands"><span class="opt-zh">U.S. Outlying Islands</span></li>
+<li role="option" class="opt" data-value="230" data-en="U.S. Virgin Islands"><span class="opt-zh">U.S. Virgin Islands</span></li>
+<li role="option" class="opt" data-value="76" data-en="Uganda"><span class="opt-zh">Uganda</span></li>
+<li role="option" class="opt" data-value="66" data-en="Ukraine"><span class="opt-zh">烏克蘭</span><span class="opt-en">Ukraine</span></li>
+<li role="option" class="opt" data-value="13" data-en="United Arab Emirates"><span class="opt-zh">阿聯酋</span><span class="opt-en">United Arab Emirates</span></li>
+<li role="option" class="opt" data-value="70" data-en="Uruguay"><span class="opt-zh">烏拉圭</span><span class="opt-en">Uruguay</span></li>
+<li role="option" class="opt" data-value="50" data-en="Uzbekistan"><span class="opt-zh">Uzbekistan</span></li>
+<li role="option" class="opt" data-value="231" data-en="Vanuatu"><span class="opt-zh">Vanuatu</span></li>
+<li role="option" class="opt" data-value="232" data-en="Vatican City"><span class="opt-zh">Vatican City</span></li>
+<li role="option" class="opt" data-value="68" data-en="Venezuela"><span class="opt-zh">委內瑞拉</span><span class="opt-en">Venezuela</span></li>
+<li role="option" class="opt" data-value="26" data-en="Vietnam"><span class="opt-zh">越南</span><span class="opt-en">Vietnam</span></li>
+<li role="option" class="opt" data-value="233" data-en="Wallis & Futuna"><span class="opt-zh">Wallis & Futuna</span></li>
+<li role="option" class="opt" data-value="234" data-en="Western Sahara"><span class="opt-zh">Western Sahara</span></li>
+<li role="option" class="opt" data-value="235" data-en="Yemen"><span class="opt-zh">Yemen</span></li>
+<li role="option" class="opt" data-value="236" data-en="Zambia"><span class="opt-zh">Zambia</span></li>
+<li role="option" class="opt" data-value="237" data-en="Zimbabwe"><span class="opt-zh">Zimbabwe</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="rm_words">
+        <div class="field-head">
+          <label class="field-label">AI 痕跡清理</label>
+          
+          <code class="field-key">rm_words</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">不移除 AI 用詞<span class="sel-en">No AI Words Removal</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="" data-en="No AI Words Removal" aria-selected="true"><span class="opt-zh">不移除 AI 用詞</span><span class="opt-en">No AI Words Removal</span></li>
+<li role="option" class="opt" data-value="1" data-en="Basic AI Words Removal"><span class="opt-zh">基本移除 AI 用詞</span><span class="opt-en">Basic AI Words Removal</span></li>
+<li role="option" class="opt" data-value="2" data-en="Extended AI Words Removal"><span class="opt-zh">加強移除 AI 用詞</span><span class="opt-en">Extended AI Words Removal</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+        <div class="field span-2">
+          <div class="field-head"><label class="field-label">附加選項</label></div>
+          <div class="btn-row" style="gap:22px">
+            <label class="check"><input type="checkbox" id="cx-content-score" checked>
+              <span><b>內容評分</b>　產生前先估算可讀性與 SEO 分數（+0.1 信用點）</span></label>
+            <label class="check"><input type="checkbox" id="cx-search-data">
+              <span><b>搜尋數據</b>　附上關鍵字搜尋量／難度</span></label>
+            <label class="check"><input type="checkbox" id="cx-user-api">
+              <span><b>使用自己的 API Key</b>　改用你嘅 OpenAI／Anthropic 額度</span></label>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="panel" id="voice" aria-labelledby="voice-h">
+      <div class="panel-head">
+        <span class="idx">02</span>
+        <h2 id="voice-h">品牌聲音</h2>
+        <span class="en">Brand Voice</span>
+      </div>
+      <p class="lead">沿用你已儲存嘅品牌語氣，或即場建立一個。</p>
+      <div class="grid">
+      <div class="field" data-dname="brand_voice">
+        <div class="field-head">
+          <label class="field-label">AI 痕跡清理</label>
+          
+          <code class="field-key">brand_voice</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">無<span class="sel-en">None</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="0" data-en="None" aria-selected="true"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+<li role="option" class="opt" data-value="-1" data-en="+ Create Brand Voice"><span class="opt-zh">＋建立品牌聲音</span><span class="opt-en">+ Create Brand Voice</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+        <div class="field">
+          <div class="field-head"><label class="field-label">自訂語氣描述</label></div>
+          <input class="inp" type="text" placeholder="例：Creative、Winston Churchill、財經分析師">
+          <p class="hint">寫一個具體人物或風格，比抽象形容詞有效得多。</p>
+        </div>
+      </div>
+    </section>
+    <section class="panel" id="details" aria-labelledby="details-h">
+      <div class="panel-head">
+        <span class="idx">03</span>
+        <h2 id="details-h">要包含的細節</h2>
+        <span class="en">Details to Include</span>
+      </div>
+      <p class="lead">唔想漏嘅事實、規格、地址、電話——寫落呢度，模型會照用。</p>
+      <div class="grid">
+        <div class="field span-2">
+          <div class="field-head"><label class="field-label">要包含的細節</label><code class="field-key">tf_details</code></div>
+          <div class="with-counter">
+            <textarea class="inp" id="tf_details" rows="3"
+              placeholder="例：電話 212-555-1234、地址、保固條款、價格區間…"></textarea>
+            <span class="counter" data-for="tf_details">0</span>
+          </div>
+          <p class="hint">逐行寫事實。模型會原樣引用，唔會改寫數字同專有名詞。</p>
+        </div>
+      </div>
+    </section>
+    <section class="panel" id="media" aria-labelledby="media-h">
+      <div class="panel-head">
+        <span class="idx">04</span>
+        <h2 id="media-h">媒體中心</h2>
+        <span class="en">Media Hub</span>
+      </div>
+      <p class="lead">圖片與影片：模型、數量、尺寸、風格、排列方式。</p>
+      <div class="grid three">
+      <div class="field" data-dname="images">
+        <div class="field-head">
+          <label class="field-label">AI 圖片</label>
+          
+          <code class="field-key">images</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">0 credits</span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt" data-value="" data-en="None"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+<li role="option" class="opt" data-value="2" data-en="0 credits Z-Image"><span class="opt-zh">0 信用點｜Z-Image</span><span class="opt-en">0 credits Z-Image</span></li>
+<li role="option" class="opt" data-value="1" data-en="0 credits FLUX.1"><span class="opt-zh">0 信用點｜FLUX.1</span><span class="opt-en">0 credits FLUX.1</span></li>
+<li role="option" class="opt" data-value="6" data-en="0.1 credits GPT Image 2.5 flare medium"><span class="opt-zh">0.1 信用點｜GPT Image 2.5 flare medium</span><span class="opt-en">0.1 credits GPT Image 2.5 flare medium</span></li>
+<li role="option" class="opt" data-value="4" data-en="0.2 credits Nano Banana 2 Lite"><span class="opt-zh">0.2 信用點｜Nano Banana 2 Lite</span><span class="opt-en">0.2 credits Nano Banana 2 Lite</span></li>
+<li role="option" class="opt" data-value="5" data-en="0.4 credits Nano Banana 2"><span class="opt-zh">0.4 信用點｜Nano Banana 2</span><span class="opt-en">0.4 credits Nano Banana 2</span></li>
+<li role="option" class="opt" data-value="7" data-en="0.4 credits GPT Image 2.5 flare high"><span class="opt-zh">0.4 信用點｜GPT Image 2.5 flare high</span><span class="opt-en">0.4 credits GPT Image 2.5 flare high</span></li>
+<li role="option" class="opt" data-value="8" data-en="0.6 credits GPT Image 2.5 flare xhigh"><span class="opt-zh">0.6 信用點｜GPT Image 2.5 flare xhigh</span><span class="opt-en">0.6 credits GPT Image 2.5 flare xhigh</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="img_quantity">
+        <div class="field-head">
+          <label class="field-label">圖片數量</label>
+          
+          <code class="field-key">img_quantity</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">（型號／數值，不譯）<span class="sel-en">3</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt" data-value="1" data-en="1"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">1</span></li>
+<li role="option" class="opt" data-value="2" data-en="2"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">2</span></li>
+<li role="option" class="opt is-cur" data-value="3" data-en="3" aria-selected="true"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">3</span></li>
+<li role="option" class="opt" data-value="4" data-en="4"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">4</span></li>
+<li role="option" class="opt" data-value="5" data-en="5"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">5</span></li>
+<li role="option" class="opt" data-value="6" data-en="6"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">6</span></li>
+<li role="option" class="opt" data-value="7" data-en="7"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">7</span></li>
+<li role="option" class="opt" data-value="8" data-en="8"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">8</span></li>
+<li role="option" class="opt" data-value="9" data-en="9"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">9</span></li>
+<li role="option" class="opt" data-value="10" data-en="10"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">10</span></li>
+<li role="option" class="opt" data-value="15" data-en="15"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">15</span></li>
+<li role="option" class="opt" data-value="20" data-en="20"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">20</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="img_size">
+        <div class="field-head">
+          <label class="field-label">圖片尺寸</label>
+          
+          <code class="field-key">img_size</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">（型號／數值，不譯）<span class="sel-en">1344×768 (16:9)</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt" data-value="1" data-en="960×768 (5:4)"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">960×768 (5:4)</span></li>
+<li role="option" class="opt" data-value="2" data-en="1024×640 (8:5)"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">1024×640 (8:5)</span></li>
+<li role="option" class="opt" data-value="3" data-en="1024×768 (4:3)"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">1024×768 (4:3)</span></li>
+<li role="option" class="opt" data-value="4" data-en="1152×768 (3:2)"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">1152×768 (3:2)</span></li>
+<li role="option" class="opt" data-value="5" data-en="1280×704 (20:11)"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">1280×704 (20:11)</span></li>
+<li role="option" class="opt is-cur" data-value="6" data-en="1344×768 (16:9)" aria-selected="true"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">1344×768 (16:9)</span></li>
+<li role="option" class="opt" data-value="9" data-en="768×1344 (9:16)"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">768×1344 (9:16)</span></li>
+<li role="option" class="opt" data-value="8" data-en="1024×1024 (1:1)"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">1024×1024 (1:1)</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="img_style">
+        <div class="field-head">
+          <label class="field-label">圖片風格</label>
+          <span class="sel-count">13</span>
+          <code class="field-key">img_style</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">無<span class="sel-en">None</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            <div class="sel-search-wrap"><input class="sel-search" type="search" placeholder="搜尋…" aria-label="搜尋選項"></div>
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="" data-en="None" aria-selected="true"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+<li role="option" class="opt" data-value="1" data-en="Photo"><span class="opt-zh">相片</span><span class="opt-en">Photo</span></li>
+<li role="option" class="opt" data-value="2" data-en="Cartoon"><span class="opt-zh">卡通</span><span class="opt-en">Cartoon</span></li>
+<li role="option" class="opt" data-value="3" data-en="Cubism"><span class="opt-zh">立體主義</span><span class="opt-en">Cubism</span></li>
+<li role="option" class="opt" data-value="4" data-en="Expressionism"><span class="opt-zh">表現主義</span><span class="opt-en">Expressionism</span></li>
+<li role="option" class="opt" data-value="5" data-en="Cyberpunk"><span class="opt-zh">賽博龐克</span><span class="opt-en">Cyberpunk</span></li>
+<li role="option" class="opt" data-value="6" data-en="Fantasy"><span class="opt-zh">奇幻</span><span class="opt-en">Fantasy</span></li>
+<li role="option" class="opt" data-value="7" data-en="Cinematic"><span class="opt-zh">電影感</span><span class="opt-en">Cinematic</span></li>
+<li role="option" class="opt" data-value="8" data-en="Abstract"><span class="opt-zh">抽象</span><span class="opt-en">Abstract</span></li>
+<li role="option" class="opt" data-value="9" data-en="Impressionism"><span class="opt-zh">印象派</span><span class="opt-en">Impressionism</span></li>
+<li role="option" class="opt" data-value="10" data-en="Surrealism"><span class="opt-zh">超現實</span><span class="opt-en">Surrealism</span></li>
+<li role="option" class="opt" data-value="11" data-en="Anime"><span class="opt-zh">動漫</span><span class="opt-en">Anime</span></li>
+<li role="option" class="opt" data-value="12" data-en="Comic Book"><span class="opt-zh">美式漫畫</span><span class="opt-en">Comic Book</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+        <div class="field">
+          <div class="field-head"><label class="field-label">自訂畫風</label></div>
+          <input class="inp" type="text" placeholder="例：Andy Warhol、Star Wars">
+        </div>
+        <div class="field">
+          <div class="field-head"><label class="field-label">品牌名（圖片用）</label><code class="field-key">img_brand_name</code></div>
+          <input class="inp" id="img_brand_name" type="text" placeholder="例：My Store">
+        </div>
+        <div class="field span-2">
+          <div class="field-head"><label class="field-label">圖片指示</label><code class="field-key">img_prompt</code></div>
+          <input class="inp" id="img_prompt" name="img_prompt" type="text"
+            placeholder="例：白色背景、俯拍、留白多啲，方便加文字">
+          <label class="check" style="margin-top:9px"><input type="checkbox" id="cc_img_alt_text" checked>
+            <span>自動填寫圖片 alt 文字（SEO）</span></label>
+        </div>
+      <div class="field" data-dname="youtube">
+        <div class="field-head">
+          <label class="field-label">YouTube 影片</label>
+          
+          <code class="field-key">youtube</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">是<span class="sel-en">Yes</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt" data-value="" data-en="None"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+<li role="option" class="opt is-cur" data-value="1" data-en="Yes" aria-selected="true"><span class="opt-zh">是</span><span class="opt-en">Yes</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="video_quantity">
+        <div class="field-head">
+          <label class="field-label">影片數量</label>
+          
+          <code class="field-key">video_quantity</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">（型號／數值，不譯）<span class="sel-en">1</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="1" data-en="1" aria-selected="true"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">1</span></li>
+<li role="option" class="opt" data-value="2" data-en="2"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">2</span></li>
+<li role="option" class="opt" data-value="3" data-en="3"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">3</span></li>
+<li role="option" class="opt" data-value="4" data-en="4"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">4</span></li>
+<li role="option" class="opt" data-value="5" data-en="5"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">5</span></li>
+<li role="option" class="opt" data-value="6" data-en="6"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">6</span></li>
+<li role="option" class="opt" data-value="7" data-en="7"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">7</span></li>
+<li role="option" class="opt" data-value="8" data-en="8"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">8</span></li>
+<li role="option" class="opt" data-value="9" data-en="9"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">9</span></li>
+<li role="option" class="opt" data-value="10" data-en="10"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">10</span></li>
+<li role="option" class="opt" data-value="15" data-en="15"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">15</span></li>
+<li role="option" class="opt" data-value="20" data-en="20"><span class="opt-zh">（型號／數值，不譯）</span><span class="opt-en">20</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="placing_scheme">
+        <div class="field-head">
+          <label class="field-label">版面排列方式</label>
+          
+          <code class="field-key">placing_scheme</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">圖、片交替<span class="sel-en">Alternate image and video</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt" data-value="1" data-en="Sequentially in each section"><span class="opt-zh">依章節順序放入</span><span class="opt-en">Sequentially in each section</span></li>
+<li role="option" class="opt" data-value="2" data-en="Distribute evenly"><span class="opt-zh">平均分佈</span><span class="opt-en">Distribute evenly</span></li>
+<li role="option" class="opt is-cur" data-value="3" data-en="Alternate image and video" aria-selected="true"><span class="opt-zh">圖、片交替</span><span class="opt-en">Alternate image and video</span></li>
+<li role="option" class="opt" data-value="4" data-en="Alternate video and image"><span class="opt-zh">片、圖交替</span><span class="opt-en">Alternate video and image</span></li>
+<li role="option" class="opt" data-value="5" data-en="First images, then videos"><span class="opt-zh">先放圖，再放片</span><span class="opt-en">First images, then videos</span></li>
+<li role="option" class="opt" data-value="6" data-en="First videos, then images"><span class="opt-zh">先放片，再放圖</span><span class="opt-en">First videos, then images</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+        <div class="field span-2">
+          <label class="check"><input type="checkbox" id="cc_media_pos">
+            <span><b>媒體一律放喺標題下面</b>　唔勾選就由 AI 自己揀最順嘅位置。</span></label>
+        </div>
+      </div>
+    </section>
+    <section class="panel" id="structure" aria-labelledby="structure-h">
+      <div class="panel-head">
+        <span class="idx">05</span>
+        <h2 id="structure-h">文章結構</h2>
+        <span class="en">Structure</span>
+      </div>
+      <p class="lead">結論、表格、H3、清單、FAQ…逐項開關。</p>
+      <div class="grid three">
+      <div class="field field-inline" data-dname="conclusion">
+        <div class="field-head"><label class="field-label">結論</label>
+          <code class="field-key">conclusion</code></div>
+        <div class="seg" role="group" aria-label="結論"><button type="button" class="seg-btn" data-value="" aria-pressed="false">否</button><button type="button" class="seg-btn is-on" data-value="1" aria-pressed="true">是</button></div>
+        
+      </div>
+      <div class="field field-inline" data-dname="tables">
+        <div class="field-head"><label class="field-label">表格</label>
+          <code class="field-key">tables</code></div>
+        <div class="seg" role="group" aria-label="表格"><button type="button" class="seg-btn" data-value="" aria-pressed="false">否</button><button type="button" class="seg-btn is-on" data-value="1" aria-pressed="true">是</button></div>
+        
+      </div>
+      <div class="field field-inline" data-dname="h3">
+        <div class="field-head"><label class="field-label">H3 小標題</label>
+          <code class="field-key">h3</code></div>
+        <div class="seg" role="group" aria-label="H3 小標題"><button type="button" class="seg-btn" data-value="" aria-pressed="false">否</button><button type="button" class="seg-btn is-on" data-value="1" aria-pressed="true">是</button></div>
+        
+      </div>
+      <div class="field field-inline" data-dname="lists">
+        <div class="field-head"><label class="field-label">清單</label>
+          <code class="field-key">lists</code></div>
+        <div class="seg" role="group" aria-label="清單"><button type="button" class="seg-btn" data-value="" aria-pressed="false">否</button><button type="button" class="seg-btn is-on" data-value="1" aria-pressed="true">是</button></div>
+        
+      </div>
+      <div class="field field-inline" data-dname="italic">
+        <div class="field-head"><label class="field-label">斜體</label>
+          <code class="field-key">italic</code></div>
+        <div class="seg" role="group" aria-label="斜體"><button type="button" class="seg-btn" data-value="" aria-pressed="false">否</button><button type="button" class="seg-btn is-on" data-value="1" aria-pressed="true">是</button></div>
+        
+      </div>
+      <div class="field field-inline" data-dname="quotes">
+        <div class="field-head"><label class="field-label">引言</label>
+          <code class="field-key">quotes</code></div>
+        <div class="seg" role="group" aria-label="引言"><button type="button" class="seg-btn" data-value="" aria-pressed="false">否</button><button type="button" class="seg-btn is-on" data-value="1" aria-pressed="true">是</button></div>
+        
+      </div>
+      <div class="field field-inline" data-dname="key_takeaways">
+        <div class="field-head"><label class="field-label">重點摘要</label>
+          <code class="field-key">key_takeaways</code></div>
+        <div class="seg" role="group" aria-label="重點摘要"><button type="button" class="seg-btn" data-value="" aria-pressed="false">否</button><button type="button" class="seg-btn is-on" data-value="1" aria-pressed="true">是</button></div>
+        
+      </div>
+      <div class="field field-inline" data-dname="faq">
+        <div class="field-head"><label class="field-label">FAQ 常見問題</label>
+          <code class="field-key">faq</code></div>
+        <div class="seg" role="group" aria-label="FAQ 常見問題"><button type="button" class="seg-btn" data-value="" aria-pressed="false">否</button><button type="button" class="seg-btn is-on" data-value="1" aria-pressed="true">是</button><button type="button" class="seg-btn" data-value="2" aria-pressed="false">是（用 Q: A: 格式）</button></div>
+        
+      </div>
+      <div class="field field-inline" data-dname="bold">
+        <div class="field-head"><label class="field-label">粗體</label>
+          <code class="field-key">bold</code></div>
+        <div class="seg" role="group" aria-label="粗體"><button type="button" class="seg-btn" data-value="" aria-pressed="false">否</button><button type="button" class="seg-btn is-on" data-value="1" aria-pressed="true">是</button></div>
+        
+      </div>
+      </div>
+    </section>
+    <section class="panel" id="seo" aria-labelledby="seo-h">
+      <div class="panel-head">
+        <span class="idx">06</span>
+        <h2 id="seo-h">SEO 關鍵字</h2>
+        <span class="en">SEO</span>
+      </div>
+      <p class="lead">留空即由系統按每段主關鍵字自動產生 NLP 關鍵字。</p>
+      <div class="field field-auto" data-dname="keywords" data-auto="true">
+        <div class="field-head">
+          <label class="field-label">要包含在文中的關鍵字</label>
+          <code class="field-key">tf-keywords</code>
+        </div>
+        <div class="auto-card">
+          <span class="auto-badge">AUTO</span>
+          <span class="txt">與 Google 前 10 名一致</span>
+          <button type="button" class="to-manual">改為手動</button>
+        </div>
+        <div class="manual-wrap">
+          <div class="kw-box">
+            <div class="kw-chips" id="kw-chips"></div>
+            <p class="hint" style="margin:0 0 8px">手動模式：只會用你加入嘅關鍵字；清單空咗就等同行自動。</p>
+            <div class="kw-tools">
+              <button type="button" class="btn btn-sm" id="gen_keywords">產生 NLP 關鍵字</button>
+              <button type="button" class="btn btn-sm btn-ghost" id="kw-add">手動新增</button>
+              <span class="hint" style="margin:0">上限 150 個</span>
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm back-to-auto" hidden>改回自動</button>
+        </div>
+      </div>
+    </section>
+    <section class="panel" id="ilink" aria-labelledby="ilink-h">
+      <div class="panel-head">
+        <span class="idx">07</span>
+        <h2 id="ilink-h">內部連結</h2>
+        <span class="en">Internal Linking</span>
+      </div>
+      <p class="lead">連去自己網站嘅頁面，控制數量、位置與屬性。</p>
+      <div class="grid">
+      <div class="field" data-dname="il_site">
+        <div class="field-head">
+          <label class="field-label">選擇網站（內部連結用）</label>
+          
+          <code class="field-key">il_site</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">無<span class="sel-en">None</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="" data-en="None" aria-selected="true"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+<li role="option" class="opt" data-value="+" data-en="+ Add a Website"><span class="opt-zh">＋新增網站</span><span class="opt-en">+ Add a Website</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="internal_links">
+        <div class="field-head">
+          <label class="field-label">連結數量</label>
+          
+          <code class="field-key">internal_links</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">1–2 條<span class="sel-en">1-2</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="1-2" data-en="1-2" aria-selected="true"><span class="opt-zh">1–2 條</span><span class="opt-en">1-2</span></li>
+<li role="option" class="opt" data-value="3-4" data-en="3-4"><span class="opt-zh">3–4 條</span><span class="opt-en">3-4</span></li>
+<li role="option" class="opt" data-value="5-7" data-en="5-7"><span class="opt-zh">5–7 條</span><span class="opt-en">5-7</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="il_place">
+        <div class="field-head">
+          <label class="field-label">放置位置</label>
+          
+          <code class="field-key">il_place</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">全文平均分佈<span class="sel-en">Evenly Throughout</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt" data-value="0" data-en="At the Top"><span class="opt-zh">文章頂部</span><span class="opt-en">At the Top</span></li>
+<li role="option" class="opt is-cur" data-value="1" data-en="Evenly Throughout" aria-selected="true"><span class="opt-zh">全文平均分佈</span><span class="opt-en">Evenly Throughout</span></li>
+<li role="option" class="opt" data-value="2" data-en="At the Bottom"><span class="opt-zh">文章底部</span><span class="opt-en">At the Bottom</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="il_context">
+        <div class="field-head">
+          <label class="field-label">情境化豐富（依語境下連結）</label>
+          
+          <code class="field-key">il_context</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">是<span class="sel-en">Yes</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt" data-value="2" data-en="None"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+<li role="option" class="opt is-cur" data-value="1" data-en="Yes" aria-selected="true"><span class="opt-zh">是</span><span class="opt-en">Yes</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="il_link_attr">
+        <div class="field-head">
+          <label class="field-label">連結屬性</label>
+          
+          <code class="field-key">il_link_attr</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">Dofollow（傳遞權重）<span class="sel-en">Dofollow</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="1" data-en="Dofollow" aria-selected="true"><span class="opt-zh">Dofollow（傳遞權重）</span><span class="opt-en">Dofollow</span></li>
+<li role="option" class="opt" data-value="2" data-en="Nofollow"><span class="opt-zh">Nofollow（不傳遞權重）</span><span class="opt-en">Nofollow</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="il_format">
+        <div class="field-head">
+          <label class="field-label">連結格式</label>
+          
+          <code class="field-key">il_format</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">內文<span class="sel-en">In text</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="1" data-en="In text" aria-selected="true"><span class="opt-zh">內文</span><span class="opt-en">In text</span></li>
+<li role="option" class="opt" data-value="2" data-en="Related articles block"><span class="opt-zh">相關文章區塊</span><span class="opt-en">Related articles block</span></li>
+<li role="option" class="opt" data-value="3" data-en="In text + Related block"><span class="opt-zh">內文＋相關文章區塊</span><span class="opt-en">In text + Related block</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="il_faq">
+        <div class="field-head">
+          <label class="field-label">允許在 FAQ 加連結</label>
+          
+          <code class="field-key">il_faq</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">無<span class="sel-en">None</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="2" data-en="None" aria-selected="true"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+<li role="option" class="opt" data-value="1" data-en="Yes"><span class="opt-zh">是</span><span class="opt-en">Yes</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+        <div class="field">
+          <div class="field-head"><label class="field-label">包含路徑</label><code class="field-key">il_include</code></div>
+          <input class="inp" id="il_include" type="text" placeholder="例：/products/*, /blog, /category-*">
+        </div>
+        <div class="field">
+          <div class="field-head"><label class="field-label">排除路徑</label><code class="field-key">il_exclude</code></div>
+          <input class="inp" id="il_exclude" type="text" placeholder="例：/admin/*, /private-area, /about-us">
+        </div>
+        <div class="field span-2">
+          <label class="check"><input type="checkbox" id="cc_il_relevant">
+            <span>只揀同主題相關嘅頁面（推薦）</span></label>
+        </div>
+      </div>
+    </section>
+    <section class="panel" id="elink" aria-labelledby="elink-h">
+      <div class="panel-head">
+        <span class="idx">08</span>
+        <h2 id="elink-h">外部連結</h2>
+        <span class="en">External Linking</span>
+      </div>
+      <p class="lead">引用外部來源，控制類型、數量與格式。</p>
+      <div class="grid">
+      <div class="field" data-dname="ext_links">
+        <div class="field-head">
+          <label class="field-label">連結類型</label>
+          
+          <code class="field-key">ext_links</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">無<span class="sel-en">None</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="0" data-en="None" aria-selected="true"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+<li role="option" class="opt" data-value="2" data-en="Automatic"><span class="opt-zh">自動</span><span class="opt-en">Automatic</span></li>
+<li role="option" class="opt" data-value="1" data-en="Custom"><span class="opt-zh">自訂</span><span class="opt-en">Custom</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="el_number">
+        <div class="field-head">
+          <label class="field-label">連結數量</label>
+          
+          <code class="field-key">el_number</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">1–2 條<span class="sel-en">1-2</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="1-2" data-en="1-2" aria-selected="true"><span class="opt-zh">1–2 條</span><span class="opt-en">1-2</span></li>
+<li role="option" class="opt" data-value="3-4" data-en="3-4"><span class="opt-zh">3–4 條</span><span class="opt-en">3-4</span></li>
+<li role="option" class="opt" data-value="5-7" data-en="5-7"><span class="opt-zh">5–7 條</span><span class="opt-en">5-7</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="el_place">
+        <div class="field-head">
+          <label class="field-label">放置位置</label>
+          
+          <code class="field-key">el_place</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">全文平均分佈<span class="sel-en">Evenly Throughout</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt" data-value="0" data-en="At the Top"><span class="opt-zh">文章頂部</span><span class="opt-en">At the Top</span></li>
+<li role="option" class="opt is-cur" data-value="1" data-en="Evenly Throughout" aria-selected="true"><span class="opt-zh">全文平均分佈</span><span class="opt-en">Evenly Throughout</span></li>
+<li role="option" class="opt" data-value="2" data-en="At the Bottom"><span class="opt-zh">文章底部</span><span class="opt-en">At the Bottom</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="el_context">
+        <div class="field-head">
+          <label class="field-label">情境化豐富（依語境下連結）</label>
+          
+          <code class="field-key">el_context</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">是<span class="sel-en">Yes</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt" data-value="2" data-en="None"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+<li role="option" class="opt is-cur" data-value="1" data-en="Yes" aria-selected="true"><span class="opt-zh">是</span><span class="opt-en">Yes</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="el_link_attr">
+        <div class="field-head">
+          <label class="field-label">連結屬性</label>
+          
+          <code class="field-key">el_link_attr</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">Nofollow（不傳遞權重）<span class="sel-en">Nofollow</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt" data-value="1" data-en="Dofollow"><span class="opt-zh">Dofollow（傳遞權重）</span><span class="opt-en">Dofollow</span></li>
+<li role="option" class="opt is-cur" data-value="2" data-en="Nofollow" aria-selected="true"><span class="opt-zh">Nofollow（不傳遞權重）</span><span class="opt-en">Nofollow</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="el_format">
+        <div class="field-head">
+          <label class="field-label">連結格式</label>
+          
+          <code class="field-key">el_format</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">內文<span class="sel-en">In text</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="1" data-en="In text" aria-selected="true"><span class="opt-zh">內文</span><span class="opt-en">In text</span></li>
+<li role="option" class="opt" data-value="4" data-en="Sources list"><span class="opt-zh">來源清單</span><span class="opt-en">Sources list</span></li>
+<li role="option" class="opt" data-value="5" data-en="In text + Sources list"><span class="opt-zh">內文＋來源清單</span><span class="opt-en">In text + Sources list</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="el_faq">
+        <div class="field-head">
+          <label class="field-label">允許在 FAQ 加連結</label>
+          
+          <code class="field-key">el_faq</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">無<span class="sel-en">None</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="2" data-en="None" aria-selected="true"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+<li role="option" class="opt" data-value="1" data-en="Yes"><span class="opt-zh">是</span><span class="opt-en">Yes</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+        <div class="field span-2">
+          <div class="field-head"><label class="field-label">指定來源網址（選填）</label><code class="field-key">el_urls</code></div>
+          <div class="with-counter">
+            <textarea class="inp" id="el_urls" rows="2" placeholder="每行一條 https://…"></textarea>
+            <span class="counter" data-for="el_urls">0</span>
+          </div>
+        </div>
+        <div class="field span-2">
+          <div class="field-head"><label class="field-label">排除網址</label><code class="field-key">el_exc_urls</code></div>
+          <textarea class="inp" id="el_exc_urls" rows="2" placeholder="每行一條要排除嘅網址"></textarea>
+        </div>
+      </div>
+    </section>
+    <section class="panel" id="web" aria-labelledby="web-h">
+      <div class="panel-head">
+        <span class="idx">09</span>
+        <h2 id="web-h">連接網絡</h2>
+        <span class="en">Connect to Web</span>
+      </div>
+      <p class="lead">即時搜尋／新聞／指定網址，決定文章引用邊啲資料。</p>
+      <div class="grid">
+      <div class="field" data-dname="web">
+        <div class="field-head">
+          <label class="field-label">允許上網搜尋</label>
+          
+          <code class="field-key">web</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">無<span class="sel-en">None</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="0" data-en="None" aria-selected="true"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+<li role="option" class="opt" data-value="2" data-en="Yes"><span class="opt-zh">是</span><span class="opt-en">Yes</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="web_source">
+        <div class="field-head">
+          <label class="field-label">搜尋來源</label>
+          
+          <code class="field-key">web_source</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">即時搜尋<span class="sel-en">Real-Time Search</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="0" data-en="Real-Time Search" aria-selected="true"><span class="opt-zh">即時搜尋</span><span class="opt-en">Real-Time Search</span></li>
+<li role="option" class="opt" data-value="1" data-en="Real-Time News"><span class="opt-zh">即時新聞</span><span class="opt-en">Real-Time News</span></li>
+<li role="option" class="opt" data-value="2" data-en="URLs Reference"><span class="opt-zh">指定網址參考</span><span class="opt-en">URLs Reference</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="web_source_date">
+        <div class="field-head">
+          <label class="field-label">資料時效</label>
+          
+          <code class="field-key">web_source_date</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">全部時間<span class="sel-en">All Time</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="" data-en="All Time" aria-selected="true"><span class="opt-zh">全部時間</span><span class="opt-en">All Time</span></li>
+<li role="option" class="opt" data-value="1D" data-en="Last 24 hours"><span class="opt-zh">過去 24 小時</span><span class="opt-en">Last 24 hours</span></li>
+<li role="option" class="opt" data-value="7D" data-en="Last Week"><span class="opt-zh">過去一週</span><span class="opt-en">Last Week</span></li>
+<li role="option" class="opt" data-value="1M" data-en="Last Month"><span class="opt-zh">過去一個月</span><span class="opt-en">Last Month</span></li>
+<li role="option" class="opt" data-value="1Y" data-en="Last Year"><span class="opt-zh">過去一年</span><span class="opt-en">Last Year</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="field" data-dname="web_exclude_cb">
+        <div class="field-head">
+          <label class="field-label">排除網址</label>
+          
+          <code class="field-key">web_exclude_cb</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">否<span class="sel-en">No</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="" data-en="No" aria-selected="true"><span class="opt-zh">否</span><span class="opt-en">No</span></li>
+<li role="option" class="opt" data-value="1" data-en="Yes"><span class="opt-zh">是</span><span class="opt-en">Yes</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+        <div class="field span-2">
+          <div class="field-head"><label class="field-label">參考網址</label><code class="field-key">ctw_urls</code></div>
+          <div class="with-counter">
+            <textarea class="inp" id="ctw_urls" rows="2" placeholder="每行一條；「指定網址參考」模式下必填"></textarea>
+            <span class="counter" data-for="ctw_urls">0</span>
+          </div>
+        </div>
+        <div class="field span-2">
+          <div class="field-head"><label class="field-label">要排除嘅網址</label><code class="field-key">web_exclude_urls</code></div>
+          <textarea class="inp" id="web_exclude_urls" rows="2" placeholder="每行一條"></textarea>
+        </div>
+      </div>
+    </section>
+    <section class="panel" id="synd" aria-labelledby="synd-h">
+      <div class="panel-head">
+        <span class="idx">10</span>
+        <h2 id="synd-h">多平台轉發</h2>
+        <span class="en">Syndication</span>
+      </div>
+      <p class="lead">同一篇文，一鍵改寫成社交平台版本。</p>
+      <div class="matrix-wrap"><table class="matrix">
+        <thead><tr><th>平台</th><th>產出</th></tr></thead>
+        <tbody>
+          <tr data-dname="sc1">
+            <td><div class="plat"><span class="dot" style="background:var(--mark)"></span>
+              <div><b>Twitter / X</b><div class="en">Twitter post</div></div></div></td>
+            <td><div class="seg" role="group" aria-label="Twitter / X"><button type="button" class="seg-btn is-on" data-value="" aria-pressed="true">否</button><button type="button" class="seg-btn" data-value="1" aria-pressed="">單篇</button><button type="button" class="seg-btn" data-value="2" aria-pressed="">短串文</button></div></td>
+          </tr>
+          <tr data-dname="sc3">
+            <td><div class="plat"><span class="dot" style="background:var(--mark)"></span>
+              <div><b>LinkedIn</b><div class="en">LinkedIn post</div></div></div></td>
+            <td><div class="seg" role="group" aria-label="LinkedIn"><button type="button" class="seg-btn is-on" data-value="" aria-pressed="true">否</button><button type="button" class="seg-btn" data-value="3" aria-pressed="">是</button></div></td>
+          </tr>
+          <tr data-dname="sc4">
+            <td><div class="plat"><span class="dot" style="background:var(--mark)"></span>
+              <div><b>Facebook</b><div class="en">Facebook post</div></div></div></td>
+            <td><div class="seg" role="group" aria-label="Facebook"><button type="button" class="seg-btn is-on" data-value="" aria-pressed="true">否</button><button type="button" class="seg-btn" data-value="4" aria-pressed="">是</button></div></td>
+          </tr>
+          <tr data-dname="sc5">
+            <td><div class="plat"><span class="dot" style="background:var(--mark)"></span>
+              <div><b>電子報</b><div class="en">Email newsletter</div></div></div></td>
+            <td><div class="seg" role="group" aria-label="電子報"><button type="button" class="seg-btn is-on" data-value="" aria-pressed="true">否</button><button type="button" class="seg-btn" data-value="5" aria-pressed="">是</button></div></td>
+          </tr>
+          <tr data-dname="sc6">
+            <td><div class="plat"><span class="dot" style="background:var(--mark)"></span>
+              <div><b>WhatsApp</b><div class="en">WhatsApp message</div></div></div></td>
+            <td><div class="seg" role="group" aria-label="WhatsApp"><button type="button" class="seg-btn is-on" data-value="" aria-pressed="true">否</button><button type="button" class="seg-btn" data-value="6" aria-pressed="">是</button></div></td>
+          </tr>
+          <tr data-dname="sc7">
+            <td><div class="plat"><span class="dot" style="background:var(--mark)"></span>
+              <div><b>Pinterest</b><div class="en">Pinterest Pin</div></div></div></td>
+            <td><div class="seg" role="group" aria-label="Pinterest"><button type="button" class="seg-btn is-on" data-value="" aria-pressed="true">否</button><button type="button" class="seg-btn" data-value="7" aria-pressed="">是</button></div></td>
+          </tr>
+        </tbody>
+      </table></div>
+      <div class="grid" style="margin-top:18px">
+      <div class="field" data-dname="sc_link">
+        <div class="field-head">
+          <label class="field-label">頁面連結方式</label>
+          
+          <code class="field-key">sc_link</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">不設連結<span class="sel-en">No Link</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="" data-en="No Link" aria-selected="true"><span class="opt-zh">不設連結</span><span class="opt-en">No Link</span></li>
+<li role="option" class="opt" data-value="1" data-en="Placeholder"><span class="opt-zh">佔位符（Placeholder）</span><span class="opt-en">Placeholder</span></li>
+<li role="option" class="opt" data-value="2" data-en="WordPress Link"><span class="opt-zh">WordPress 連結</span><span class="opt-en">WordPress Link</span></li>
+<li role="option" class="opt" data-value="3" data-en="Custom Link"><span class="opt-zh">自訂連結</span><span class="opt-en">Custom Link</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+        <div class="field">
+          <div class="field-head"><label class="field-label">來源網址（選填）</label><code class="field-key">syndication_url</code></div>
+          <input class="inp" id="syndication_url" type="text" placeholder="想改寫現有文章就貼網址">
+        </div>
+      </div>
+    </section>
+    <section class="panel" id="outline" aria-labelledby="outline-h">
+      <div class="panel-head">
+        <span class="idx">11</span>
+        <h2 id="outline-h">大綱編輯器</h2>
+        <span class="en">Outline Editor</span>
+        <span class="musthave">必備品</span>
+      </div>
+      <p class="lead">生成之前先出一份大綱。你可以加標題、拖曳排序；確認結構之後再生成，命中率會高好多。</p>
+      <div class="grid">
+        <div class="field field-auto" data-dname="outline_cb" data-auto="true">
+          <div class="field-head">
+            <label class="field-label">大綱</label>
+            <code class="field-key">outline_cb</code>
+          </div>
+          <div class="auto-card">
+            <span class="auto-badge">AUTO</span>
+            <span class="txt">與 Google 前 10 名一致</span>
+            <button type="button" class="to-manual">改為手動</button>
+          </div>
+          <div class="manual-wrap">
+            <div class="outline-editor">
+              <ul class="oh-list" id="oh-list">
+                <li class="oh-row" draggable="true"><span class="oh-handle" aria-hidden="true">⠿</span><span class="oh-text">H2 · 什麼是被動收入：三種現金流結構</span><button class="oh-del" type="button" aria-label="刪除">×</button></li>
+                <li class="oh-row" draggable="true"><span class="oh-handle" aria-hidden="true">⠿</span><span class="oh-text">H2 · 2026 年香港常見入門渠道</span><button class="oh-del" type="button" aria-label="刪除">×</button></li>
+                <li class="oh-row" draggable="true"><span class="oh-handle" aria-hidden="true">⠿</span><span class="oh-text">H3 · 需要幾多本金</span><button class="oh-del" type="button" aria-label="刪除">×</button></li>
+                <li class="oh-row" draggable="true"><span class="oh-handle" aria-hidden="true">⠿</span><span class="oh-text">H2 · 回報與風險：實際數字</span><button class="oh-del" type="button" aria-label="刪除">×</button></li>
+              </ul>
+              <div class="oh-tools">
+                <input class="inp" id="oh-new" type="text" placeholder="新增一個 H2 / H3 標題">
+                <button class="btn btn-sm" id="oh-add">加入</button>
+                <button class="btn btn-sm btn-ghost" id="magic_bag">魔法包：由 SERP 生成大綱</button>
+              </div>
+              <p class="hint">拖左邊手把排序；H3 會跟著上面嗰個 H2。</p>
+            </div>
+            <button type="button" class="btn btn-sm back-to-auto" hidden>改回自動</button>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-head"><label class="field-label">大綱參考資料</label><code class="field-key">outline_input</code></div>
+          <textarea class="inp" id="oh_source" rows="4"
+            placeholder="貼上現成大綱、文章草稿或 Excel 內容（選填）。貼咗就會以此為基礎排結構。"></textarea>
+          <p class="hint">留空就得。有資料嘅時候，系統會優先跟你嘅結構。</p>
+        </div>
+      </div>
+      <div class="info-box">
+        <b>四種用法</b>
+        <ul>
+          <li><b>魔法包</b>：若已開啟「連接網絡」，即時抓 Google 相關排名文章，生成貼近現況嘅大綱。</li>
+          <li><b>新增標題</b>：自己落 H2／H3，適合已有關鍵字地圖嘅情況。</li>
+          <li><b>拖放</b>：拖拉排序，文章段落次序即時跟住變。</li>
+          <li><b>頂級模型</b>：大綱由最強模型產生，用嚟打難度較高嘅題材。</li>
+        </ul>
+      </div>
+    </section>
+    <section class="panel" id="publish" aria-labelledby="publish-h">
+      <div class="panel-head">
+        <span class="idx">12</span>
+        <h2 id="publish-h">發佈</h2>
+        <span class="en">Target Website</span>
+      </div>
+      <p class="lead">揀網站、決定要唔要連大綱同模板。</p>
+      <div class="grid">
+      <div class="field" data-dname="pc_site_id">
+        <div class="field-head">
+          <label class="field-label">選擇網站（發佈用）</label>
+          
+          <code class="field-key">pc_site_id</code>
+        </div>
+        <div class="sel" data-open="false">
+          <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sel-val">無<span class="sel-en">None</span></span>
+            <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+          </button>
+          <div class="sel-pop" role="listbox" hidden>
+            
+            <ul class="sel-list">
+<li role="option" class="opt is-cur" data-value="" data-en="None" aria-selected="true"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+<li role="option" class="opt" data-value="add" data-en="+ Add a Website"><span class="opt-zh">＋新增網站</span><span class="opt-en">+ Add a Website</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+        <div class="field">
+          <div class="field-head"><label class="field-label">發佈方式</label></div>
+          <div class="seg" role="group" aria-label="發佈方式">
+            <button type="button" class="seg-btn is-on" aria-pressed="true">存草稿</button>
+            <button type="button" class="seg-btn" aria-pressed="false">直接發佈</button>
+          </div>
+          <p class="hint">先存草稿，檢查大綱再發佈，係最安全嘅做法。</p>
+        </div>
+        <div class="field span-2">
+          <div class="field-head"><label class="field-label">模板</label></div>
+          <div class="btn-row" style="gap:22px">
+            <label class="check"><input type="checkbox" id="cx-template">
+              <span><b>存為模板</b>　下次同一組設定一撳即用</span></label>
+          </div>
+          <div class="kw-tools" style="margin-top:10px">
+            <input class="inp" id="tc_name_input" type="text" placeholder="模板名稱" style="max-width:260px">
+            <button type="button" class="btn btn-sm" id="save_template">儲存模板</button>
+          </div>
+          <p class="hint">大綱相關設定喺上面「11 大綱編輯器」。</p>
+        </div>
+      </div>
+    </section>
+    </form>
+  </main>
+</div>
+
+<div class="runbar" role="region" aria-label="執行">
+  <div class="runbar-in">
+    <div class="ledger">
+      <span>模型 <b id="rb-model">0.8</b></span>
+      <span>評分 <b id="rb-score">0.1</b></span>
+      <span>圖片 <b id="rb-img">0</b></span>
+    </div>
+    <span class="saved" id="saved">草稿已自動儲存</span>
+    <div class="spacer"></div>
+    <span class="total">合計 <b id="rb-total">0.9</b> 信用點</span>
+    <button type="button" class="btn" id="save-draft">儲存草稿</button>
+    <button type="button" class="btn btn-primary" id="run">產生文章</button>
+  </div>
+</div>
+
+<footer class="page-foot">
+  <span>介面重設計原型 · 繁體中文（香港）</span>
+  <span>結構對應原生頁面 12 個區塊 / 52 個下拉 / 513 個選項</span>
+  <span>字體：Noto Serif TC · Noto Sans TC · JetBrains Mono</span>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+  const $ = (s, r=document) => r.querySelector(s);
+  const LS = (() => {
+    try { localStorage.setItem('__probe','1'); localStorage.removeItem('__probe'); return localStorage; }
+    catch (e) { const mem = {}; return { getItem: k => (k in mem ? mem[k] : null),
+      setItem: (k,v) => { mem[k] = String(v); }, removeItem: k => { delete mem[k]; } }; }
+  })();
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+  /* ---------- custom select ---------- */
+  function closeAll(except){
+    $$('.sel[data-open="true"]').forEach(sel=>{
+      if (sel === except) return;
+      sel.dataset.open = 'false';
+      sel.querySelector('.sel-btn').setAttribute('aria-expanded','false');
+      sel.querySelector('.sel-pop').hidden = true;
+    });
+  }
+  $$('.sel').forEach(sel=>{
+    const btn = sel.querySelector('.sel-btn');
+    const pop = sel.querySelector('.sel-pop');
+    const search = sel.querySelector('.sel-search');
+    const list = sel.querySelector('.sel-list');
+    let active = -1;
+
+    function opts(){ return $$('.opt', list).filter(o=>!o.hidden); }
+    function open(){
+      closeAll(sel);
+      sel.dataset.open = 'true';
+      btn.setAttribute('aria-expanded','true');
+      pop.hidden = false;
+      if (search){ search.value=''; opts().forEach(o=>o.hidden=false); search.focus(); }
+      active = -1;
+    }
+    function close(){
+      sel.dataset.open = 'false';
+      btn.setAttribute('aria-expanded','false');
+      pop.hidden = true;
+    }
+    function pick(el){
+      if (!el) return;
+      $$('.opt', list).forEach(o=>{ o.classList.remove('is-cur'); o.removeAttribute('aria-selected'); });
+      el.classList.add('is-cur');
+      el.setAttribute('aria-selected','true');
+      const zh = el.querySelector('.opt-zh').textContent;
+      const en = el.dataset.en;
+      const val = $('.sel-val', btn);
+      val.innerHTML = '';
+      const z = document.createElement('span'); z.textContent = zh; val.appendChild(z);
+      if (en && en !== zh){ const e = document.createElement('span'); e.className='sel-en'; e.textContent = en; val.appendChild(e); }
+      sel.dataset.value = el.dataset.value;
+      close(); btn.focus();
+      updateCredits(); save();
+    }
+    btn.addEventListener('click', ()=> sel.dataset.open === 'true' ? close() : open());
+    btn.addEventListener('keydown', e=>{
+      if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); }
+    });
+    list.addEventListener('click', e=>{ const el = e.target.closest('.opt'); if (el) pick(el); });
+    list.addEventListener('mousemove', e=>{
+      const el = e.target.closest('.opt'); if (!el) return;
+      opts().forEach(o=>o.classList.remove('is-active')); el.classList.add('is-active');
+    });
+    if (search){
+      search.addEventListener('input', ()=>{
+        const q = search.value.trim().toLowerCase();
+        opts().forEach(o=>{
+          const en = (o.dataset.en||'').toLowerCase();
+          const zh = o.textContent.toLowerCase();
+          o.hidden = q && !(en.includes(q) || zh.includes(q));
+        });
+        active = -1;
+      });
+      search.addEventListener('keydown', e=>{
+        if (e.key === 'ArrowDown'){ e.preventDefault(); move(1); }
+        if (e.key === 'Enter'){ e.preventDefault(); const a = opts()[active]; pick(a || opts()[0]); }
+      });
+    }
+    function move(d){
+      const list2 = opts(); if (!list2.length) return;
+      active = (active + d + list2.length) % list2.length;
+      list2.forEach(o=>o.classList.remove('is-active'));
+      const el = list2[active]; el.classList.add('is-active');
+      el.scrollIntoView({block:'nearest'});
+    }
+    sel.addEventListener('keydown', e=>{
+      if (pop.hidden) return;
+      if (e.key === 'ArrowDown'){ e.preventDefault(); move(1); }
+      if (e.key === 'ArrowUp'){ e.preventDefault(); move(-1); }
+      if (e.key === 'Escape'){ e.preventDefault(); close(); btn.focus(); }
+    });
+  });
+  document.addEventListener('click', e=>{ if (!e.target.closest('.sel')) closeAll(null); });
+  document.addEventListener('keydown', e=>{ if (e.key === 'Escape') closeAll(null); });
+
+  /* ---------- AUTO fields ---------- */
+  $$('.field-auto').forEach(f=>{
+    const toManual = f.querySelector('.to-manual');
+    const back = f.querySelector('.back-to-auto');
+    const dname = f.dataset.dname;
+    toManual.addEventListener('click', ()=>{
+      f.dataset.auto = 'false';
+      back.hidden = false;
+      if (!f.querySelector('.sel')){
+        const tpl = document.querySelector(`template[data-clone="${dname}"]`);
+        if (tpl) f.appendChild(tpl.content.cloneNode(true));
+      }
+      save();
+    });
+    back.addEventListener('click', ()=>{
+      f.dataset.auto = 'true'; back.hidden = true; save();
+    });
+  });
+
+  /* ---------- segmented controls ---------- */
+  $$('.seg').forEach(seg=>{
+    seg.addEventListener('click', e=>{
+      const b = e.target.closest('.seg-btn'); if (!b) return;
+      $$('.seg-btn', seg).forEach(x=>{ x.classList.remove('is-on'); x.setAttribute('aria-pressed','false'); });
+      b.classList.add('is-on'); b.setAttribute('aria-pressed','true'); save();
+    });
+  });
+
+  /* ---------- credits ---------- */
+  function num(s){ const m = /([\d.]+)/.exec(s||''); return m ? parseFloat(m[1]) : 0; }
+  function selText(dname){
+    const sel = document.querySelector('[data-dname="' + dname + '"] .sel');
+    if (!sel) return '';
+    const v = sel.querySelector('.sel-val span');
+    return v ? v.textContent : '';
+  }
+  function creditOf(dname, fallback){
+    const m = /([\d.]+)\s*信用點/.exec(selText(dname));
+    return m ? parseFloat(m[1]) : fallback;
+  }
+  function updateCredits(){
+    const model = creditOf('quality', 0.8);
+    const scoreEl = $('#cx-content-score');
+    const score = scoreEl && scoreEl.checked ? 0.1 : 0;
+    const per = creditOf('images', 0);
+    const qm = /(\d+)/.exec(selText('img_quantity'));
+    const qty = qm ? parseInt(qm[1], 10) : 3;
+    const img = +(per * qty).toFixed(1);
+    const total = +(model + score + img).toFixed(1);
+    [['#lg-model',model],['#lg-score',score],['#lg-img',img],['#lg-total',total],
+     ['#rb-model',model],['#rb-score',score],['#rb-img',img],['#rb-total',total]]
+      .forEach(([s,v])=>{ const el=$(s); if (el) el.textContent = v; });
+  }
+  ['cx-content-score','cx-search-data','cx-user-api'].forEach(id=>{
+    const el = $('#'+id); if (el) el.addEventListener('change', ()=>{ updateCredits(); save(); });
+  });
+
+  /* ---------- counters ---------- */
+  function bindCounter(input){
+    if (!input) return;
+    const c = $(`.counter[data-for="${input.id}"]`);
+    const upd = ()=>{ if (c) c.textContent = input.value.length; };
+    input.addEventListener('input', upd); upd();
+  }
+  ['tf_details','el_urls','ctw_urls'].forEach(id=>bindCounter($('#'+id)));
+  const title = $('#inp_title');
+  if (title) title.addEventListener('input', ()=>{ $('#title-count').textContent = title.value.length; });
+
+  /* ---------- keyword chips ---------- */
+  const chips = $('#kw-chips'), kwNote = $('#kw-auto-note');
+  $('#gen_keywords')?.addEventListener('click', ()=>{
+    const demo = ['被動收入','香港','2026','投資','現金流','新手'];
+    demo.forEach(t=>{
+      if ($$('.chip', chips).some(c=>c.dataset.k===t)) return;
+      const el = document.createElement('span');
+      el.className = 'chip'; el.dataset.k = t;
+      el.innerHTML = `${t}<button type="button" aria-label="移除 ${t}">×</button>`;
+      chips.appendChild(el);
+    });
+    if (kwNote) kwNote.style.display = 'none';
+    expose(); save();
+  });
+  $('#kw-add')?.addEventListener('click', expose);
+  function expose(){ if (kwNote) kwNote.style.display = 'none'; }
+  chips?.addEventListener('click', e=>{
+    const b = e.target.closest('button'); if (!b) return;
+    b.closest('.chip').remove();
+    if (!chips.children.length && kwNote) kwNote.style.display = '';
+    save();
+  });
+
+  /* ---------- rail scrollspy ---------- */
+  const railLinks = $$('.rail a');
+  const panels = $$('.panel');
+  const io = new IntersectionObserver(entries=>{
+    entries.forEach(en=>{
+      if (!en.isIntersecting) return;
+      railLinks.forEach(a=>a.classList.toggle('on', a.dataset.target === en.target.id));
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  panels.forEach(p=>io.observe(p));
+  railLinks.forEach(a=>a.addEventListener('click', e=>{
+    e.preventDefault();
+    document.getElementById(a.dataset.target)?.scrollIntoView({behavior:'smooth', block:'start'});
+  }));
+  $$('[data-jump]').forEach(b=>b.addEventListener('click', ()=>{
+    document.getElementById(b.dataset.jump)?.scrollIntoView({behavior:'smooth', block:'start'});
+  }));
+
+  /* ---------- theme ---------- */
+  $('#theme-toggle')?.addEventListener('click', ()=>{
+    const root = document.documentElement;
+    root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    LS.setItem('sw-theme', root.dataset.theme);
+  });
+  const savedTheme = LS.getItem('sw-theme');
+  if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+
+  /* ---------- persistence ---------- */
+  const KEY = 'sw-1click-zh';
+  function save(){
+    const state = { title: $('#inp_title')?.value || '', kw: $('#main_keyword')?.value || '' };
+    $$('.sel').forEach(s=>{
+      const f = s.closest('.field'); if (!f) return;
+      state[f.dataset.dname] = s.dataset.value ?? s.querySelector('.sel-val > span:first-child').textContent;
+    });
+    $$('.seg').forEach(seg=>{
+      const host = seg.closest('[data-dname]'); if (!host) return;
+      const on = seg.querySelector('.seg-btn.is-on');
+      state['seg:'+host.dataset.dname] = on ? on.dataset.value : '';
+    });
+    $$('input[type=checkbox]').forEach(c=>{ if (c.id) state[c.id] = c.checked; });
+    $$('textarea').forEach(t=>{ if (t.id) state[t.id] = t.value; });
+    LS.setItem(KEY, JSON.stringify(state));
+    const sv = $('#saved'); if (sv){ sv.textContent = '已儲存 ' + new Date().toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'}); }
+  }
+  function restore(){
+    let state; try { state = JSON.parse(LS.getItem(KEY) || 'null'); } catch(e){ return; }
+    if (!state) return;
+    if (state.title) { $('#inp_title').value = state.title; $('#title-count').textContent = state.title.length; }
+    if (state.kw) $('#main_keyword').value = state.kw;
+    $$('input[type=checkbox]').forEach(c=>{ if (c.id && c.id in state) c.checked = state[c.id]; });
+    $$('textarea').forEach(t=>{ if (t.id && t.id in state) t.value = state[t.id]; });
+    $$('.seg').forEach(seg=>{
+      const host = seg.closest('[data-dname]'); if (!host) return;
+      const v = state['seg:'+host.dataset.dname]; if (!v) return;
+      const b = Array.from(seg.querySelectorAll('.seg-btn')).find(x=>x.dataset.value === v);
+      if (b) b.click();
+    });
+    $$('.sel').forEach(s=>{
+      const f = s.closest('.field'); if (!f) return;
+      const v = state[f.dataset.dname]; if (!v) return;
+      const opt = Array.from(s.querySelectorAll('.opt')).find(o=>(o.dataset.value === v) || (o.dataset.en === v));
+      if (opt) opt.click();
+    });
+  }
+  restore(); updateCredits();
+
+
+  /* ---------- outline editor ---------- */
+  const ohList = document.getElementById('oh-list');
+  if (ohList) {
+    const ohInput = document.getElementById('oh-new');
+    const makeRow = (text) => {
+      const li = document.createElement('li');
+      li.className = 'oh-row'; li.draggable = true;
+      li.innerHTML = '<span class="oh-handle" aria-hidden="true">⠿</span>' +
+                     '<span class="oh-text"></span>' +
+                     '<button class="oh-del" type="button" aria-label="刪除">×</button>';
+      li.querySelector('.oh-text').textContent = text;
+      return li;
+    };
+    const saveOutline = () => LS.setItem('sw-outline',
+      JSON.stringify([...ohList.querySelectorAll('.oh-text')].map(e => e.textContent)));
+    const addRow = () => {
+      const v = (ohInput && ohInput.value || '').trim();
+      if (!v) { ohInput && ohInput.focus(); return; }
+      ohList.appendChild(makeRow(v)); ohInput.value = ''; saveOutline();
+    };
+    document.getElementById('oh-add')?.addEventListener('click', addRow);
+    ohInput?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addRow(); } });
+    ohList.addEventListener('click', e => {
+      if (e.target.classList.contains('oh-del')) { e.target.closest('.oh-row').remove(); saveOutline(); }
+    });
+    let dragging = null;
+    ohList.addEventListener('dragstart', e => {
+      dragging = e.target.closest('.oh-row'); if (dragging) dragging.classList.add('is-drag');
+    });
+    ohList.addEventListener('dragend', () => {
+      if (dragging) dragging.classList.remove('is-drag');
+      dragging = null; saveOutline();
+    });
+    ohList.addEventListener('dragover', e => {
+      if (!dragging) return;
+      e.preventDefault();
+      const after = [...ohList.querySelectorAll('.oh-row:not(.is-drag)')]
+        .find(r => e.clientY < r.getBoundingClientRect().top + r.offsetHeight / 2);
+      if (after) ohList.insertBefore(dragging, after); else ohList.appendChild(dragging);
+    });
+    document.getElementById('magic_bag')?.addEventListener('click', () => {
+      ohList.innerHTML = '';
+      [['H2 · 什麼是被動收入：三種現金流結構', null],
+       ['H2 · 2026 年香港常見入門渠道', null],
+       ['H3 · 需要幾多本金', 1], ['H3 · 時間成本', 1],
+       ['H2 · 回報與風險：實際數字', null],
+       ['H2 · 常見問題', null]].forEach(([t]) => ohList.appendChild(makeRow(t)));
+      saveOutline();
+    });
+    try {
+      const prev = JSON.parse(LS.getItem('sw-outline') || 'null');
+      if (Array.isArray(prev) && prev.length) {
+        ohList.innerHTML = '';
+        prev.forEach(t => ohList.appendChild(makeRow(t)));
+      }
+    } catch (e) {}
+  }
+
+  /* ---------- demo actions ---------- */
+  $('#run')?.addEventListener('click', ()=>{
+    const kw = $('#main_keyword')?.value.trim();
+    const t = $('#inp_title')?.value.trim();
+    if (!kw && !t){ $('#main_keyword').focus(); alert('先填標題或主關鍵字，系統才有嘢可以寫。'); return; }
+    const btn = $('#run'); btn.disabled = true; btn.textContent = '排隊中…';
+    setTimeout(()=>{ btn.disabled = false; btn.textContent = '產生文章'; }, 1200);
+  });
+  $('#save-draft')?.addEventListener('click', save);
+  $('#gen_title')?.addEventListener('click', ()=>{
+    const kw = $('#main_keyword')?.value.trim() || '被動收入';
+    $('#inp_title').value = `${kw}完整指南：2026 年實戰步驟`; 
+    $('#title-count').textContent = $('#inp_title').value.length;
+    save();
+  });
+})();
+</script>
+</body>
+</html>
