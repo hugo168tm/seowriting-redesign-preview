@@ -389,6 +389,14 @@ footer.page-foot{max-width:1240px;margin:0 auto;padding:26px 34px 84px;color:var
 
   /* hidden 必須壓過 .sel-pop{display:flex}，否則所有選單會浮喺版面 */
   .sel-pop[hidden]{display:none}
+
+/* ---------- mobile fix: 工具切換器唔可以隱藏，改成可橫向滑動 ---------- */
+@media (max-width:1180px){
+  .tools a:not([aria-current]), .tool:not([aria-current]){display:flex}
+  .appbar .tools, .tools{overflow-x:auto; overflow-y:hidden; scrollbar-width:none; -webkit-overflow-scrolling:touch; min-width:0}
+  .tools::-webkit-scrollbar{display:none}
+  .tools a, .tools .tool{flex:0 0 auto; white-space:nowrap}
+}
 </style>
 </head>
 <body>
