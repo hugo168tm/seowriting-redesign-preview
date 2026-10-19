@@ -1,20 +1,957 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>施工中 · SEOWriting 編輯台</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet">
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Super Page · SEOWriting 編輯台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--paper:#FBFAF7;--ink:#16181D;--rule:#E3DFD6;--mark:#9B2C2C}
+
+:root{
+  --paper:#FBFAF7; --paper-2:#F4F2EC; --card:#FFFFFF;
+  --ink:#16181D; --ink-2:#4C525C; --ink-3:#767C87;
+  --rule:#E3DFD6; --rule-2:#EFEBE2;
+  --mark:#9B2C2C; --mark-soft:#F3E4E1;
+  --auto:#8A6100; --auto-soft:#F6EEDA;
+  --ok:#1F6F4A; --ok-soft:#E6F1EA;
+  --focus:#2F5D8A;
+  --r:3px; --r-lg:5px;
+  --sh:0 1px 2px rgba(22,24,29,.05), 0 8px 24px -12px rgba(22,24,29,.18);
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --serif:"Noto Serif TC","Songti TC","PingFang TC",Georgia,"Times New Roman",serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sp:4px;
+  --step-0:15px; --step-1:17px; --step-2:21px; --step-3:27px; --step-4:36px; --step-5:52px;
+}
+[data-theme="dark"]{
+  --paper:#15171B; --paper-2:#1B1E23; --card:#1E2126;
+  --ink:#F2F0EA; --ink-2:#B9BEC7; --ink-3:#8C929C;
+  --rule:#2C3037; --rule-2:#242830;
+  --mark:#E2836F; --mark-soft:#33211E;
+  --auto:#D9AE5F; --auto-soft:#2E2618;
+  --ok:#6DBE93; --ok-soft:#1B2A22;
+  --focus:#8FB8E0;
+  --sh:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -18px rgba(0,0,0,.7);
+}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--paper);color:var(--ink);
-     font-family:"Noto Sans TC",system-ui,sans-serif;padding:32px}
-.card{max-width:520px;border:1px solid var(--rule);background:#fff;padding:40px 36px;text-align:center}
-.eyebrow{font:500 11px/1 ui-monospace,monospace;letter-spacing:.18em;color:var(--mark);text-transform:uppercase}
-h1{font-family:"Noto Serif TC",serif;font-size:30px;margin:14px 0 12px}
-p{color:#5b5f66;line-height:1.75;margin:0 0 22px}
-a{color:var(--ink);border-bottom:1px solid var(--mark);text-decoration:none;padding-bottom:2px}
-</style></head><body><div class="card">
-<div class="eyebrow">Under construction</div>
-<h1>Super Page</h1>
-<p>依家由 Claude Code 用 superpowers brainstorming 流程開發緊，完成後會喺呢個網址出現。</p>
-<p><a href="index.html">← 返去一鍵發布部落格文章</a></p>
-</div></body></html>
+html{-webkit-text-size-adjust:100%; scrollbar-gutter:stable both-edges}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--sans); font-size:var(--step-0); line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:var(--serif); font-weight:600; letter-spacing:.01em; margin:0}
+code,.mono{font-family:var(--mono); font-size:.86em}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--focus); outline-offset:2px; border-radius:2px}
+
+/* ---------- app bar ---------- */
+.appbar{position:sticky; top:0; z-index:40; background:var(--ink); color:#F7F5EF;
+  display:flex; align-items:center; gap:18px; padding:0 18px; height:52px;
+  font-size:13.5px; letter-spacing:.02em}
+[data-theme="dark"] .appbar{background:#0C0E11; border-bottom:1px solid var(--rule)}
+.brand{font-family:var(--serif); font-size:16px; letter-spacing:.04em; white-space:nowrap}
+.brand b{font-weight:700}
+.tools{display:flex; gap:2px; margin-left:6px; overflow:auto; scrollbar-width:none}
+.tools::-webkit-scrollbar{display:none}
+.tool{padding:6px 11px; border-radius:3px; color:#CFCBC2; text-decoration:none; white-space:nowrap}
+.tool:hover{background:rgba(255,255,255,.09); color:#fff}
+.tool[aria-current="page"]{background:#F7F5EF; color:#16181D; font-weight:500}
+.appbar .grow{flex:1}
+.credit-chip{font-family:var(--mono); font-size:12.5px; border:1px solid rgba(255,255,255,.22);
+  border-radius:999px; padding:3px 10px; color:#EDE9E0}
+.icon-btn{background:none; border:1px solid rgba(255,255,255,.2); color:#EDE9E0; width:32px; height:32px;
+  border-radius:3px; cursor:pointer; display:grid; place-items:center; font-size:14px}
+.icon-btn:hover{background:rgba(255,255,255,.1)}
+.avatar{width:30px;height:30px;border-radius:50%;background:#2A2E35;color:#F7F5EF;
+  display:grid;place-items:center;font-size:12px;font-family:var(--mono)}
+
+/* ---------- shell ---------- */
+.shell{display:grid; grid-template-columns:232px minmax(0,1fr); gap:0; max-width:1240px; margin:0 auto}
+
+
+/* ---------- margin rail (signature) ---------- */
+.rail{position:sticky; top:52px; align-self:start; height:calc(100vh - 52px - 66px); display:flex;
+  flex-direction:column; overflow:hidden;
+  padding:26px 16px 16px 22px; border-right:1px solid var(--rule); font-size:13px}
+.rail-scroll{flex:1 1 auto; min-height:0; overflow:auto; padding-right:4px}
+.rail-scroll::-webkit-scrollbar{width:6px}
+.rail-scroll::-webkit-scrollbar-thumb{background:var(--rule); border-radius:3px}
+.rail h2{font-family:var(--sans); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-3); font-weight:500; margin-bottom:12px}
+.rail ol{list-style:none; margin:0; padding:0}
+.rail li{position:relative}
+.rail a{display:flex; align-items:baseline; gap:8px; padding:5px 0 5px 14px; text-decoration:none;
+  color:var(--ink-2); border-left:1px solid var(--rule)}
+.rail a:hover{color:var(--ink)}
+.rail a .num{font-family:var(--mono); font-size:10.5px; color:var(--ink-3)}
+.rail a.on{color:var(--ink); font-weight:600; border-left:2px solid var(--mark); margin-left:-1px; padding-left:13px}
+.rail a.done .num{color:var(--ok)}
+.rail a.on .num{color:var(--mark)}
+.rail a .num{font-variant-numeric:tabular-nums}
+.rail .legend{margin-top:22px; padding-top:14px; border-top:1px solid var(--rule); color:var(--ink-3);
+  font-size:11.5px; line-height:1.6}
+.rail .legend .glyph{color:var(--auto); font-weight:600}
+.rail-card{flex:0 0 auto; margin-top:12px; padding:11px 12px; border:1px solid var(--rule);
+  border-radius:var(--r); background:var(--paper-2)}
+.rail-card h3{font-family:var(--sans); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--ink-3); margin-bottom:8px; font-weight:500}
+.ledger-line{display:flex; justify-content:space-between; align-items:baseline; gap:8px;
+  font-family:var(--mono); font-size:11.5px; color:var(--ink-2); padding:2.5px 0;
+  font-variant-numeric:tabular-nums}
+.ledger-line span:last-child{color:var(--ink); font-weight:500}
+.ledger-line .dots{flex:1; border-bottom:1px dotted var(--rule); transform:translateY(-3px)}
+.ledger-total{display:flex; justify-content:space-between; align-items:baseline; margin-top:8px;
+  padding-top:8px; border-top:1px solid var(--ink); font-family:var(--mono); font-size:15px;
+  color:var(--ink); font-variant-numeric:tabular-nums}
+.ledger-total span:last-child{font-weight:600}
+
+/* ---------- main ---------- */
+main{padding:34px 40px 140px; min-width:0}
+@media (max-width:640px){ main{padding:22px 18px 150px} }
+
+/* masthead — the hero is the headline field itself */
+.masthead{margin-bottom:22px}
+.eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--mark); margin-bottom:10px}
+.masthead h1{font-size:var(--step-5); line-height:1.18; letter-spacing:-.01em; margin-bottom:8px}
+@media (max-width:640px){ .masthead h1{font-size:var(--step-4)} }
+.dek{color:var(--ink-2); max-width:62ch; margin:0 0 22px}
+.headline-field{border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); padding:14px 0 10px;
+  margin-bottom:14px}
+.headline-field .hf-label{padding-right:2px; font-family:var(--mono); font-size:10.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-3); display:flex; justify-content:space-between}
+.headline-field input{width:100%; border:0; background:transparent; color:var(--ink);
+  font-family:var(--serif); font-size:var(--step-3); line-height:1.35; padding:6px 0}
+.headline-field input::placeholder{color:var(--ink-3); font-style:normal; font-weight:400;
+  opacity:1; letter-spacing:0}
+.hf-actions{display:flex; gap:10px; align-items:center; margin-top:6px; flex-wrap:wrap}
+.kw-row{display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-top:16px}
+.kw-field{flex:1 1 260px; min-width:0}
+.kw-field input{width:100%; border:1px solid var(--rule); background:var(--card); border-radius:var(--r);
+  padding:11px 12px; font:inherit; color:var(--ink)}
+.kw-field input:focus{border-color:var(--focus); box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 14%,transparent)}
+.kw-field label{display:block; font-size:12.5px; color:var(--ink-2); margin-bottom:5px}
+
+/* auto summary strip */
+.auto-strip{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:20px}
+.auto-pill{display:inline-flex; align-items:center; gap:7px; border:1px solid var(--auto-soft);
+  background:var(--auto-soft); color:var(--auto); border-radius:999px; padding:4px 11px;
+  font-size:12px; font-weight:500}
+.auto-pill .glyph{font-weight:700; font-family:var(--serif); font-size:13px}
+.auto-pill button{background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;
+  font:inherit;font-size:11.5px;padding:0}
+
+/* panels */
+.panel{border-top:1px solid var(--rule); padding:34px 0 10px}
+#core.panel{padding-top:24px}
+.panel:first-of-type{border-top:1px solid var(--ink)}
+.panel-head{display:flex; align-items:baseline; gap:12px; margin-bottom:14px; padding-bottom:11px;
+  border-bottom:1px solid var(--rule-2); flex-wrap:wrap}
+.panel-head h2{font-size:var(--step-2)}
+.panel-head .idx{font-family:var(--mono); font-size:11px; color:var(--ink-3)}
+.panel-head .en{font-size:11.5px; color:var(--ink-3); letter-spacing:.04em}
+.panel > .lead{color:var(--ink-2); font-size:13.5px; max-width:70ch; margin:0 0 18px}
+
+/* fields */
+.grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px 26px}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid .span-2{grid-column:span 2}
+@media (max-width:760px){ .grid,.grid.three{grid-template-columns:1fr} .grid .span-2{grid-column:auto} }
+.field{min-width:0}
+.field-head{display:flex; align-items:center; gap:8px; margin-bottom:6px; min-height:20px}
+.field-label{font-size:13.5px; font-weight:500; color:var(--ink)}
+.field-key{font-size:10.5px; color:var(--ink-3); background:var(--paper-2); border:1px solid var(--rule-2);
+  border-radius:2px; padding:0 4px}
+.sel-count{font-family:var(--mono); font-size:10.5px; color:var(--ink-3);
+  background:var(--paper-2); border-radius:2px; padding:0 4px}
+.hint{font-size:12px; color:var(--ink-3); margin:6px 0 0; line-height:1.5}
+
+/* custom select */
+.sel{position:relative}
+.sel-btn{width:100%; min-height:44px; display:flex; align-items:center; justify-content:space-between; gap:8px;
+  background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:10px 11px;
+  font:inherit; font-size:13.5px; color:var(--ink); text-align:left; cursor:pointer;
+  transition:border-color .18s ease, box-shadow .18s ease}
+.sel-btn:hover{border-color:var(--ink-3)}
+.sel[data-open="true"] .sel-btn{border-color:var(--focus); box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 14%,transparent)}
+.sel-val{display:flex; flex-direction:column; gap:1px; min-width:0}
+.sel-val:empty::before{content:"未選擇"; color:var(--ink-3)}
+.sel-val > span:first-child{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.sel-en{font-size:11px; color:var(--ink-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.chev{width:16px; height:16px; fill:none; stroke:var(--ink-3); stroke-width:1.6; flex:0 0 auto}
+.sel-pop{position:absolute; z-index:30; top:calc(100% + 4px); left:0; right:0; background:var(--card);
+  border:1px solid var(--rule); border-radius:var(--r-lg); box-shadow:var(--sh); overflow:hidden}
+.sel-search-wrap{padding:8px; border-bottom:1px solid var(--rule-2)}
+.sel-search{width:100%; border:1px solid var(--rule); border-radius:2px; padding:7px 9px; font:inherit;
+  font-size:12.5px; background:var(--paper)}
+.sel-list{list-style:none; margin:0; padding:5px; max-height:264px; overflow:auto}
+.pop-wide .sel-list{max-height:360px}
+.opt{padding:7px 9px; border-radius:2px; cursor:pointer; display:flex; flex-direction:column; gap:1px;
+  font-size:13.5px}
+.opt-zh{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.opt-en{font-size:11px; color:var(--ink-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.opt:hover,.opt.is-active{background:var(--paper-2)}
+.opt.is-cur{color:var(--mark); font-weight:500}
+.opt.is-cur::after{content:"目前"; font-family:var(--mono); font-size:9.5px; color:var(--mark);
+  border:1px solid currentColor; border-radius:2px; padding:0 3px; margin-left:6px; align-self:flex-start}
+
+/* auto card */
+.auto-card{min-height:44px; border:1px dashed var(--auto); background:var(--auto-soft);
+  border-radius:var(--r); padding:8px 11px; display:flex; align-items:center; gap:9px; flex-wrap:wrap}
+.auto-badge{font-family:var(--mono); font-size:10px; letter-spacing:.12em; background:var(--auto);
+  color:var(--paper); border-radius:2px; padding:1px 6px}
+.auto-card .txt{font-size:12.5px; color:var(--auto); font-weight:500}
+.auto-card button{margin-left:auto; background:none; border:0; color:var(--ink-2); font:inherit;
+  font-size:12px; text-decoration:underline; cursor:pointer; padding:0}
+.auto-card button:hover{color:var(--ink)}
+.field[data-auto="false"] .auto-card{display:none}
+.field[data-auto="true"] .manual-wrap{display:none}
+.field[data-auto="false"] .manual-wrap{display:block}
+.field[data-auto="false"] .back-to-auto{display:inline-block}
+
+/* segmented */
+.seg{display:inline-flex; border:1px solid var(--rule); border-radius:var(--r); overflow:hidden;
+  background:var(--card)}
+.seg-btn{border:0; background:none; font:inherit; font-size:13px; color:var(--ink-2); padding:7px 13px; min-height:38px;
+  cursor:pointer; border-right:1px solid var(--rule-2); transition:background .15s ease,color .15s ease}
+.seg-btn:last-child{border-right:0}
+.seg-btn:hover{background:var(--paper-2); color:var(--ink)}
+.seg-btn.is-on{background:var(--ink); color:var(--paper); font-weight:500}
+[data-theme="dark"] .seg-btn.is-on{background:var(--ink); color:#15171B}
+
+/* inputs */
+.inp,textarea.inp{width:100%; border:1px solid var(--rule); background:var(--card); border-radius:var(--r);
+  padding:10px 11px; font:inherit; font-size:13.5px; color:var(--ink); transition:border-color .18s ease}
+.inp:focus{border-color:var(--focus); box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 14%,transparent);
+  outline:none}
+textarea.inp{min-height:84px; resize:vertical; line-height:1.6}
+.inp::placeholder{color:var(--ink-3)}
+.with-counter{position:relative}
+.counter{position:absolute; right:9px; bottom:7px; font-family:var(--mono); font-size:10.5px;
+  color:var(--ink-3); background:var(--card); padding:0 3px}
+.check{display:flex; gap:9px; align-items:flex-start; font-size:13px; color:var(--ink-2); cursor:pointer}
+.check input{margin-top:3px; accent-color:var(--mark); width:15px; height:15px}
+.check b{color:var(--ink); font-weight:500}
+
+/* buttons */
+.btn{font:inherit; font-size:13.5px; border-radius:var(--r); padding:9px 15px; cursor:pointer;
+  border:1px solid var(--rule); background:var(--card); color:var(--ink);
+  transition:background .16s ease, border-color .16s ease, transform .1s ease}
+.btn:hover{border-color:var(--ink-3); background:var(--paper-2)}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--mark); border-color:var(--mark); color:#fff; font-weight:500}
+.btn-primary:hover{background:#872523; border-color:#872523}
+.btn-ghost{background:none; border-color:transparent; color:var(--ink-2); text-decoration:underline;
+  padding-left:0; padding-right:0}
+.btn-sm{font-size:12.5px; padding:6px 10px}
+.btn-row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+
+/* seo keyword block */
+.kw-box{border:1px solid var(--rule); border-radius:var(--r); background:var(--card); padding:11px}
+.kw-chips{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; min-height:24px}
+.chip{display:inline-flex; align-items:center; gap:6px; background:var(--paper-2); border:1px solid var(--rule-2);
+  border-radius:999px; padding:2px 9px; font-size:12.5px}
+.chip button{background:none;border:0;color:var(--ink-3);cursor:pointer;font-size:13px;line-height:1;padding:0}
+.kw-empty{font-size:12.5px; color:var(--auto); background:var(--auto-soft); border:1px dashed var(--auto);
+  border-radius:var(--r); padding:8px 10px}
+.kw-tools{display:flex; gap:8px; align-items:center; margin-top:9px; flex-wrap:wrap}
+
+/* syndication matrix */
+.matrix-wrap{overflow-x:auto}
+.matrix{width:100%; border-collapse:collapse; font-size:13px; min-width:520px}
+.matrix th{text-align:left; font-weight:500; color:var(--ink-3); font-size:11.5px; letter-spacing:.08em;
+  text-transform:uppercase; padding:0 10px 8px 0; border-bottom:1px solid var(--rule)}
+.matrix td{padding:9px 10px 9px 0; border-bottom:1px solid var(--rule-2); vertical-align:middle}
+.matrix tr:last-child td{border-bottom:0}
+.matrix .plat{display:flex; align-items:center; gap:9px}
+.matrix .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-3);flex:0 0 auto}
+.matrix .plat b{font-weight:500}
+.matrix .en{color:var(--ink-3); font-size:11.5px}
+
+/* run bar */
+.runbar{position:fixed; left:0; right:0; bottom:0; z-index:35; background:var(--card);
+  border-top:1px solid var(--ink); box-shadow:0 -8px 24px -18px rgba(0,0,0,.5)}
+[data-theme="dark"] .runbar{border-top-color:var(--rule)}
+.runbar-in{max-width:1240px; margin:0 auto; padding:11px 22px; display:flex; align-items:center; gap:18px;
+  flex-wrap:wrap}
+.ledger .unit{opacity:.62;font-size:11px;letter-spacing:.02em}
+    .ledger{display:flex; gap:16px; flex-wrap:wrap; font-family:var(--mono); font-size:12px; color:var(--ink-2)}
+.ledger span b{color:var(--ink); font-weight:500}
+.runbar .spacer{flex:1}
+.runbar .ledger span{white-space:nowrap}
+.saved{font-size:11.5px; color:var(--ink-3); font-family:var(--mono)}
+.total{font-family:var(--mono); font-size:15px; color:var(--ink)}
+.total b{font-weight:600}
+
+footer.page-foot{max-width:1240px; margin:0 auto; padding:26px 40px 40px; color:var(--ink-3);
+  font-size:12px; border-top:1px solid var(--rule); display:flex; gap:16px; flex-wrap:wrap}
+@media (max-width:640px){ footer.page-foot{padding:22px 18px 40px} }
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
+
+
+/* ---------- outline editor / must-have / info box ---------- */
+.musthave{font-size:10px; letter-spacing:.1em; color:var(--mark); border:1px solid currentColor;
+  border-radius:2px; padding:1px 6px; font-family:var(--mono); text-transform:uppercase}
+.info-box{border:1px solid var(--rule); background:var(--paper-2); border-radius:var(--r);
+  padding:12px 14px; margin-top:4px}
+.info-box > b{font-size:12.5px; letter-spacing:.02em}
+.info-box ul{margin:7px 0 0; padding-left:17px; color:var(--ink-2); font-size:12.5px; line-height:1.75}
+.info-box li b{color:var(--ink); font-weight:500}
+.outline-editor{border:1px solid var(--rule); border-radius:var(--r); background:var(--card); padding:10px}
+.oh-list{list-style:none; margin:0 0 10px; padding:0}
+.oh-row{display:flex; align-items:center; gap:9px; padding:7px 9px; border:1px solid var(--rule-2);
+  border-radius:2px; background:var(--paper); margin-bottom:6px; cursor:grab}
+.oh-row:active{cursor:grabbing}
+.oh-row.is-drag{opacity:.4; border-style:dashed}
+.oh-handle{color:var(--ink-3); font-family:var(--mono); font-size:13px; letter-spacing:-1px; user-select:none}
+.oh-text{flex:1; font-size:13.5px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.oh-del{background:none; border:0; color:var(--ink-3); font-size:15px; line-height:1; cursor:pointer; padding:0 2px}
+.oh-del:hover{color:var(--mark)}
+.oh-tools{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+@media (max-width:900px){ .oh-tools .inp{flex:1 1 140px} }
+
+/* ---------- responsive (last block on purpose) ---------- */
+.appbar{flex-wrap:nowrap}
+.appbar .tools{flex:1 1 auto; min-width:0; overflow:hidden}
+.appbar .credit-chip,.appbar .icon-btn,.appbar .avatar{flex:0 0 auto}
+.credit-chip{white-space:nowrap}
+@media (max-width:1180px){ .tool:not([aria-current]){display:none} }
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .rail{display:none}
+  main{padding:20px 18px 128px}
+  .credit-chip{display:none}
+  .appbar{padding:0 12px; gap:10px}
+  .runbar-in{padding:9px 14px; gap:10px}
+  .runbar .ledger{display:none}
+  .saved{display:none}
+  .masthead h1{font-size:34px}
+  .headline-field input{font-size:22px}
+}
+@media (max-width:520px){
+  .appbar{gap:8px}
+  .brand{font-size:14px}
+  .tool{padding:6px 8px; font-size:12.5px}
+  .runbar-in .total{font-size:14px}
+  .btn{padding:9px 11px; font-size:13px}
+}
+
+
+/* ---------- Super Page extras ---------- */
+*{box-sizing:border-box}
+.layout{display:flex;max-width:1240px;margin:0 auto}
+.main{flex:1;min-width:0;padding:0 34px 80px}
+.auth-note{font-size:12px;color:var(--ink-3);font-family:var(--mono);margin:0 0 22px}
+.tools{display:flex;gap:4px;flex:1;align-items:center}
+.tools a{color:rgba(247,245,239,.78);text-decoration:none;font-size:13.5px;padding:8px 11px;border-radius:3px;white-space:nowrap}
+.tools a:hover{color:#fff;background:rgba(255,255,255,.08)}
+.tools a[aria-current="page"]{color:#fff;font-weight:600;border-bottom:2px solid var(--mark)}
+.appbar-right{display:flex;align-items:center;gap:12px}
+.theme-btn{background:none;border:1px solid rgba(255,255,255,.22);color:#F7F5EF;font-size:14px;border-radius:3px;width:34px;height:34px;cursor:pointer;line-height:1}
+.acct{font-size:13px;color:rgba(247,245,239,.85);white-space:nowrap}
+.sel-pop{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:30;background:var(--card);border:1px solid var(--rule);border-radius:var(--r-lg);box-shadow:var(--sh);overflow:hidden;max-height:340px;display:flex;flex-direction:column}
+.sel-list{list-style:none;margin:0;padding:4px;overflow:auto}
+.sel-search-wrap{padding:8px;border-bottom:1px solid var(--rule-2)}
+.sel-search{width:100%;border:1px solid var(--rule);border-radius:2px;padding:7px 9px;font:inherit;font-size:12.5px;background:var(--paper);color:var(--ink)}
+.opt{cursor:pointer;padding:8px 10px;font-size:13px;color:var(--ink);border-radius:2px;display:flex;flex-direction:column;gap:1px}
+.opt[hidden]{display:none}
+/* hero input */
+.hero-field{margin:4px 0 6px}
+.hero-field textarea{width:100%;border:1px solid var(--rule);background:var(--card);border-radius:var(--r);padding:16px;font:inherit;font-family:var(--serif);font-size:var(--step-2);line-height:1.4;color:var(--ink);resize:vertical;min-height:120px}
+.hero-field textarea:focus{border-color:var(--focus);box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 14%,transparent)}
+.hero-field textarea::placeholder{color:var(--ink-3);font-style:normal}
+.hero-count{display:block;text-align:right;font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-top:5px;font-variant-numeric:tabular-nums}
+.hero-en{display:block;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);margin:2px 0 0}
+.auto-note{max-width:70ch;font-size:13px;color:var(--auto);background:var(--auto-soft);border:1px dashed var(--auto);border-radius:var(--r);padding:10px 13px;margin:0 0 6px;line-height:1.6}
+.auto-note .glyph{font-family:var(--serif);font-weight:700}
+/* examples */
+.examples{margin-top:16px}
+.examples h3{font-family:var(--sans);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px;font-weight:500}
+.ex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.ex-chip{text-align:left;background:var(--card);border:1px solid var(--rule);border-radius:var(--r);padding:11px 13px;font:inherit;font-size:13px;color:var(--ink);cursor:pointer;min-height:44px;line-height:1.5}
+.ex-chip:hover{border-color:var(--ink-3);background:var(--paper-2)}
+.ex-chip small{display:block;color:var(--ink-3);font-size:11px;margin-top:2px}
+/* ledger */
+.ledger{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.ledger-final{font-family:var(--mono);font-size:15px;color:var(--ink)}
+.runbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--paper);border-top:1px solid var(--rule);box-shadow:0 -8px 24px -18px rgba(0,0,0,.5)}
+.runbar-in{max-width:1240px;margin:0 auto;padding:12px 34px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+footer.page-foot{max-width:1240px;margin:0 auto;padding:26px 34px 84px;color:var(--ink-3);font-size:12px;border-top:1px solid var(--rule);display:flex;gap:16px;flex-wrap:wrap}
+.rail nav a.active{color:var(--ink);font-weight:600;border-left:2px solid var(--mark);margin-left:-1px;padding-left:13px}
+.rail nav a.active .num{color:var(--mark)}
+@media (max-width:900px){
+  .rail{display:none !important}
+  .acct{display:none}
+  .main{padding:0 16px 80px}
+  .runbar-in{padding:12px 16px}
+  .tools{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .brand{display:none}
+}
+@media (max-width:640px){
+  .masthead h1{font-size:var(--step-4)}
+  .runbar-in .ledger{display:none}
+  .hero-field textarea{font-size:var(--step-1)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+</style>
+</head>
+<body>
+<!-- COPY DESC: shell (appbar + runbar + rail + tokens from 1-click-blog-post-zh.html) -->
+<!-- COPY DESC: ui-kit (sel + credit + theme from 1-click-blog-post-zh.html) -->
+<header class="appbar">
+  <span class="brand">SEOWriting 編輯台</span>
+  <nav class="tools" aria-label="工具切換">
+    <a href="1-click-blog-post-zh.html">一鍵發布</a>
+    <a href="bulk-generation-zh.html">批量生成</a>
+    <a href="super-page-zh.html" aria-current="page">Super Page</a>
+    <a href="rewriter-zh.html">改寫工具</a>
+  </nav>
+  <div class="appbar-right">
+    <button id="theme-toggle" class="theme-btn" type="button" aria-label="切換深色模式">◧</button>
+    <span class="credit-chip" id="ledgerPill">1 credit</span>
+    <span class="avatar" aria-hidden="true">示</span>
+    <span class="acct">示例帳戶</span>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="rail" aria-label="區塊導覽">
+    <h2>流程</h2>
+    <nav>
+      <a href="#country" data-target="country"><span class="num">01</span>目標區域</a>
+      <a href="#voice" data-target="voice"><span class="num">02</span>品牌聲音</a>
+      <a href="#images" data-target="images"><span class="num">03</span>AI 圖片</a>
+    </nav>
+    <div class="legend"><span class="glyph">※</span> = 敘述式自動生成</div>
+    <div class="rail-card">
+      <h3>成本估計</h3>
+      <div class="ledger-line"><span>基本</span><span class="dots"></span><span id="rb-base">1</span></div>
+      <div class="ledger-line"><span>圖片模型</span><span class="dots"></span><span id="rb-img">0</span></div>
+      <div class="ledger-total"><span>總計（信用點）</span><span id="rb-total">1</span></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <p class="eyebrow">Super Page</p>
+    <div class="masthead">
+      <h1>Super Page</h1>
+      <p class="dek">一句話（或關鍵字）由 super-agent 掃描 SERP、分析對手 CTA 策略，生成完整嘅推廣頁。唔使砌表單，描述想做嘅嘢就得。</p>
+      <p class="auto-note"><span class="glyph">※</span> 敘述式：系統自動掃 SERP、抽對手 CTA、生成完整推廣頁 —— 填一句就開工。</p>
+      <div class="hero-field">
+        <textarea id="inp_hero" maxlength="50001" rows="5" placeholder="今日要寫咩 Super Page？"></textarea>
+        <span class="hero-en">Enter keyword or instructions…</span>
+        <span class="hero-count mono" id="hero-count">0/50001</span>
+      </div>
+      <div class="examples">
+        <h3>示範 Examples</h3>
+        <div class="ex-grid" id="examples"></div>
+      </div>
+      <p class="auth-note">工具：super-page / batch：off / 登入：示例帳戶</p>
+    </div>
+
+    <section class="panel" id="country">
+      <div class="panel-head"><span class="idx">01</span><h2>目標國家／地區</h2><span class="en">Target country</span></div>
+      <div class="field" data-dname="target_country">
+        <div class="field-label">目標國家／地區 <code class="field-key">target_country</code></div>
+        <div class="sel" data-open="false">
+          <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>United States</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+          <div class="sel-pop" hidden>
+            <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋國家／地區…" aria-label="搜尋國家／地區"></div>
+            <ul class="sel-list"><li class="opt" data-value="United States"><span class="opt-zh">United States</span></li>
+<li class="opt" data-value="United Kingdom"><span class="opt-zh">United Kingdom</span></li>
+<li class="opt" data-value="Australia"><span class="opt-zh">Australia</span></li>
+<li class="opt" data-value="Canada"><span class="opt-zh">Canada</span></li>
+<li class="opt" data-value="Afghanistan"><span class="opt-zh">Afghanistan</span></li>
+<li class="opt" data-value="Albania"><span class="opt-zh">Albania</span></li>
+<li class="opt" data-value="Algeria"><span class="opt-zh">Algeria</span></li>
+<li class="opt" data-value="American Samoa"><span class="opt-zh">American Samoa</span></li>
+<li class="opt" data-value="Andorra"><span class="opt-zh">Andorra</span></li>
+<li class="opt" data-value="Angola"><span class="opt-zh">Angola</span></li>
+<li class="opt" data-value="Anguilla"><span class="opt-zh">Anguilla</span></li>
+<li class="opt" data-value="Antigua & Barbuda"><span class="opt-zh">Antigua & Barbuda</span></li>
+<li class="opt" data-value="Argentina"><span class="opt-zh">Argentina</span></li>
+<li class="opt" data-value="Armenia"><span class="opt-zh">Armenia</span></li>
+<li class="opt" data-value="Aruba"><span class="opt-zh">Aruba</span></li>
+<li class="opt" data-value="Austria"><span class="opt-zh">Austria</span></li>
+<li class="opt" data-value="Azerbaijan"><span class="opt-zh">Azerbaijan</span></li>
+<li class="opt" data-value="Bahamas"><span class="opt-zh">Bahamas</span></li>
+<li class="opt" data-value="Bahrain"><span class="opt-zh">Bahrain</span></li>
+<li class="opt" data-value="Bangladesh"><span class="opt-zh">Bangladesh</span></li>
+<li class="opt" data-value="Barbados"><span class="opt-zh">Barbados</span></li>
+<li class="opt" data-value="Belarus"><span class="opt-zh">Belarus</span></li>
+<li class="opt" data-value="Belgium"><span class="opt-zh">Belgium</span></li>
+<li class="opt" data-value="Belize"><span class="opt-zh">Belize</span></li>
+<li class="opt" data-value="Benin"><span class="opt-zh">Benin</span></li>
+<li class="opt" data-value="Bermuda"><span class="opt-zh">Bermuda</span></li>
+<li class="opt" data-value="Bhutan"><span class="opt-zh">Bhutan</span></li>
+<li class="opt" data-value="Bolivia"><span class="opt-zh">Bolivia</span></li>
+<li class="opt" data-value="Bosnia & Herzegovina"><span class="opt-zh">Bosnia & Herzegovina</span></li>
+<li class="opt" data-value="Botswana"><span class="opt-zh">Botswana</span></li>
+<li class="opt" data-value="Bouvet Island"><span class="opt-zh">Bouvet Island</span></li>
+<li class="opt" data-value="Brazil"><span class="opt-zh">Brazil</span></li>
+<li class="opt" data-value="British Indian Ocean Territory"><span class="opt-zh">British Indian Ocean Territory</span></li>
+<li class="opt" data-value="British Virgin Islands"><span class="opt-zh">British Virgin Islands</span></li>
+<li class="opt" data-value="Brunei"><span class="opt-zh">Brunei</span></li>
+<li class="opt" data-value="Bulgaria"><span class="opt-zh">Bulgaria</span></li>
+<li class="opt" data-value="Burkina Faso"><span class="opt-zh">Burkina Faso</span></li>
+<li class="opt" data-value="Burundi"><span class="opt-zh">Burundi</span></li>
+<li class="opt" data-value="Cambodia"><span class="opt-zh">Cambodia</span></li>
+<li class="opt" data-value="Cameroon"><span class="opt-zh">Cameroon</span></li>
+<li class="opt" data-value="Cape Verde"><span class="opt-zh">Cape Verde</span></li>
+<li class="opt" data-value="Cayman Islands"><span class="opt-zh">Cayman Islands</span></li>
+<li class="opt" data-value="Central African Republic"><span class="opt-zh">Central African Republic</span></li>
+<li class="opt" data-value="Chad"><span class="opt-zh">Chad</span></li>
+<li class="opt" data-value="Chile"><span class="opt-zh">Chile</span></li>
+<li class="opt" data-value="China"><span class="opt-zh">China</span></li>
+<li class="opt" data-value="Christmas Island"><span class="opt-zh">Christmas Island</span></li>
+<li class="opt" data-value="Cocos (Keeling) Islands"><span class="opt-zh">Cocos (Keeling) Islands</span></li>
+<li class="opt" data-value="Colombia"><span class="opt-zh">Colombia</span></li>
+<li class="opt" data-value="Comoros"><span class="opt-zh">Comoros</span></li>
+<li class="opt" data-value="Congo - Brazzaville"><span class="opt-zh">Congo - Brazzaville</span></li>
+<li class="opt" data-value="Congo - Kinshasa"><span class="opt-zh">Congo - Kinshasa</span></li>
+<li class="opt" data-value="Cook Islands"><span class="opt-zh">Cook Islands</span></li>
+<li class="opt" data-value="Costa Rica"><span class="opt-zh">Costa Rica</span></li>
+<li class="opt" data-value="Croatia"><span class="opt-zh">Croatia</span></li>
+<li class="opt" data-value="Cuba"><span class="opt-zh">Cuba</span></li>
+<li class="opt" data-value="Cyprus"><span class="opt-zh">Cyprus</span></li>
+<li class="opt" data-value="Czech Republic"><span class="opt-zh">Czech Republic</span></li>
+<li class="opt" data-value="Côte d’Ivoire"><span class="opt-zh">Côte d’Ivoire</span></li>
+<li class="opt" data-value="Denmark"><span class="opt-zh">Denmark</span></li>
+<li class="opt" data-value="Djibouti"><span class="opt-zh">Djibouti</span></li>
+<li class="opt" data-value="Dominica"><span class="opt-zh">Dominica</span></li>
+<li class="opt" data-value="Dominican Republic"><span class="opt-zh">Dominican Republic</span></li>
+<li class="opt" data-value="Ecuador"><span class="opt-zh">Ecuador</span></li>
+<li class="opt" data-value="Egypt"><span class="opt-zh">Egypt</span></li>
+<li class="opt" data-value="El Salvador"><span class="opt-zh">El Salvador</span></li>
+<li class="opt" data-value="Equatorial Guinea"><span class="opt-zh">Equatorial Guinea</span></li>
+<li class="opt" data-value="Eritrea"><span class="opt-zh">Eritrea</span></li>
+<li class="opt" data-value="Estonia"><span class="opt-zh">Estonia</span></li>
+<li class="opt" data-value="Eswatini"><span class="opt-zh">Eswatini</span></li>
+<li class="opt" data-value="Ethiopia"><span class="opt-zh">Ethiopia</span></li>
+<li class="opt" data-value="Faroe Islands"><span class="opt-zh">Faroe Islands</span></li>
+<li class="opt" data-value="Fiji"><span class="opt-zh">Fiji</span></li>
+<li class="opt" data-value="Finland"><span class="opt-zh">Finland</span></li>
+<li class="opt" data-value="France"><span class="opt-zh">France</span></li>
+<li class="opt" data-value="French Guiana"><span class="opt-zh">French Guiana</span></li>
+<li class="opt" data-value="French Polynesia"><span class="opt-zh">French Polynesia</span></li>
+<li class="opt" data-value="French Southern Territories"><span class="opt-zh">French Southern Territories</span></li>
+<li class="opt" data-value="Gabon"><span class="opt-zh">Gabon</span></li>
+<li class="opt" data-value="Gambia"><span class="opt-zh">Gambia</span></li>
+<li class="opt" data-value="Georgia"><span class="opt-zh">Georgia</span></li>
+<li class="opt" data-value="Germany"><span class="opt-zh">Germany</span></li>
+<li class="opt" data-value="Ghana"><span class="opt-zh">Ghana</span></li>
+<li class="opt" data-value="Gibraltar"><span class="opt-zh">Gibraltar</span></li>
+<li class="opt" data-value="Greece"><span class="opt-zh">Greece</span></li>
+<li class="opt" data-value="Greenland"><span class="opt-zh">Greenland</span></li>
+<li class="opt" data-value="Grenada"><span class="opt-zh">Grenada</span></li>
+<li class="opt" data-value="Guadeloupe"><span class="opt-zh">Guadeloupe</span></li>
+<li class="opt" data-value="Guam"><span class="opt-zh">Guam</span></li>
+<li class="opt" data-value="Guatemala"><span class="opt-zh">Guatemala</span></li>
+<li class="opt" data-value="Guinea"><span class="opt-zh">Guinea</span></li>
+<li class="opt" data-value="Guinea-Bissau"><span class="opt-zh">Guinea-Bissau</span></li>
+<li class="opt" data-value="Guyana"><span class="opt-zh">Guyana</span></li>
+<li class="opt" data-value="Haiti"><span class="opt-zh">Haiti</span></li>
+<li class="opt" data-value="Heard & McDonald Islands"><span class="opt-zh">Heard & McDonald Islands</span></li>
+<li class="opt" data-value="Honduras"><span class="opt-zh">Honduras</span></li>
+<li class="opt" data-value="Hong Kong"><span class="opt-zh">Hong Kong</span></li>
+<li class="opt" data-value="Hungary"><span class="opt-zh">Hungary</span></li>
+<li class="opt" data-value="Iceland"><span class="opt-zh">Iceland</span></li>
+<li class="opt" data-value="India"><span class="opt-zh">India</span></li>
+<li class="opt" data-value="Indonesia"><span class="opt-zh">Indonesia</span></li>
+<li class="opt" data-value="Iran"><span class="opt-zh">Iran</span></li>
+<li class="opt" data-value="Iraq"><span class="opt-zh">Iraq</span></li>
+<li class="opt" data-value="Ireland"><span class="opt-zh">Ireland</span></li>
+<li class="opt" data-value="Israel"><span class="opt-zh">Israel</span></li>
+<li class="opt" data-value="Italy"><span class="opt-zh">Italy</span></li>
+<li class="opt" data-value="Jamaica"><span class="opt-zh">Jamaica</span></li>
+<li class="opt" data-value="Japan"><span class="opt-zh">Japan</span></li>
+<li class="opt" data-value="Jordan"><span class="opt-zh">Jordan</span></li>
+<li class="opt" data-value="Kazakhstan"><span class="opt-zh">Kazakhstan</span></li>
+<li class="opt" data-value="Kenya"><span class="opt-zh">Kenya</span></li>
+<li class="opt" data-value="Kiribati"><span class="opt-zh">Kiribati</span></li>
+<li class="opt" data-value="Kuwait"><span class="opt-zh">Kuwait</span></li>
+<li class="opt" data-value="Kyrgyzstan"><span class="opt-zh">Kyrgyzstan</span></li>
+<li class="opt" data-value="Laos"><span class="opt-zh">Laos</span></li>
+<li class="opt" data-value="Latvia"><span class="opt-zh">Latvia</span></li>
+<li class="opt" data-value="Lebanon"><span class="opt-zh">Lebanon</span></li>
+<li class="opt" data-value="Lesotho"><span class="opt-zh">Lesotho</span></li>
+<li class="opt" data-value="Liberia"><span class="opt-zh">Liberia</span></li>
+<li class="opt" data-value="Libya"><span class="opt-zh">Libya</span></li>
+<li class="opt" data-value="Liechtenstein"><span class="opt-zh">Liechtenstein</span></li>
+<li class="opt" data-value="Lithuania"><span class="opt-zh">Lithuania</span></li>
+<li class="opt" data-value="Luxembourg"><span class="opt-zh">Luxembourg</span></li>
+<li class="opt" data-value="Macao"><span class="opt-zh">Macao</span></li>
+<li class="opt" data-value="Madagascar"><span class="opt-zh">Madagascar</span></li>
+<li class="opt" data-value="Malawi"><span class="opt-zh">Malawi</span></li>
+<li class="opt" data-value="Malaysia"><span class="opt-zh">Malaysia</span></li>
+<li class="opt" data-value="Maldives"><span class="opt-zh">Maldives</span></li>
+<li class="opt" data-value="Mali"><span class="opt-zh">Mali</span></li>
+<li class="opt" data-value="Malta"><span class="opt-zh">Malta</span></li>
+<li class="opt" data-value="Marshall Islands"><span class="opt-zh">Marshall Islands</span></li>
+<li class="opt" data-value="Martinique"><span class="opt-zh">Martinique</span></li>
+<li class="opt" data-value="Mauritania"><span class="opt-zh">Mauritania</span></li>
+<li class="opt" data-value="Mauritius"><span class="opt-zh">Mauritius</span></li>
+<li class="opt" data-value="Mayotte"><span class="opt-zh">Mayotte</span></li>
+<li class="opt" data-value="Mexico"><span class="opt-zh">Mexico</span></li>
+<li class="opt" data-value="Micronesia"><span class="opt-zh">Micronesia</span></li>
+<li class="opt" data-value="Moldova"><span class="opt-zh">Moldova</span></li>
+<li class="opt" data-value="Monaco"><span class="opt-zh">Monaco</span></li>
+<li class="opt" data-value="Mongolia"><span class="opt-zh">Mongolia</span></li>
+<li class="opt" data-value="Montserrat"><span class="opt-zh">Montserrat</span></li>
+<li class="opt" data-value="Morocco"><span class="opt-zh">Morocco</span></li>
+<li class="opt" data-value="Mozambique"><span class="opt-zh">Mozambique</span></li>
+<li class="opt" data-value="Myanmar (Burma)"><span class="opt-zh">Myanmar (Burma)</span></li>
+<li class="opt" data-value="Namibia"><span class="opt-zh">Namibia</span></li>
+<li class="opt" data-value="Nauru"><span class="opt-zh">Nauru</span></li>
+<li class="opt" data-value="Nepal"><span class="opt-zh">Nepal</span></li>
+<li class="opt" data-value="Netherlands"><span class="opt-zh">Netherlands</span></li>
+<li class="opt" data-value="New Caledonia"><span class="opt-zh">New Caledonia</span></li>
+<li class="opt" data-value="New Zealand"><span class="opt-zh">New Zealand</span></li>
+<li class="opt" data-value="Nicaragua"><span class="opt-zh">Nicaragua</span></li>
+<li class="opt" data-value="Niger"><span class="opt-zh">Niger</span></li>
+<li class="opt" data-value="Nigeria"><span class="opt-zh">Nigeria</span></li>
+<li class="opt" data-value="Niue"><span class="opt-zh">Niue</span></li>
+<li class="opt" data-value="Norfolk Island"><span class="opt-zh">Norfolk Island</span></li>
+<li class="opt" data-value="North Korea"><span class="opt-zh">North Korea</span></li>
+<li class="opt" data-value="North Macedonia"><span class="opt-zh">North Macedonia</span></li>
+<li class="opt" data-value="Northern Mariana Islands"><span class="opt-zh">Northern Mariana Islands</span></li>
+<li class="opt" data-value="Norway"><span class="opt-zh">Norway</span></li>
+<li class="opt" data-value="Oman"><span class="opt-zh">Oman</span></li>
+<li class="opt" data-value="Pakistan"><span class="opt-zh">Pakistan</span></li>
+<li class="opt" data-value="Palau"><span class="opt-zh">Palau</span></li>
+<li class="opt" data-value="Palestine"><span class="opt-zh">Palestine</span></li>
+<li class="opt" data-value="Panama"><span class="opt-zh">Panama</span></li>
+<li class="opt" data-value="Papua New Guinea"><span class="opt-zh">Papua New Guinea</span></li>
+<li class="opt" data-value="Paraguay"><span class="opt-zh">Paraguay</span></li>
+<li class="opt" data-value="Peru"><span class="opt-zh">Peru</span></li>
+<li class="opt" data-value="Philippines"><span class="opt-zh">Philippines</span></li>
+<li class="opt" data-value="Pitcairn Islands"><span class="opt-zh">Pitcairn Islands</span></li>
+<li class="opt" data-value="Poland"><span class="opt-zh">Poland</span></li>
+<li class="opt" data-value="Portugal"><span class="opt-zh">Portugal</span></li>
+<li class="opt" data-value="Puerto Rico"><span class="opt-zh">Puerto Rico</span></li>
+<li class="opt" data-value="Qatar"><span class="opt-zh">Qatar</span></li>
+<li class="opt" data-value="Romania"><span class="opt-zh">Romania</span></li>
+<li class="opt" data-value="Russia"><span class="opt-zh">Russia</span></li>
+<li class="opt" data-value="Rwanda"><span class="opt-zh">Rwanda</span></li>
+<li class="opt" data-value="Réunion"><span class="opt-zh">Réunion</span></li>
+<li class="opt" data-value="Samoa"><span class="opt-zh">Samoa</span></li>
+<li class="opt" data-value="San Marino"><span class="opt-zh">San Marino</span></li>
+<li class="opt" data-value="Saudi Arabia"><span class="opt-zh">Saudi Arabia</span></li>
+<li class="opt" data-value="Senegal"><span class="opt-zh">Senegal</span></li>
+<li class="opt" data-value="Serbia"><span class="opt-zh">Serbia</span></li>
+<li class="opt" data-value="Seychelles"><span class="opt-zh">Seychelles</span></li>
+<li class="opt" data-value="Sierra Leone"><span class="opt-zh">Sierra Leone</span></li>
+<li class="opt" data-value="Singapore"><span class="opt-zh">Singapore</span></li>
+<li class="opt" data-value="Slovakia"><span class="opt-zh">Slovakia</span></li>
+<li class="opt" data-value="Slovenia"><span class="opt-zh">Slovenia</span></li>
+<li class="opt" data-value="Solomon Islands"><span class="opt-zh">Solomon Islands</span></li>
+<li class="opt" data-value="Somalia"><span class="opt-zh">Somalia</span></li>
+<li class="opt" data-value="South Africa"><span class="opt-zh">South Africa</span></li>
+<li class="opt" data-value="South Korea"><span class="opt-zh">South Korea</span></li>
+<li class="opt" data-value="Spain"><span class="opt-zh">Spain</span></li>
+<li class="opt" data-value="Sri Lanka"><span class="opt-zh">Sri Lanka</span></li>
+<li class="opt" data-value="St. Helena"><span class="opt-zh">St. Helena</span></li>
+<li class="opt" data-value="St. Kitts & Nevis"><span class="opt-zh">St. Kitts & Nevis</span></li>
+<li class="opt" data-value="St. Lucia"><span class="opt-zh">St. Lucia</span></li>
+<li class="opt" data-value="St. Pierre & Miquelon"><span class="opt-zh">St. Pierre & Miquelon</span></li>
+<li class="opt" data-value="St. Vincent & Grenadines"><span class="opt-zh">St. Vincent & Grenadines</span></li>
+<li class="opt" data-value="Sudan"><span class="opt-zh">Sudan</span></li>
+<li class="opt" data-value="Suriname"><span class="opt-zh">Suriname</span></li>
+<li class="opt" data-value="Svalbard & Jan Mayen"><span class="opt-zh">Svalbard & Jan Mayen</span></li>
+<li class="opt" data-value="Sweden"><span class="opt-zh">Sweden</span></li>
+<li class="opt" data-value="Switzerland"><span class="opt-zh">Switzerland</span></li>
+<li class="opt" data-value="Syria"><span class="opt-zh">Syria</span></li>
+<li class="opt" data-value="São Tomé & Príncipe"><span class="opt-zh">São Tomé & Príncipe</span></li>
+<li class="opt" data-value="Taiwan"><span class="opt-zh">Taiwan</span></li>
+<li class="opt" data-value="Tajikistan"><span class="opt-zh">Tajikistan</span></li>
+<li class="opt" data-value="Tanzania"><span class="opt-zh">Tanzania</span></li>
+<li class="opt" data-value="Thailand"><span class="opt-zh">Thailand</span></li>
+<li class="opt" data-value="Togo"><span class="opt-zh">Togo</span></li>
+<li class="opt" data-value="Tokelau"><span class="opt-zh">Tokelau</span></li>
+<li class="opt" data-value="Tonga"><span class="opt-zh">Tonga</span></li>
+<li class="opt" data-value="Trinidad & Tobago"><span class="opt-zh">Trinidad & Tobago</span></li>
+<li class="opt" data-value="Tunisia"><span class="opt-zh">Tunisia</span></li>
+<li class="opt" data-value="Turkmenistan"><span class="opt-zh">Turkmenistan</span></li>
+<li class="opt" data-value="Turks & Caicos Islands"><span class="opt-zh">Turks & Caicos Islands</span></li>
+<li class="opt" data-value="Tuvalu"><span class="opt-zh">Tuvalu</span></li>
+<li class="opt" data-value="Turkey"><span class="opt-zh">Turkey</span></li>
+<li class="opt" data-value="U.S. Outlying Islands"><span class="opt-zh">U.S. Outlying Islands</span></li>
+<li class="opt" data-value="U.S. Virgin Islands"><span class="opt-zh">U.S. Virgin Islands</span></li>
+<li class="opt" data-value="Uganda"><span class="opt-zh">Uganda</span></li>
+<li class="opt" data-value="Ukraine"><span class="opt-zh">Ukraine</span></li>
+<li class="opt" data-value="United Arab Emirates"><span class="opt-zh">United Arab Emirates</span></li>
+<li class="opt" data-value="Uruguay"><span class="opt-zh">Uruguay</span></li>
+<li class="opt" data-value="Uzbekistan"><span class="opt-zh">Uzbekistan</span></li>
+<li class="opt" data-value="Vanuatu"><span class="opt-zh">Vanuatu</span></li>
+<li class="opt" data-value="Vatican City"><span class="opt-zh">Vatican City</span></li>
+<li class="opt" data-value="Venezuela"><span class="opt-zh">Venezuela</span></li>
+<li class="opt" data-value="Vietnam"><span class="opt-zh">Vietnam</span></li>
+<li class="opt" data-value="Wallis & Futuna"><span class="opt-zh">Wallis & Futuna</span></li>
+<li class="opt" data-value="Western Sahara"><span class="opt-zh">Western Sahara</span></li>
+<li class="opt" data-value="Yemen"><span class="opt-zh">Yemen</span></li>
+<li class="opt" data-value="Zambia"><span class="opt-zh">Zambia</span></li>
+<li class="opt" data-value="Zimbabwe"><span class="opt-zh">Zimbabwe</span></li></ul>
+          </div>
+        </div>
+        <p class="hint">234 個國家／地區選項。</p>
+      </div>
+    </section>
+
+    <section class="panel" id="voice">
+      <div class="panel-head"><span class="idx">02</span><h2>品牌聲音</h2><span class="en">Brand Voice</span></div>
+      <div class="field" data-dname="brand_voice">
+        <div class="field-label">品牌聲音 <code class="field-key">brand_voice</code></div>
+        <div class="sel" data-open="false">
+          <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>無（唔指定）</span><span class="sel-en">None</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+          <div class="sel-pop" hidden>
+            <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋品牌聲音…" aria-label="搜尋品牌聲音"></div>
+            <ul class="sel-list"><li class="opt" data-value="None" data-en="None"><span class="opt-zh">無（唔指定）</span><span class="opt-en">None</span></li><li class="opt" data-value="+ Create Brand Voice" data-en="+ Create Brand Voice"><span class="opt-zh">＋ 建立品牌聲音</span><span class="opt-en">+ Create Brand Voice</span></li></ul>
+          </div>
+        </div>
+        <p class="hint">如未建立，可揀「＋ 建立品牌聲音」。</p>
+      </div>
+    </section>
+
+    <section class="panel" id="images">
+      <div class="panel-head"><span class="idx">03</span><h2>AI 圖片模型</h2><span class="en">AI Images</span></div>
+      <div class="field" data-dname="images">
+        <div class="field-label">AI 圖片模型 <code class="field-key">images</code></div>
+        <div class="sel" data-open="false">
+          <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>Z-Image</span><span class="sel-en">0 credit</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+          <div class="sel-pop" hidden>
+            <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋圖片模型…" aria-label="搜尋圖片模型"></div>
+            <ul class="sel-list"><li class="opt" data-value="Z-Image" data-credit="0"><span class="opt-zh">Z-Image</span><span class="opt-en"></span></li>
+<li class="opt" data-value="FLUX.1" data-credit="0"><span class="opt-zh">FLUX.1</span><span class="opt-en"></span></li>
+<li class="opt" data-value="GPT Image 2.5 flare medium" data-credit="2.5"><span class="opt-zh">GPT Image 2.5 flare medium</span><span class="opt-en">2.5 credits</span></li>
+<li class="opt" data-value="Nano Banana 2 Lite" data-credit="5"><span class="opt-zh">Nano Banana 2 Lite</span><span class="opt-en">5 credits</span></li>
+<li class="opt" data-value="Nano Banana 2" data-credit="10"><span class="opt-zh">Nano Banana 2</span><span class="opt-en">10 credits</span></li>
+<li class="opt" data-value="GPT Image 2.5 flare high" data-credit="10"><span class="opt-zh">GPT Image 2.5 flare high</span><span class="opt-en">10 credits</span></li>
+<li class="opt" data-value="GPT Image 2.5 flare xhigh" data-credit="15"><span class="opt-zh">GPT Image 2.5 flare xhigh</span><span class="opt-en">15 credits</span></li></ul>
+          </div>
+        </div>
+        <p class="hint">每個模型每張圖收費不同；Super Page 每次生成多張圖，故定價較 article 高（2.5–15 credits／張）。</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="runbar" role="contentinfo">
+  <div class="runbar-in">
+    <div class="ledger"><span><b id="lg-base">基本 1</b></span><span><b id="lg-img">圖片 0</b></span><span class="unit">信用點</span></div>
+    <button id="run" class="btn btn-primary" type="button">生成 Super Page</button>
+  </div>
+</div>
+
+<footer class="page-foot"><span>重設計原型 · 純前端 · 唔提交伺服器</span><span>資料來源：seowriting.ai Super Page</span></footer>
+
+<script>
+(function(){
+  'use strict';
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+  const LS = (() => {
+    try { localStorage.setItem('__probe','1'); localStorage.removeItem('__probe'); return localStorage; }
+    catch (e) { const mem = {}; return { getItem: k => (k in mem ? mem[k] : null),
+      setItem: (k,v) => { mem[k] = String(v); }, removeItem: k => { delete mem[k]; } }; }
+  })();
+
+  const IMG_CREDIT = {"Z-Image":0,"FLUX.1":0,"GPT Image 2.5 flare medium":2.5,"Nano Banana 2 Lite":5,
+    "Nano Banana 2":10,"GPT Image 2.5 flare high":10,"GPT Image 2.5 flare xhigh":15};
+
+  /* ---------- custom select ---------- */
+  function closeAll(except){
+    $$('.sel[data-open="true"]').forEach(sel=>{
+      if (sel === except) return;
+      sel.dataset.open = 'false';
+      sel.querySelector('.sel-btn').setAttribute('aria-expanded','false');
+      sel.querySelector('.sel-pop').hidden = true;
+    });
+  }
+  $$('.sel').forEach(sel=>{
+    const btn = sel.querySelector('.sel-btn');
+    const pop = sel.querySelector('.sel-pop');
+    const search = sel.querySelector('.sel-search');
+    const list = sel.querySelector('.sel-list');
+    let active = -1;
+    function opts(){ return $$('.opt', list).filter(o=>!o.hidden); }
+    function open(){
+      closeAll(sel); sel.dataset.open = 'true';
+      btn.setAttribute('aria-expanded','true');
+      pop.hidden = false;
+      if (search){ search.value=''; opts().forEach(o=>o.hidden=false); search.focus(); }
+      active = -1;
+    }
+    function close(){ sel.dataset.open = 'false'; btn.setAttribute('aria-expanded','false'); pop.hidden = true; }
+    function pick(el){
+      if (!el) return;
+      $$('.opt', list).forEach(o=>{ o.classList.remove('is-cur'); o.removeAttribute('aria-selected'); });
+      el.classList.add('is-cur'); el.setAttribute('aria-selected','true');
+      const zh = el.querySelector('.opt-zh').textContent;
+      const en = el.dataset.en;
+      const val = $('.sel-val', btn); val.innerHTML = '';
+      const z = document.createElement('span'); z.textContent = zh; val.appendChild(z);
+      if (en && en !== zh){ const e = document.createElement('span'); e.className='sel-en'; e.textContent = en; val.appendChild(e); }
+      sel.dataset.value = el.dataset.value;
+      close(); btn.focus();
+      updateCredits(); save();
+    }
+    btn.addEventListener('click', ()=> sel.dataset.open === 'true' ? close() : open());
+    btn.addEventListener('keydown', e=>{
+      if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); }
+    });
+    list.addEventListener('click', e=>{ const el = e.target.closest('.opt'); if (el) pick(el); });
+    list.addEventListener('mousemove', e=>{
+      const el = e.target.closest('.opt'); if (!el) return;
+      opts().forEach(o=>o.classList.remove('is-active')); el.classList.add('is-active');
+    });
+    if (search){
+      search.addEventListener('input', ()=>{
+        const q = search.value.trim().toLowerCase();
+        opts().forEach(o=>{
+          const en = (o.dataset.en||'').toLowerCase();
+          const zh = o.querySelector('.opt-zh').textContent.toLowerCase();
+          o.hidden = q && !(en.includes(q) || zh.includes(q));
+        });
+        active = -1;
+      });
+      search.addEventListener('keydown', e=>{
+        if (e.key === 'ArrowDown'){ e.preventDefault(); move(1); }
+        if (e.key === 'Enter'){ e.preventDefault(); const a = opts()[active]; pick(a || opts()[0]); }
+      });
+    }
+    function move(d){
+      const list2 = opts(); if (!list2.length) return;
+      active = (active + d + list2.length) % list2.length;
+      list2.forEach(o=>o.classList.remove('is-active'));
+      const el = list2[active]; el.classList.add('is-active');
+      el.scrollIntoView({block:'nearest'});
+    }
+    sel.addEventListener('keydown', e=>{
+      if (pop.hidden) return;
+      if (e.key === 'ArrowDown'){ e.preventDefault(); move(1); }
+      if (e.key === 'ArrowUp'){ e.preventDefault(); move(-1); }
+      if (e.key === 'Escape'){ e.preventDefault(); close(); btn.focus(); }
+    });
+    sel.addEventListener('keydown', e=>{
+      if (pop.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp')){ e.preventDefault(); open(); }
+    });
+  });
+  document.addEventListener('click', e=>{ if (!e.target.closest('.sel')) closeAll(null); });
+  document.addEventListener('keydown', e=>{ if (e.key === 'Escape') closeAll(null); });
+
+  /* ---------- credits ---------- */
+  function selValue(dname){ const s = document.querySelector('[data-dname="'+dname+'"] .sel'); return s ? (s.dataset.value || '') : ''; }
+  function updateCredits(){
+    const base = 1;
+    const img = IMG_CREDIT[selValue('images')] ?? 0;
+    const total = base + img;
+    const t = total + ' credit' + (total!==1?'s':'');
+    const a = $('#rb-base'); if (a) a.textContent = base;
+    const b = $('#rb-img'); if (b) b.textContent = img;
+    const c = $('#rb-total'); if (c) c.textContent = total;
+    const d = $('#lg-base'); if (d) d.textContent = '基本 ' + base;
+    const e2 = $('#lg-img'); if (e2) e2.textContent = '圖片 ' + img;
+    const f = $('#ledgerPill'); if (f) f.textContent = t;
+  }
+
+  /* ---------- hero counter ---------- */
+  const hero = $('#inp_hero');
+  if (hero){
+    hero.addEventListener('input', ()=>{ $('#hero-count').textContent = hero.value.length + '/50001'; });
+    $('#hero-count').textContent = '0/50001';
+  }
+
+  /* ---------- examples ---------- */
+  const EX = [
+    ['Product Comparison Page','比較頁：逐項對比 3–5 個同類產品，抽每個對手嘅 CTA 焦點，幫用戶一睇即揀。'],
+    ['Local Service Page','本地服務頁：針對單一地理區域嘅服務商，列出服務、收費、案例、聯絡方式，SERP 見得多。'],
+    ['Content with Reference URL','附參考網址內容：連埋參考來源 URL 一齊俾我，生成嘅文章會引用佢哋做論據。'],
+    ['Listicle Blog Page','清單式文章：用「Top N」結構整理最具排名潛力嘅題目，逐點列出，方便掃讀。'],
+    ['Guides with Product Recommendations','導覽＋產品推薦：完整指南之餘，結尾加有庫存／EMC 回調，做產品推薦嘅落地頁。']
+  ];
+  const eg = $('#examples');
+  if (eg){
+    EX.forEach(([t, desc])=>{
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'ex-chip';
+      b.innerHTML = t + '<small>' + desc + '</small>';
+      b.addEventListener('click', ()=>{
+        hero.value = t + ' — ' + desc;
+        hero.focus();
+        $('#hero-count').textContent = hero.value.length + '/50001';
+        save();
+      });
+      eg.appendChild(b);
+    });
+  }
+
+  /* ---------- theme ---------- */
+  $('#theme-toggle')?.addEventListener('click', ()=>{
+    const root = document.documentElement;
+    root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    LS.setItem('sw-theme', root.dataset.theme);
+  });
+  const savedTheme = LS.getItem('sw-theme');
+  if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+
+  /* ---------- persistence ---------- */
+  const KEY = 'sw-super-page-zh';
+  function save(){
+    const state = { hero: hero.value };
+    $$('.sel').forEach(s=>{ const f = s.closest('.field'); if (f) state[f.dataset.dname] = s.dataset.value ?? ''; });
+    LS.setItem(KEY, JSON.stringify(state));
+  }
+  function restore(){
+    let state; try { state = JSON.parse(LS.getItem(KEY) || 'null'); } catch(e){ return; }
+    if (!state) return;
+    if (state.hero){ hero.value = state.hero; $('#hero-count').textContent = hero.value.length + '/50001'; }
+    $$('.sel').forEach(s=>{
+      const f = s.closest('.field'); const v = state[f.dataset.dname]; if (!v) return;
+      let opt = null; s.querySelectorAll('.opt').forEach(o=>{ if (o.dataset.value === v) opt = o; });
+      if (opt) opt.click();
+    });
+  }
+  restore(); updateCredits();
+
+  /* ---------- rail scrollspy (verified algorithm) ---------- */
+  const railLinks = $$('.rail nav a');
+  const panels = $$('.panel');
+  const setActive = id => railLinks.forEach(a => {
+    const is = a.dataset.target === id;
+    a.classList.toggle('active', is);
+    if (is) a.setAttribute('aria-current','true'); else a.removeAttribute('aria-current');
+  });
+  const spy = () => {
+    const line = window.scrollY + 150;
+    let cur = panels[0].id;
+    for (const p of panels) {
+      const top = p.getBoundingClientRect().top + window.scrollY;
+      if (top - 8 <= line) cur = p.id;
+    }
+    if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 4) cur = panels[panels.length-1].id;
+    setActive(cur);
+  };
+  let ticking = false;
+  addEventListener('scroll', () => { if (ticking) return; ticking = true; requestAnimationFrame(() => { spy(); ticking = false; }); }, { passive: true });
+  spy();
+  railLinks.forEach(a=>a.addEventListener('click', e=>{
+    e.preventDefault();
+    const t = document.getElementById(a.dataset.target);
+    if (t) t.scrollIntoView({behavior:'smooth', block:'start'});
+  }));
+
+  /* ---------- demo action ---------- */
+  $('#run')?.addEventListener('click', ()=>{
+    if (!hero.value.trim()){ hero.focus(); alert('先填一句想生成嘅嘢，Super Page 先有嘢可以寫。'); return; }
+    const btn = $('#run'); btn.disabled = true; btn.textContent = '生成中…';
+    setTimeout(()=>{ btn.disabled = false; btn.textContent = '生成 Super Page'; }, 1000);
+  });
+})();
+</script>
+</body>
+</html>
