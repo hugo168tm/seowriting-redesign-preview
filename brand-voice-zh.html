@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>品牌聲音 Brand Voice · SEOWriting 編輯台</title>
+<meta name="description" content="Brand Voice 繁中重設計：文章樣本 → 分析寫作 DNA → 8 個可編輯 Elements，之後 1-Click / Bulk 生成時套用。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ---------- design tokens (source of truth: ui/1-click-blog-post-zh.html) ---------- */
+:root{
+  --paper:#FBFAF7; --paper-2:#F4F2EC; --card:#FFFFFF;
+  --ink:#16181D; --ink-2:#4C525C; --ink-3:#767C87;
+  --rule:#E3DFD6; --rule-2:#EFEBE2;
+  --mark:#9B2C2C; --mark-soft:#F3E4E1;
+  --auto:#8A6100; --auto-soft:#F6EEDA;
+  --ok:#1F6F4A; --ok-soft:#E6F1EA;
+  --focus:#2F5D8A;
+  --r:3px; --r-lg:5px;
+  --sh:0 1px 2px rgba(22,24,29,.05), 0 8px 24px -12px rgba(22,24,29,.18);
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --serif:"Noto Serif TC","Songti TC","PingFang TC",Georgia,"Times New Roman",serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sp:4px;
+  --step-0:15px; --step-1:17px; --step-2:21px; --step-3:27px; --step-4:36px; --step-5:52px;
+}
+[data-theme="dark"]{
+  --paper:#15171B; --paper-2:#1B1E23; --card:#1E2126;
+  --ink:#F2F0EA; --ink-2:#B9BEC7; --ink-3:#8C929C;
+  --rule:#2C3037; --rule-2:#242830;
+  --mark:#E2836F; --mark-soft:#33211E;
+  --auto:#D9AE5F; --auto-soft:#2E2618;
+  --ok:#6DBE93; --ok-soft:#1B2A22;
+  --focus:#8FB8E0;
+  --sh:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -18px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%; scrollbar-gutter:stable both-edges}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--sans); font-size:var(--step-0); line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:var(--serif); font-weight:600; letter-spacing:.01em; margin:0}
+code,.mono{font-family:var(--mono); font-size:.86em}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--focus); outline-offset:2px; border-radius:2px}
+[hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.en{font-family:var(--mono); font-size:11px; color:var(--ink-3); letter-spacing:.03em; margin-left:6px; font-weight:400}
+
+/* ---------- app bar ---------- */
+.appbar{position:sticky; top:0; z-index:40; background:var(--ink); color:#F7F5EF;
+  display:flex; align-items:center; gap:18px; padding:0 18px; height:52px;
+  font-size:13.5px; letter-spacing:.02em}
+[data-theme="dark"] .appbar{background:#0C0E11; border-bottom:1px solid var(--rule)}
+.brand{font-family:var(--serif); font-size:16px; letter-spacing:.04em; white-space:nowrap}
+.brand b{font-weight:700}
+.tools{display:flex; gap:2px; margin-left:6px; overflow:auto; scrollbar-width:none; flex:1; min-width:0; align-items:center}
+.tools::-webkit-scrollbar{display:none}
+.tools a{padding:6px 11px; border-radius:3px; color:rgba(247,245,239,.78); text-decoration:none; white-space:nowrap}
+.tools a:hover{background:rgba(255,255,255,.09); color:#fff}
+.tools a[aria-current="page"]{background:#F7F5EF; color:#16181D; font-weight:500}
+.appbar-right{display:flex; align-items:center; gap:12px; flex:0 0 auto; margin-left:auto}
+.credit-chip{font-family:var(--mono); font-size:12.5px; border:1px solid rgba(255,255,255,.22);
+  border-radius:999px; padding:3px 10px; color:#EDE9E0}
+.theme-btn{background:none; border:1px solid rgba(255,255,255,.22); color:#F7F5EF; font-size:14px;
+  border-radius:3px; width:34px; height:34px; cursor:pointer; line-height:1}
+.theme-btn:hover{background:rgba(255,255,255,.1)}
+.avatar{width:30px;height:30px;border-radius:50%;background:#2A2E35;color:#F7F5EF;
+  display:grid;place-items:center;font-size:12px;font-family:var(--mono)}
+.acct{font-size:13px;color:rgba(247,245,239,.85);white-space:nowrap}
+
+/* ---------- layout (single column, 一頁三段) ---------- */
+main{max-width:1120px; margin:0 auto; padding:34px 40px 150px; min-width:0}
+@media (max-width:640px){ main{padding:22px 18px 150px} }
+
+/* masthead */
+.eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--mark); margin-bottom:10px}
+.masthead{margin-bottom:14px}
+.masthead h1{font-size:var(--step-4); line-height:1.18; letter-spacing:-.01em; margin-bottom:8px}
+@media (max-width:640px){ .masthead h1{font-size:var(--step-3)} }
+.dek{color:var(--ink-2); max-width:66ch; margin:0 0 20px}
+.auth-note{font-size:12px;color:var(--ink-3);font-family:var(--mono);margin:0 0 18px}
+
+/* ---------- section nav (scrollspy: scrollY + 150 判定) ---------- */
+.sect-nav{display:flex; gap:4px; flex-wrap:wrap; border-top:1px solid var(--ink);
+  border-bottom:1px solid var(--rule); padding:8px 0 0; margin:0 0 8px}
+.sect-nav a{padding:8px 12px; border-radius:3px 3px 0 0; text-decoration:none; color:var(--ink-2);
+  font-size:13px; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap}
+.sect-nav a:hover{color:var(--ink)}
+.sect-nav a.on{color:var(--mark); border-bottom-color:var(--mark); font-weight:600}
+
+/* ---------- section head ---------- */
+.sect-head{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:30px 0 14px}
+.sect-head h2{font-size:var(--step-2)}
+.sect-head .count{font-family:var(--mono); font-size:11px; color:var(--ink-3)}
+.sect-head .spacer{flex:1}
+
+/* ---------- empty state ---------- */
+.empty{border:1px dashed var(--rule); border-radius:var(--r-lg); background:var(--paper-2);
+  padding:40px 26px; text-align:center}
+.empty .icon{font-family:var(--serif); font-size:34px; color:var(--ink-3); margin:0 0 10px}
+.empty h3{font-size:var(--step-2); margin-bottom:6px; color:var(--ink)}
+.empty h3 .en{font-size:12px; color:var(--ink-3); font-family:var(--sans); font-weight:500}
+.empty p.lead-en{font-family:var(--serif); font-size:var(--step-1); color:var(--ink-2);
+  max-width:52ch; margin:0 auto 6px}
+.empty p.zh{color:var(--ink-3); font-size:13.5px; max-width:52ch; margin:0 auto 22px}
+
+/* ---------- voice cards ---------- */
+.voice-list{list-style:none; margin:0; padding:0}
+.voice-card{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px 18px; align-items:center;
+  border:1px solid var(--rule); border-radius:var(--r); background:var(--card);
+  padding:14px 16px; margin-bottom:8px}
+.vc-main{min-width:0}
+.vc-name{font-size:15px; font-weight:600; display:flex; align-items:baseline; gap:9px; flex-wrap:wrap}
+.vc-name .name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.vc-meta{display:flex; gap:14px; flex-wrap:wrap; margin-top:6px; font-size:12px; color:var(--ink-3)}
+.vc-meta .mono{font-variant-numeric:tabular-nums}
+.pill{font-family:var(--mono); font-size:11px; letter-spacing:.05em; border-radius:999px; padding:2px 9px;
+  white-space:nowrap}
+.pill.run{background:var(--mark-soft); color:var(--mark); border:1px solid var(--mark)}
+.vc-actions{display:flex; gap:8px; align-items:center; justify-content:flex-end; flex-wrap:wrap}
+
+/* ---------- buttons ---------- */
+.btn{font:inherit; font-size:13.5px; border-radius:var(--r); padding:9px 15px; cursor:pointer;
+  border:1px solid var(--rule); background:var(--card); color:var(--ink);
+  transition:background .16s ease, border-color .16s ease, transform .1s ease; display:inline-block}
+.btn:hover{border-color:var(--ink-3); background:var(--paper-2)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.45; cursor:not-allowed; pointer-events:none}
+.btn-primary{background:var(--mark); border-color:var(--mark); color:#fff; font-weight:500}
+.btn-primary:hover{background:#872523; border-color:#872523}
+.btn-primary .en{color:rgba(255,255,255,.78)}
+.btn-sm{font-size:12.5px; padding:6px 11px}
+.btn-ghost{background:none; border-color:transparent; color:var(--ink-2); text-decoration:underline;
+  padding-left:0; padding-right:0}
+.btn-ghost:hover{background:none; border-color:transparent; color:var(--ink)}
+.btn-ghost .en{color:var(--ink-3)}
+
+/* ---------- inputs ---------- */
+.inp,textarea.inp{width:100%; border:1px solid var(--rule); background:var(--card); border-radius:var(--r);
+  padding:10px 11px; font:inherit; font-size:13.5px; color:var(--ink);
+  transition:border-color .18s ease}
+.inp:focus{border-color:var(--focus); box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 14%,transparent);
+  outline:none}
+textarea.inp{resize:vertical; line-height:1.6}
+.inp::placeholder{color:var(--ink-3); opacity:1}
+.min-hint{font-size:12px; margin:9px 0 0; line-height:1.55; color:var(--mark)}
+.min-hint.ok{color:var(--ok)}
+.min-hint b{font-family:var(--mono); font-weight:500}
+.min-hint .en{color:inherit; opacity:.8}
+
+/* ---------- wizard ---------- */
+.wizard{border:1px solid var(--rule); border-radius:var(--r-lg); background:var(--card);
+  padding:18px 18px 16px}
+.wiz-tabs{display:inline-flex; border:1px solid var(--rule); border-radius:var(--r); overflow:hidden;
+  background:var(--card); flex-wrap:wrap}
+.tab-btn{border:0; background:none; font:inherit; font-size:13px; color:var(--ink-2);
+  padding:8px 14px; cursor:pointer; border-right:1px solid var(--rule-2); min-height:40px}
+.tab-btn:last-child{border-right:0}
+.tab-btn:hover{background:var(--paper-2); color:var(--ink)}
+.tab-btn.is-on{background:var(--ink); color:var(--paper); font-weight:500}
+.tab-btn .en{color:var(--ink-3); font-size:10.5px}
+.tab-btn.is-on .en{color:rgba(255,255,255,.72)}
+.src-panel{padding:20px 0 0}
+.src-panel > .lead{color:var(--ink-2); font-size:13px; max-width:70ch; margin:0 0 14px}
+
+/* text source */
+.textbox .tb-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:6px}
+.tb-head label{font-size:13.5px; font-weight:500; color:var(--ink)}
+.counter-chip{font-family:var(--mono); font-size:11px; color:var(--ink-3); background:var(--paper-2);
+  border:1px solid var(--rule-2); border-radius:2px; padding:1px 6px; font-variant-numeric:tabular-nums}
+.bv-textarea{min-height:200px}
+
+/* url source */
+.url-wrap label{display:block; font-size:13.5px; font-weight:500; color:var(--ink); margin-bottom:6px}
+.url-wrap .inp{font-family:var(--mono); font-size:13px}
+
+/* file source */
+.dropzone{border:1px dashed var(--rule); border-radius:var(--r); background:var(--paper-2);
+  padding:26px 18px; text-align:center; cursor:pointer; transition:border-color .16s ease, background .16s ease}
+.dropzone:hover,.dropzone.is-over{border-color:var(--ink-3); background:var(--paper)}
+.dropzone .dz-icon{font-size:26px; color:var(--ink-3); font-family:var(--serif)}
+.dropzone .dz-title{font-size:13.5px; color:var(--ink-2); margin-top:6px}
+.dropzone .dz-browse{color:var(--mark); text-decoration:underline; font-weight:500}
+.dropzone .dz-sub{font-size:12px; color:var(--ink-3); margin-top:4px}
+.dz-file{display:inline-flex; align-items:center; gap:8px; margin-top:12px; font-family:var(--mono);
+  font-size:12px; color:var(--ok); background:var(--ok-soft); border:1px solid var(--ok);
+  border-radius:999px; padding:3px 11px; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+
+/* analyzing step */
+.an-head{font-size:13.5px; color:var(--ink-2); margin-bottom:14px}
+.an-head b{color:var(--ink); font-weight:500}
+.progress{height:6px; border-radius:3px; background:var(--rule-2); overflow:hidden; margin-bottom:18px}
+.progress-bar{height:100%; width:0; background:var(--mark); border-radius:3px; transition:width .28s ease}
+.an-steps{list-style:none; margin:0; padding:0}
+.an-steps li{display:flex; align-items:center; gap:10px; padding:7px 0; color:var(--ink-3); font-size:13px}
+.an-steps li::before{content:""; width:9px; height:9px; border:1px solid var(--rule); border-radius:50%;
+  flex:0 0 auto}
+.an-steps li.done{color:var(--ink)}
+.an-steps li.done::before{background:var(--ok); border-color:var(--ok)}
+.an-steps li.active{color:var(--ink); font-weight:500}
+.an-steps li.active::before{border-color:var(--mark)}
+.an-steps .en{color:var(--ink-3); font-size:10.5px; margin-left:auto; text-align:right}
+
+/* elements step */
+.el-head{display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  margin-bottom:12px}
+.el-head .name-field{flex:1 1 300px; min-width:0}
+.el-count{font-family:var(--mono); font-size:12.5px; color:var(--mark); background:var(--mark-soft);
+  border:1px solid var(--mark); border-radius:999px; padding:3px 11px; white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+.el-lead{color:var(--ink-2); font-size:12.5px; margin:0 0 14px; max-width:74ch}
+.el-list{display:flex; flex-direction:column; gap:10px; margin-bottom:6px}
+.el-row{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.7fr) auto; gap:12px;
+  border:1px solid var(--rule); border-radius:var(--r); background:var(--paper);
+  padding:12px 14px; align-items:start}
+.el-row.is-drag{opacity:.4; border-style:dashed}
+.el-fld{min-width:0}
+.el-lbl{display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:5px}
+.el-lbl label{font-size:12.5px; font-weight:500; color:var(--ink-2)}
+.mini-counter{font-family:var(--mono); font-size:10.5px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+.el-name{font-family:var(--mono); font-size:13px}
+.el-desc{min-height:70px}
+.el-actions{display:flex; flex-direction:column; gap:6px; align-items:stretch; padding-top:24px}
+.el-actions .btn{padding:5px 9px; font-size:12px}
+.el-actions .el-del{color:var(--ink-3)}
+.el-actions .el-del:hover{color:var(--mark)}
+
+/* wizard foot */
+.wiz-foot{display:flex; align-items:center; gap:10px; flex-wrap:wrap; border-top:1px solid var(--rule);
+  padding-top:16px; margin-top:14px}
+.wiz-foot .spacer{flex:1}
+
+/* ---------- usage demo ---------- */
+.usage-card{border:1px solid var(--rule); border-radius:var(--r-lg); background:var(--card);
+  padding:18px 18px 12px}
+.usage-grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px}
+@media (max-width:760px){ .usage-grid{grid-template-columns:1fr} }
+.field{min-width:0}
+.field-head{display:flex; align-items:baseline; gap:5px 8px; flex-wrap:wrap; margin-bottom:6px; min-height:20px}
+.field-label{font-size:13.5px; font-weight:500; color:var(--ink)}
+.field-key{font-family:var(--mono); font-size:10.5px; color:var(--ink-3); background:var(--paper-2);
+  border:1px solid var(--rule-2); border-radius:2px; padding:0 4px}
+.field.is-locked .sel-btn{background:var(--paper-2); color:var(--ink-3); cursor:not-allowed; opacity:.75}
+.field.is-locked .sel-btn .chev{stroke:var(--ink-3)}
+.field.is-locked .field-key{background:var(--rule-2)}
+.field.is-locked .field-label{color:var(--ink-3)}
+.usage-explain{margin:14px 0 0; font-size:12.5px; color:var(--auto); background:var(--auto-soft);
+  border:1px dashed var(--auto); border-radius:var(--r); padding:9px 12px; line-height:1.6}
+
+/* ---------- custom select (usage demo) ---------- */
+.sel{position:relative}
+.sel-btn{width:100%; min-height:44px; display:flex; align-items:center; justify-content:space-between; gap:8px;
+  background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:10px 11px;
+  font:inherit; font-size:13.5px; color:var(--ink); text-align:left; cursor:pointer;
+  transition:border-color .18s ease, box-shadow .18s ease}
+.sel-btn:hover{border-color:var(--ink-3)}
+.sel[data-open="true"] .sel-btn{border-color:var(--focus); box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 14%,transparent)}
+.sel-val{display:flex; flex-direction:column; gap:1px; min-width:0}
+.sel-val:empty::before{content:"未選擇"; color:var(--ink-3)}
+.sel-val > span:first-child{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.sel-en{font-size:11px; color:var(--ink-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.chev{width:16px; height:16px; fill:none; stroke:var(--ink-3); stroke-width:1.6; flex:0 0 auto}
+.sel-pop{position:absolute; z-index:30; top:calc(100% + 4px); left:0; right:0; background:var(--card);
+  border:1px solid var(--rule); border-radius:var(--r-lg); box-shadow:var(--sh); overflow:hidden}
+/* 陷阱 2：呢條必須存在，壓過 .sel-pop 嘅顯示，唔係所有選單會浮喺版面 */
+.sel-pop[hidden]{display:none!important}
+.sel-list{list-style:none; margin:0; padding:5px; max-height:264px; overflow:auto}
+.opt{padding:7px 9px; border-radius:2px; cursor:pointer; display:flex; flex-direction:column; gap:1px;
+  font-size:13.5px}
+.opt-zh{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.opt-en{font-size:11px; color:var(--ink-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.opt:hover,.opt.is-active{background:var(--paper-2)}
+.opt.is-cur{color:var(--mark); font-weight:500}
+.opt.is-cur::after{content:"目前"; font-family:var(--mono); font-size:9.5px; color:var(--mark);
+  border:1px solid currentColor; border-radius:2px; padding:0 3px; margin-left:6px; align-self:flex-start}
+
+/* ---------- runbar ---------- */
+.runbar{position:fixed; left:0; right:0; bottom:0; z-index:35; background:var(--card);
+  border-top:1px solid var(--ink); box-shadow:0 -8px 24px -18px rgba(0,0,0,.5)}
+[data-theme="dark"] .runbar{border-top-color:var(--rule)}
+.runbar-in{max-width:1120px; margin:0 auto; padding:11px 22px; display:flex; align-items:center;
+  gap:18px; flex-wrap:wrap}
+.ledger{display:flex; gap:16px; flex-wrap:wrap; font-family:var(--mono); font-size:12px; color:var(--ink-2)}
+.ledger span b{color:var(--ink); font-weight:500}
+.runbar .spacer{flex:1}
+.saved{font-size:11.5px; color:var(--ink-3); font-family:var(--mono); white-space:nowrap}
+
+/* ---------- footer ---------- */
+footer.page-foot{max-width:1120px; margin:0 auto; padding:26px 40px 100px; color:var(--ink-3);
+  font-size:12px; border-top:1px solid var(--rule); display:flex; gap:16px; flex-wrap:wrap}
+@media (max-width:640px){ footer.page-foot{padding:22px 18px 100px} }
+
+/* ---------- responsive ---------- */
+@media (max-width:900px){
+  main{padding:20px 18px 130px}
+  .credit-chip{display:none}
+  .appbar{padding:0 12px; gap:10px}
+  .runbar-in{padding:9px 14px; gap:10px}
+  .runbar .ledger{display:none}
+  .saved{display:none}
+}
+@media (max-width:760px){
+  .el-row{grid-template-columns:1fr}
+  .el-actions{flex-direction:row; padding-top:0}
+}
+@media (max-width:640px){
+  .voice-card{grid-template-columns:1fr}
+  .vc-actions{justify-content:flex-start}
+  .appbar{gap:8px}
+  .brand{font-size:14px}
+  .tools a{padding:6px 8px; font-size:12.5px}
+  .acct{display:none}
+  .empty{padding:30px 16px}
+  .sect-nav a{font-size:12.5px; padding:7px 9px}
+  .wizard{padding:14px 12px 14px}
+  .tab-btn{padding:7px 10px; font-size:12.5px}
+}
+
+/* ---------- 移動修復：工具切換器唔可以隱藏，改成可橫向滑動 ---------- */
+@media (max-width:1180px){
+  .tools a:not([aria-current]), .tool:not([aria-current]){display:flex}
+  .appbar .tools, .tools{overflow-x:auto; overflow-y:hidden; scrollbar-width:none;
+    -webkit-overflow-scrolling:touch; min-width:0}
+  .tools::-webkit-scrollbar{display:none}
+  .tools a, .tools .tool{flex:0 0 auto; white-space:nowrap}
+}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
+
+/* ---------- 清單表格（對應原生 NAME / BRAND VOICE / ELEMENTS / TO DO）---------- */
+.table-wrap{overflow-x:auto}
+.vtable{width:100%; border-collapse:collapse; font-size:14px}
+.vtable th{text-align:left; font-weight:500; font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--ink-3); border-bottom:1px solid var(--rule); padding:0 12px 8px}
+.vtable th .en{font-family:var(--mono); font-size:10px; letter-spacing:.1em; opacity:.55; margin-left:6px}
+.vtable td{padding:14px 12px; border-bottom:1px solid var(--rule-2); vertical-align:top}
+.vtable tr:hover td{background:var(--paper-2)}
+.vname{font-weight:500}
+.vdesc{color:var(--ink-2); max-width:52ch}
+.vsum{display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.55}
+.vcount{color:var(--ink-3); white-space:nowrap}
+.vact{white-space:nowrap; text-align:right}
+.vact .btn + .btn{margin-left:6px}
+@media (max-width:700px){
+  .vdesc{max-width:22ch}
+  .vtable th, .vtable td{padding:10px 8px}
+}
+</style>
+</head>
+<body>
+<header class="appbar">
+  <span class="brand">SEOWriting 編輯台</span>
+  <nav class="tools" aria-label="工具切換">
+    <a href="1-click-blog-post-zh.html">一鍵發布</a>
+    <a href="bulk-generation-zh.html">批量生成</a>
+    <a href="super-page-zh.html">Super Page</a>
+    <a href="rewriter-zh.html">改寫工具</a>
+    <a href="builder-zh.html">Builder</a>
+    <a href="brand-voice-zh.html" aria-current="page">品牌聲音</a>
+  </nav>
+  <div class="appbar-right">
+    <button id="theme-toggle" class="theme-btn" type="button" aria-label="切換深色模式">◧</button>
+    <span class="credit-chip" id="ledgerPill">1,240 信用點</span>
+    <span class="avatar" aria-hidden="true">示</span>
+    <span class="acct">示例帳戶</span>
+  </div>
+</header>
+
+<main>
+  <p class="eyebrow">工具 06 · Brand Voice</p>
+  <div class="masthead">
+    <h1>品牌聲音</h1>
+    <p class="dek">上載你自己的文章樣本，系統會抽出「寫作 DNA」——語調、詞彙、句式——存成一個 Brand Voice，之後 1-Click / Bulk 生成時套用。<br>Customize tone, vocabulary, syntax, and more to develop a unique style for your articles.</p>
+    <p class="auth-note">工具：brand_voice / 登入：示例帳戶</p>
+  </div>
+
+  <nav class="sect-nav" aria-label="本頁段落">
+    <a href="#s-list" data-scroll="s-list" class="on">① 品牌聲音清單</a>
+    <a href="#s-wizard" data-scroll="s-wizard">② 建立精靈</a>
+    <a href="#s-usage" data-scroll="s-usage">③ 使用方式示範</a>
+  </nav>
+
+  <!-- ① 品牌聲音清單（預設視圖） -->
+  <section id="s-list" aria-labelledby="s-list-h">
+    <div class="sect-head">
+      <h2 id="s-list-h">品牌聲音清單</h2>
+      <span class="count" id="voice-count">0 個 voice</span>
+      <span class="spacer"></span>
+      <button class="btn btn-primary" id="btn-new" type="button" hidden aria-hidden="true">＋ 新建立 Brand Voice</button>
+    </div>
+
+    <div class="empty" id="bv-empty">
+      <div class="icon" aria-hidden="true">♪</div>
+      <h3>未有任何 Brand Voice <span class="en">No brand voices yet</span></h3>
+      <p class="lead-en">Customize tone, vocabulary, syntax, and more to develop a unique style for your articles.</p>
+      <p class="zh">上載文章樣本，系統會抽出你嘅寫作 DNA，存成一個可以用喺所有文章嘅品牌聲音。</p>
+      <button class="btn btn-primary" id="empty-create" type="button">＋ 新建立 Brand Voice</button>
+    </div>
+
+    <div class="table-wrap" id="voice-table" hidden>
+      <table class="vtable">
+        <thead>
+          <tr>
+            <th scope="col">名稱 <span class="en">NAME</span></th>
+            <th scope="col">品牌聲音 <span class="en">BRAND VOICE</span></th>
+            <th scope="col">Elements</th>
+            <th scope="col">操作 <span class="en">TO DO</span></th>
+          </tr>
+        </thead>
+        <tbody id="voice-list"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ② 建立精靈（3 步） -->
+  <section id="s-wizard" aria-labelledby="s-wizard-h">
+    <div class="sect-head">
+      <h2 id="s-wizard-h">建立精靈</h2>
+      <span class="count">Add Brand Voice · 3 步</span>
+      <span class="spacer"></span>
+      <span class="count mono" id="step-chip">Step 1 / 3 · 輸入來源</span>
+    </div>
+
+    <div class="wizard">
+      <!-- Step 1：輸入來源 -->
+      <div class="wiz-step" data-step="1">
+        <p class="lead" style="color:var(--ink-2);font-size:13px;max-width:70ch;margin:0 0 12px">
+          Add a text, URL or document snippet to customize your brand's writing style. Ensure you have the rights to use any content you submit.</p>
+        <div class="wiz-tabs" role="tablist" aria-label="輸入來源">
+          <button class="tab-btn is-on" data-tab="text" type="button" role="tab" aria-selected="true">貼上文字 <span class="en">Add text</span></button>
+          <button class="tab-btn" data-tab="url" type="button" role="tab" aria-selected="false">網頁抓取 <span class="en">Web Scrape</span></button>
+          <button class="tab-btn" data-tab="file" type="button" role="tab" aria-selected="false">上載檔案 <span class="en">Upload a file</span></button>
+        </div>
+
+        <div class="src-panel" data-panel="text">
+          <div class="textbox">
+            <div class="tb-head">
+              <label for="bv-text">Brand text</label>
+              <span class="counter-chip" id="text-count">0/10000</span>
+            </div>
+            <textarea id="bv-text" class="inp bv-textarea" maxlength="10000" rows="10"
+              placeholder="Write or paste in any content" aria-label="Brand text"></textarea>
+          </div>
+          <p class="min-hint" id="text-min-hint">最少 1,000 字。仲差 <b>1000</b> 字。</p>
+        </div>
+
+        <div class="src-panel" data-panel="url" hidden>
+          <div class="url-wrap">
+            <label for="bv-url">網址 <span class="en">URL</span></label>
+            <input id="bv-url" class="inp" type="url" maxlength="300"
+              placeholder="https://example.com/blog-post" aria-label="網頁網址">
+            <p class="min-hint ok" id="url-hint">貼一個 blog post 或 text-heavy 頁面，系統會抓內容做分析。</p>
+          </div>
+        </div>
+
+        <div class="src-panel" data-panel="file" hidden>
+          <div class="dropzone" id="dropzone">
+            <input type="file" id="bv-file" class="sr-only" accept=".txt,.md,.docx,.doc,.html,text/plain">
+            <div class="dz-icon" aria-hidden="true">↥</div>
+            <div class="dz-title">拖個含文字嘅檔案嚟度，或者 <span class="dz-browse">揀選檔案</span></div>
+            <div class="dz-sub">Upload a file · .txt / .md / .docx</div>
+            <div class="dz-file" id="dz-file" hidden></div>
+          </div>
+          <p class="min-hint ok" id="file-hint">上載一個含文字嘅檔案做分析。請確保你有權使用入面嘅內容。</p>
+        </div>
+
+        <div class="wiz-foot">
+          <button class="btn" id="src-back" type="button">← 返回清單 <span class="en">Back</span></button>
+          <span class="spacer"></span>
+          <button class="btn btn-primary" id="create-voice" type="button" disabled>建立 Brand Voice <span class="en">Create Brand Voice</span></button>
+        </div>
+      </div>
+
+      <!-- Step 2：分析中 -->
+      <div class="wiz-step" data-step="2" hidden>
+        <div class="an-head">請稍候，分析緊你嘅內容…… <b>Please wait a few seconds for the analysis to complete.</b></div>
+        <div class="progress"><div class="progress-bar" id="prog-bar"></div></div>
+        <ul class="an-steps" id="an-steps">
+          <li data-an="0">量度句長… <span class="en">Measure sentence length</span></li>
+          <li data-an="1">抽取常用詞… <span class="en">Extract frequent words</span></li>
+          <li data-an="2">分析語調… <span class="en">Detect tone &amp; voice</span></li>
+          <li data-an="3">比對句式結構… <span class="en">Compare syntax patterns</span></li>
+          <li data-an="4">建立寫作風格模型… <span class="en">Building writing style model</span></li>
+        </ul>
+      </div>
+
+      <!-- Step 3：Elements 編輯 -->
+      <div class="wiz-step" data-step="3" hidden>
+        <div class="el-head">
+          <div class="name-field">
+            <div class="field-head"><label class="field-label" for="bv-name">Brand Voice 名稱</label><span class="en">Name</span></div>
+            <input id="bv-name" class="inp" maxlength="60" placeholder="例：官方立法／Official Legislative">
+          </div>
+          <span class="el-count" id="el-count">8/10 Elements</span>
+        </div>
+        <p class="el-lead">呢啲 Element 係分析出嚟嘅寫作 DNA，全部可以改。Element 名稱最多 <b>50</b> 字、描述最多 <b>250</b> 字，超過會即時截斷。</p>
+        <div class="el-list" id="el-list"></div>
+        <div class="wiz-foot">
+          <button class="btn" id="add-el" type="button">＋ 新增 Element <span class="en">Add an Element</span></button>
+          <span class="spacer"></span>
+          <button class="btn" id="el-back" type="button">← 返回 <span class="en">Back</span></button>
+          <button class="btn btn-primary" id="save-voice" type="button">儲存 Brand Voice <span class="en">Save Brand Voice</span></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ③ 使用方式示範 -->
+  <section id="s-usage" aria-labelledby="s-usage-h">
+    <div class="sect-head">
+      <h2 id="s-usage-h">使用方式示範</h2>
+      <span class="count">喺 1-Click / Bulk 揀 Brand Voice</span>
+    </div>
+    <div class="usage-card">
+      <div class="usage-grid">
+        <div class="field">
+          <div class="field-head"><label class="field-label">Brand Voice</label><code class="field-key">brand_voice</code></div>
+          <div class="sel" id="usage-voice" data-open="false">
+            <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+              <span class="sel-val"></span>
+              <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+            </button>
+            <div class="sel-pop" role="listbox" hidden><ul class="sel-list"></ul></div>
+          </div>
+        </div>
+        <div class="field" id="fld-tone">
+          <div class="field-head"><label class="field-label">語氣 <span class="en">Tone of voice</span></label><code class="field-key">tone</code></div>
+          <div class="sel" id="usage-tone" data-open="false">
+            <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+              <span class="sel-val"></span>
+              <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+            </button>
+            <div class="sel-pop" role="listbox" hidden>
+              <ul class="sel-list">
+                <li role="option" class="opt" data-value="none"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+                <li role="option" class="opt is-cur" data-value="friendly" aria-selected="true"><span class="opt-zh">親切</span><span class="opt-en">Friendly</span></li>
+                <li role="option" class="opt" data-value="professional"><span class="opt-zh">專業</span><span class="opt-en">Professional</span></li>
+                <li role="option" class="opt" data-value="informational"><span class="opt-zh">資訊性</span><span class="opt-en">Informational</span></li>
+                <li role="option" class="opt" data-value="authoritative"><span class="opt-zh">權威</span><span class="opt-en">Authoritative</span></li>
+                <li role="option" class="opt" data-value="casual"><span class="opt-zh">輕鬆隨意</span><span class="opt-en">Casual</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="field" id="fld-pov">
+          <div class="field-head"><label class="field-label">人稱／敘述視角 <span class="en">Point of view</span></label><code class="field-key">point_view</code></div>
+          <div class="sel" id="usage-pov" data-open="false">
+            <button type="button" class="sel-btn" aria-haspopup="listbox" aria-expanded="false">
+              <span class="sel-val"></span>
+              <svg class="chev" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+            </button>
+            <div class="sel-pop" role="listbox" hidden>
+              <ul class="sel-list">
+                <li role="option" class="opt is-cur" data-value="0" aria-selected="true"><span class="opt-zh">無</span><span class="opt-en">None</span></li>
+                <li role="option" class="opt" data-value="1"><span class="opt-zh">第一人稱單數（我／我的）</span><span class="opt-en">First person singular</span></li>
+                <li role="option" class="opt" data-value="2"><span class="opt-zh">第一人稱複數（我們）</span><span class="opt-en">First person plural</span></li>
+                <li role="option" class="opt" data-value="3"><span class="opt-zh">第二人稱（你／你們）</span><span class="opt-en">Second person</span></li>
+                <li role="option" class="opt" data-value="4"><span class="opt-zh">第三人稱（佢／佢哋）</span><span class="opt-en">Third person</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="usage-explain" id="usage-explain" hidden>
+        ※ 已套用 Brand Voice —— 語氣同視角由佢接管，呢兩欄喺原生會變成 inactive（唔可以再手動改）。
+      </p>
+    </div>
+  </section>
+</main>
+
+<div class="runbar" role="contentinfo">
+  <div class="runbar-in">
+    <div class="ledger">
+      <span><b id="rb-count">0/10 voices</b></span></span>
+      <span><b id="rb-elems">0</b> Elements</span>
+    </div>
+    <span class="spacer"></span>
+    <span class="saved" id="saved" hidden></span>
+    <button class="btn btn-primary" id="btn-new2" type="button">＋ 新建立 Brand Voice</button>
+  </div>
+</div>
+
+<footer class="page-foot"><span>重設計原型 · 純前端 · 唔提交伺服器</span><span>資料來源：docs.seowriting.ai/article/brand-voice</span></footer>
+
+<script>
+(function(){
+  'use strict';
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+  const LS = (() => {
+    try { localStorage.setItem('__probe','1'); localStorage.removeItem('__probe'); return localStorage; }
+    catch (e) { const mem = {}; return { getItem: k => (k in mem ? mem[k] : null),
+      setItem: (k,v) => { mem[k] = String(v); }, removeItem: k => { delete mem[k]; } }; }
+  })();
+
+  /* ---------- constants（全部實讀自官方截圖／文件） ---------- */
+  const MAX_EL = 10, MAX_NAME = 50, MAX_DESC = 250;
+  const MIN_TEXT = 1000, MAX_TEXT = 10000;
+  const DEFAULT_ELEMENTS = [
+    { name:'Voice Tone', desc:'Strict, formal, authoritative tone with precise, unambiguous language.' },
+    { name:'Point of view', desc:'Third-person objective, maintaining professional distance and authority.' },
+    { name:'Style of Expression', desc:'Concise, direct sentences that avoid rhetorical flourishes and ambiguity.' },
+    { name:'Brand Archetype', desc:'Sage - focuses on knowledge, authority, and clear information sharing.' },
+    { name:'Vocabulary and Language', desc:'Precise legal and administrative terms, minimal jargon, formal register.' },
+    { name:'Syntax and Punctuation', desc:'Structured sentences with deliberate punctuation; lists where clarity demands.' },
+    { name:'Target Audience', desc:'Citizens and businesses seeking official, reliable information.' },
+    { name:'Company Mission', desc:'Deliver transparent, authoritative information in the public interest.' }
+  ];
+
+  /* ---------- voice store（localStorage 持久化） ---------- */
+  let voices = loadVoices();
+  function loadVoices(){
+    try { const v = JSON.parse(LS.getItem('sw-bv-voices') || 'null');
+      return Array.isArray(v) ? v : []; } catch (e) { return []; }
+  }
+  function saveVoices(){ LS.setItem('sw-bv-voices', JSON.stringify(voices)); }
+
+  function relTime(ts){
+    const d = Date.now() - ts, day = 864e5, min = 6e4;
+    if (!ts || d < min) return '啱啱';
+    if (d < 36e5) return Math.floor(d/min) + ' 分鐘前';
+    if (d < day) return '今日 ' + new Date(ts).toLocaleTimeString('zh-HK', {hour:'2-digit', minute:'2-digit'});
+    if (d < 2*day) return '昨日';
+    return Math.floor(d/day) + ' 日前';
+  }
+
+  /* ---------- ① 清單渲染 ---------- */
+  function renderList(){
+    const empty = $('#bv-empty'), list = $('#voice-list'), cnt = $('#voice-count');
+    list.innerHTML = '';
+    const n = voices.length;
+    if (cnt) cnt.textContent = n + '/10 voices available';
+    const rb = $('#rb-count'), rbe = $('#rb-elems');
+    if (rb) rb.textContent = n + '/10 voices';
+    if (rbe) rbe.textContent = voices.reduce((a, v) => a + v.elements.length, 0);
+    const wrap = $('#voice-table');
+    if (!voices.length){ empty.hidden = false; if (wrap) wrap.hidden = true; }
+    else {
+      empty.hidden = true; if (wrap) wrap.hidden = false;
+      voices.forEach(v => list.appendChild(makeRow(v)));
+    }
+    renderVoiceOptions();
+  }
+
+  function makeRow(v){
+    const tr = document.createElement('tr');
+    tr.className = 'voice-row'; tr.dataset.id = v.id;
+
+    const tdName = document.createElement('td');
+    const nm = document.createElement('span'); nm.className = 'vname'; nm.textContent = v.name;
+    tdName.appendChild(nm);
+
+    const tdDesc = document.createElement('td');
+    tdDesc.className = 'vdesc';
+    const first = v.elements.find(e => /voice tone/i.test(e.name)) || v.elements[0] || {name:'Voice Tone', desc:''};
+    const sum = document.createElement('span'); sum.className = 'vsum';
+    sum.textContent = (first.name || 'Voice Tone') + ': ' + (first.desc || '—');
+    tdDesc.appendChild(sum);
+
+    const tdCount = document.createElement('td');
+    tdCount.className = 'mono vcount'; tdCount.textContent = v.elements.length;
+
+    const tdAct = document.createElement('td');
+    tdAct.className = 'vact';
+    const ed = document.createElement('button'); ed.className = 'btn btn-sm'; ed.type='button'; ed.textContent='編輯';
+    ed.addEventListener('click', () => openEdit(v.id));
+    const del = document.createElement('button'); del.className = 'btn btn-sm btn-ghost'; del.type='button'; del.textContent='刪除';
+    del.addEventListener('click', () => delVoice(v.id));
+    tdAct.appendChild(ed); tdAct.appendChild(del);
+
+    tr.appendChild(tdName); tr.appendChild(tdDesc); tr.appendChild(tdCount); tr.appendChild(tdAct);
+    return tr;
+  }
+
+  function delVoice(id){
+    const v = voices.find(x => x.id === id); if (!v) return;
+    if (!confirm('確定刪除「' + v.name + '」？之後 1-Click / Bulk 唔可以再用呢個 Brand Voice。')) return;
+    voices = voices.filter(x => x.id !== id);
+    saveVoices(); renderList();
+  }
+
+  /* ---------- 精靈狀態 ---------- */
+  let wizMode = 'create';   // 'create' | 'edit'
+  let editingId = null;
+  let els = [];             // 當前 element 陣列
+  let analyzeToken = 0;
+
+  function startCreate(){
+    resetWizard();
+    $('#s-wizard').scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+  function resetWizard(){
+    wizMode = 'create'; editingId = null;
+    const t = $('#bv-text'); if (t) t.value = '';
+    const u = $('#bv-url'); if (u) u.value = '';
+    const f = $('#bv-file'); if (f) f.value = '';
+    const ff = $('#dz-file'); if (ff) ff.hidden = true;
+    els = [];
+    const nm = $('#bv-name'); if (nm) nm.value = '';
+    showStep(1);
+    setTab('text');
+    updateCreateState();
+  }
+
+  function showStep(n){
+    $$('.wiz-step').forEach(s => { s.hidden = +s.dataset.step !== n; });
+    const labels = ['', 'Step 1 / 3 · 輸入來源', 'Step 2 / 3 · 分析中', 'Step 3 / 3 · Elements 編輯'];
+    const chip = $('#step-chip'); if (chip) chip.textContent = labels[n] || '';
+    if (n === 3) renderElements();
+  }
+
+  /* ---------- Step 1：tab 切換 ---------- */
+  function setTab(name){
+    $$('.tab-btn').forEach(b => {
+      b.classList.toggle('is-on', b.dataset.tab === name);
+      b.setAttribute('aria-selected', b.dataset.tab === name ? 'true' : 'false');
+    });
+    $$('.src-panel[data-panel]').forEach(p => { p.hidden = p.dataset.panel !== name; });
+  }
+  $$('.tab-btn').forEach(btn => btn.addEventListener('click', () => { setTab(btn.dataset.tab); updateCreateState(); }));
+
+  /* ---------- Step 1：三個來源各自嘅驗證 ---------- */
+  function updateCreateState(){
+    const tab = currentTab();
+    const b = $('#create-voice');
+    if (tab === 'text'){
+      const n = ($('#bv-text').value || '').length;
+      const hint = $('#text-min-hint');
+      if (n < MIN_TEXT){
+        b.disabled = true;
+        hint.classList.remove('ok'); hint.hidden = false;
+        hint.innerHTML = '最少 1,000 字。仲差 <b>' + (MIN_TEXT - n) + '</b> 字。';
+      } else if (n >= MAX_TEXT){
+        b.disabled = false;
+        hint.classList.add('ok'); hint.hidden = false;
+        hint.textContent = '已達上限 10,000 字，多餘內容已截斷。';
+      } else {
+        b.disabled = false;
+        hint.classList.add('ok'); hint.hidden = false;
+        hint.textContent = '已符合最少字數要求，可以開始分析。';
+      }
+    } else if (tab === 'url'){
+      const v = ($('#bv-url').value || '').trim();
+      b.disabled = !v;
+    } else {
+      const has = ($('#bv-file').files && $('#bv-file').files.length > 0);
+      b.disabled = !has;
+    }
+  }
+
+  function currentTab(){
+    const on = $('.tab-btn.is-on');
+    return on ? on.dataset.tab : 'text';
+  }
+
+  const textEl = $('#bv-text');
+  function updateTextCounter(){
+    /* > 10000 硬截斷：唔止靠 maxlength（貼上／程式寫入都會超過） */
+    if (textEl.value.length > MAX_TEXT) textEl.value = textEl.value.slice(0, MAX_TEXT);
+    const n = (textEl.value || '').length;
+    const c = $('#text-count'); if (c) c.textContent = n + '/' + MAX_TEXT;
+    updateCreateState();
+  }
+  textEl.addEventListener('input', updateTextCounter);
+
+  $('#bv-url').addEventListener('input', updateCreateState);
+  $('#bv-file').addEventListener('change', () => {
+    const f = $('#bv-file').files && $('#bv-file').files[0];
+    const box = $('#dz-file');
+    if (f){
+      box.hidden = false;
+      box.textContent = '✓ 已揀選：' + f.name + ' · ' + formatSize(f.size);
+    } else { box.hidden = true; }
+    updateCreateState();
+  });
+  const dz = $('#dropzone');
+  dz.addEventListener('click', e => { if (!e.target.closest('.dz-file')) $('#bv-file').click(); });
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('is-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('is-over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('is-over');
+    const dt = e.dataTransfer;
+    const input = $('#bv-file');
+    if (dt && dt.files && dt.files.length){
+      try { input.files = dt.files; } catch (err) { /* 部分瀏覽器唔畀直接 assign FileList */ }
+      input.dispatchEvent(new Event('change'));
+    }
+  });
+
+  function formatSize(b){
+    return b < 1024 ? b + ' B' : b < 1048576 ? (b/1024).toFixed(1) + ' KB' : (b/1048576).toFixed(1) + ' MB';
+  }
+
+  /* ---------- Step 2：分析動畫（約 2.4 秒後自動入 Step 3） ---------- */
+  $('#create-voice').addEventListener('click', () => {
+    if ($('#create-voice').disabled) return;
+    startAnalyze();
+  });
+  $('#src-back').addEventListener('click', () => {
+    $('#s-list').scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+
+  function startAnalyze(){
+    const token = ++analyzeToken;
+    showStep(2);
+    const bar = $('#prog-bar'), steps = $$('#an-steps li');
+    bar.style.width = '0%';
+    steps.forEach(s => s.classList.remove('done', 'active'));
+    if (steps.length) steps[0].classList.add('active');
+    let k = 0;
+    const iv = setInterval(() => {
+      if (analyzeToken !== token){ clearInterval(iv); return; }
+      if (k < steps.length){
+        steps[k].classList.remove('active');
+        steps[k].classList.add('done');
+        if (k + 1 < steps.length) steps[k + 1].classList.add('active');
+        k++;
+      }
+      bar.style.width = Math.round(k / steps.length * 100) + '%';
+      if (k >= steps.length) clearInterval(iv);
+    }, 480);
+    setTimeout(() => {
+      if (analyzeToken !== token) return;
+      els = DEFAULT_ELEMENTS.map(e => ({ name: e.name, desc: e.desc }));
+      showStep(3);
+      const nm = $('#bv-name'); if (nm) nm.focus();
+    }, 2440);
+  }
+
+  /* ---------- Step 3：Elements 編輯 ---------- */
+  function renderElements(){
+    const list = $('#el-list');
+    list.innerHTML = '';
+    els.forEach((el, idx) => list.appendChild(makeElRow(idx)));
+    updateElCount(); updateAddBtn();
+  }
+  function makeElRow(idx){
+    const row = document.createElement('div');
+    row.className = 'el-row'; row.dataset.i = idx; row.draggable = true;
+    row.innerHTML =
+      '<div class="el-fld el-name-fld">' +
+        '<div class="el-lbl"><label>名稱 <span class="en">Name</span></label><span class="mini-counter">0/50</span></div>' +
+        '<input class="inp el-name" maxlength="50" placeholder="例：Voice Tone">' +
+      '</div>' +
+      '<div class="el-fld el-desc-fld">' +
+        '<div class="el-lbl"><label>描述 <span class="en">Description</span></label><span class="mini-counter">0/250</span></div>' +
+        '<textarea class="inp el-desc" maxlength="250" rows="3" placeholder="寫低呢個 Element 嘅指引…"></textarea>' +
+      '</div>' +
+      '<div class="el-actions">' +
+        '<button class="btn btn-sm el-move" data-dir="-1" type="button" title="上移">↑</button>' +
+        '<button class="btn btn-sm el-move" data-dir="1" type="button" title="下移">↓</button>' +
+        '<button class="btn btn-sm btn-ghost el-del" type="button">刪除</button>' +
+      '</div>';
+    const nameIn = row.querySelector('.el-name'), descIn = row.querySelector('.el-desc');
+    const nameC = row.querySelector('.el-name-fld .mini-counter');
+    const descC = row.querySelector('.el-desc-fld .mini-counter');
+    nameIn.value = els[idx].name;
+    descIn.value = els[idx].desc;
+    function upd(){
+      els[idx].name = nameIn.value.slice(0, MAX_NAME);
+      els[idx].desc = descIn.value.slice(0, MAX_DESC);
+      nameC.textContent = els[idx].name.length + '/' + MAX_NAME;
+      descC.textContent = els[idx].desc.length + '/' + MAX_DESC;
+    }
+    nameIn.addEventListener('input', upd);
+    descIn.addEventListener('input', upd);
+    upd();
+    row.querySelector('.el-del').addEventListener('click', () => {
+      if (els.length <= 1){ alert('至少要保留一個 Element。'); return; }
+      els.splice(idx, 1); renderElements();
+    });
+    row.querySelectorAll('.el-move').forEach(b => b.addEventListener('click', () => {
+      const d = +b.dataset.dir, to = idx + d;
+      if (to < 0 || to >= els.length) return;
+      const t = els[idx]; els[idx] = els[to]; els[to] = t;
+      renderElements();
+    }));
+    return row;
+  }
+
+  /* 拖放排序（可選，已實作） */
+  (function dragReorder(){
+    const list = $('#el-list');
+    let dragging = null;
+    list.addEventListener('dragstart', e => {
+      dragging = e.target.closest('.el-row');
+      if (dragging) dragging.classList.add('is-drag');
+    });
+    list.addEventListener('dragend', () => {
+      if (dragging) dragging.classList.remove('is-drag');
+      dragging = null;
+      /* 拖完之後以 DOM 順序重寫 els，再重畫——唔係淨係移動視覺位置 */
+      els = $$('.el-row', list).map(row => ({
+        name: row.querySelector('.el-name').value,
+        desc: row.querySelector('.el-desc').value
+      }));
+      renderElements();
+    });
+    list.addEventListener('dragover', e => {
+      if (!dragging) return;
+      e.preventDefault();
+      const after = $$('.el-row:not(.is-drag)', list)
+        .find(r => e.clientY < r.getBoundingClientRect().top + r.offsetHeight / 2);
+      if (after) list.insertBefore(dragging, after); else list.appendChild(dragging);
+    });
+  })();
+
+  function updateElCount(){
+    const c = $('#el-count'); if (c) c.textContent = els.length + '/' + MAX_EL + ' Elements';
+  }
+  function updateAddBtn(){
+    const b = $('#add-el'); b.disabled = els.length >= MAX_EL;
+  }
+  $('#add-el').addEventListener('click', () => {
+    if (els.length >= MAX_EL) return;
+    els.push({ name:'', desc:'' });
+    renderElements();
+    const rows = $$('.el-row');
+    const last = rows[rows.length - 1];
+    if (last) last.querySelector('.el-name').focus();
+  });
+  $('#el-back').addEventListener('click', () => {
+    if (wizMode === 'edit'){ $('#s-list').scrollIntoView({ behavior:'smooth', block:'start' }); return; }
+    showStep(1);
+  });
+  $('#save-voice').addEventListener('click', () => {
+    const name = ($('#bv-name').value || '').trim();
+    if (!name){ $('#bv-name').focus(); alert('請先為呢個 Brand Voice 改個名。'); return; }
+    const clean = els
+      .map(e => ({ name: (e.name || '').trim(), desc: (e.desc || '').trim() }))
+      .filter(e => e.name || e.desc);
+    if (!clean.length){ alert('至少要有一個 Element。'); return; }
+    const now = Date.now();
+    if (wizMode === 'edit' && editingId){
+      const v = voices.find(x => x.id === editingId);
+      if (v){ v.name = name; v.elements = clean; v.updatedAt = now; }
+    } else {
+      voices.unshift({ id: 'bv_' + now + '_' + Math.random().toString(36).slice(2, 7),
+        name: name, elements: clean, createdAt: now, updatedAt: now });
+    }
+    saveVoices(); renderList();
+    flashSaved();
+    resetWizard();
+    $('#s-list').scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+
+  function flashSaved(){
+    const sv = $('#saved');
+    if (!sv) return;
+    sv.textContent = '已儲存 ' + new Date().toLocaleTimeString('zh-HK', { hour:'2-digit', minute:'2-digit' });
+    sv.hidden = false;
+    clearTimeout(flashSaved._t);
+    flashSaved._t = setTimeout(() => { sv.hidden = true; }, 2400);
+  }
+
+  /* ---------- 編輯載入返 Step 3 ---------- */
+  function openEdit(id){
+    const v = voices.find(x => x.id === id); if (!v) return;
+    wizMode = 'edit'; editingId = id;
+    els = v.elements.map(e => ({ name: e.name || '', desc: e.desc || '' }));
+    const nm = $('#bv-name'); if (nm) nm.value = v.name || '';
+    showStep(3);
+    $('#s-wizard').scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+
+  /* ---------- ③ 使用示範：Brand Voice 下拉 ---------- */
+  function addOpt(list, val, zh, en){
+    const li = document.createElement('li');
+    li.className = 'opt'; li.setAttribute('role', 'option'); li.dataset.value = val;
+    li.innerHTML = '<span class="opt-zh"></span><span class="opt-en"></span>';
+    li.querySelector('.opt-zh').textContent = zh;
+    li.querySelector('.opt-en').textContent = en;
+    list.appendChild(li);
+    return li;
+  }
+  function renderVoiceOptions(){
+    const list = $('#usage-voice .sel-list');
+    if (!list) return;
+    list.innerHTML = '';
+    addOpt(list, 'none', '無', 'None');
+    voices.forEach(v => addOpt(list, 'voice:' + v.id, v.name, v.name + ' · ' + v.elements.length + ' Elements'));
+    addOpt(list, 'create', '+ Create Brand Voice', '+ Create Brand Voice');
+    syncSelVal($('#usage-voice'));
+    /* 若然揀咗嘅 voice 已刪除，下拉回落到 None，要同步解鎖 Tone / POV */
+    if ($('#usage-voice').dataset.value === 'none') setLocked(false);
+  }
+
+  /* ---------- 通用自訂 select ---------- */
+  function closeAll(except){
+    $$('.sel[data-open="true"]').forEach(sel => {
+      if (sel === except) return;
+      sel.dataset.open = 'false';
+      sel.querySelector('.sel-btn').setAttribute('aria-expanded', 'false');
+      sel.querySelector('.sel-pop').hidden = true;
+    });
+  }
+  function syncSelVal(sel){
+    if (!sel) return;
+    const val = sel.dataset.value || '';
+    const opts = $$('.opt', sel);
+    let cur = opts.find(o => o.dataset.value === val) ||
+              opts.find(o => o.classList.contains('is-cur')) ||
+              opts.find(o => o.dataset.value === 'none') ||
+              opts[0];
+    if (!cur) return;
+    const zh = cur.querySelector('.opt-zh').textContent;
+    const enEl = cur.querySelector('.opt-en');
+    const en = cur.dataset.en || (enEl ? enEl.textContent : '');
+    const box = sel.querySelector('.sel-val');
+    box.innerHTML = '';
+    const z = document.createElement('span'); z.textContent = zh; box.appendChild(z);
+    if (en && en !== zh){ const e = document.createElement('span'); e.className = 'sel-en'; e.textContent = en; box.appendChild(e); }
+    sel.dataset.value = cur.dataset.value;
+    opts.forEach(o => { o.classList.toggle('is-cur', o === cur); o.toggleAttribute('aria-selected', o === cur); });
+  }
+
+  function initSelect(sel){
+    const btn = sel.querySelector('.sel-btn'), pop = sel.querySelector('.sel-pop'), list = sel.querySelector('.sel-list');
+    function open(){
+      if (sel.dataset.locked === 'true') return;
+      closeAll(sel);
+      if (sel.id === 'usage-voice') renderVoiceOptions();
+      sel.dataset.open = 'true';
+      btn.setAttribute('aria-expanded', 'true');
+      pop.hidden = false;
+    }
+    function close(){
+      sel.dataset.open = 'false';
+      btn.setAttribute('aria-expanded', 'false');
+      pop.hidden = true;
+    }
+    function pick(el){
+      if (!el) return;
+      $$('.opt', list).forEach(o => { o.classList.remove('is-cur'); o.removeAttribute('aria-selected'); });
+      el.classList.add('is-cur'); el.setAttribute('aria-selected', 'true');
+      const zh = el.querySelector('.opt-zh').textContent;
+      const enEl = el.querySelector('.opt-en');
+      const en = el.dataset.en || (enEl ? enEl.textContent : '');
+      const box = btn.querySelector('.sel-val');
+      box.innerHTML = '';
+      const z = document.createElement('span'); z.textContent = zh; box.appendChild(z);
+      if (en && en !== zh){ const e = document.createElement('span'); e.className = 'sel-en'; e.textContent = en; box.appendChild(e); }
+      sel.dataset.value = el.dataset.value;
+      close(); btn.focus();
+      if (sel.id === 'usage-voice') onVoicePick(el.dataset.value);
+    }
+    btn.addEventListener('click', () => sel.dataset.open === 'true' ? close() : open());
+    btn.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); }
+    });
+    list.addEventListener('keydown', e => {
+      if (e.key === 'Escape'){ e.preventDefault(); close(); btn.focus(); }
+    });
+    list.addEventListener('click', e => { const el = e.target.closest('.opt'); if (el) pick(el); });
+  }
+
+  function onVoicePick(val){
+    if (val === 'create'){
+      const u = $('#usage-voice');
+      u.dataset.value = 'none';
+      syncSelVal(u);
+      setLocked(false);
+      startCreate();
+      return;
+    }
+    if (val === 'none'){ setLocked(false); return; }
+    setLocked(true);
+  }
+
+  function setLocked(locked){
+    ['#usage-tone', '#usage-pov'].forEach(id => {
+      const sel = $(id); if (!sel) return;
+      sel.dataset.locked = locked ? 'true' : 'false';
+      const host = sel.closest('.field'); if (host) host.classList.toggle('is-locked', locked);
+    });
+    const ex = $('#usage-explain'); if (ex) ex.hidden = !locked;
+  }
+
+  $$('.sel').forEach(initSelect);
+  document.addEventListener('click', e => { if (!e.target.closest('.sel')) closeAll(null); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(null); });
+  syncSelVal($('#usage-tone'));
+  syncSelVal($('#usage-pov'));
+
+  /* ---------- 新建立掣（清單／空狀態／runbar 三處） ---------- */
+  ['#btn-new', '#empty-create', '#btn-new2'].forEach(id => {
+    const b = $(id); if (b) b.addEventListener('click', startCreate);
+  });
+
+  /* ---------- scrollspy（scrollY + 150 判定，唔用 IntersectionObserver） ---------- */
+  const sectNavs = $$('.sect-nav a');
+  function scrollspy(){
+    const y = window.scrollY + 150;
+    let cur = sectNavs[0];
+    sectNavs.forEach(a => {
+      const sec = document.getElementById(a.dataset.scroll);
+      if (sec && sec.offsetTop <= y) cur = a;
+    });
+    sectNavs.forEach(a => a.classList.toggle('on', a === cur));
+  }
+  window.addEventListener('scroll', scrollspy, { passive:true });
+  sectNavs.forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    const sec = document.getElementById(a.dataset.scroll);
+    if (sec) window.scrollTo({ top: sec.getBoundingClientRect().top + window.scrollY - 60, behavior:'smooth' });
+  }));
+
+  /* ---------- theme ---------- */
+  $('#theme-toggle').addEventListener('click', () => {
+    const root = document.documentElement;
+    root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    LS.setItem('sw-theme', root.dataset.theme);
+  });
+  const savedTheme = LS.getItem('sw-theme');
+  if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+
+  /* ---------- 初始渲染 ---------- */
+  renderList();
+  updateTextCounter();
+  scrollspy();
+})();
+</script>
+</body>
+</html>
