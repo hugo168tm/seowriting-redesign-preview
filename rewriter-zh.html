@@ -288,6 +288,19 @@ textarea.inp{min-height:84px; resize:vertical; line-height:1.6}
 footer.page-foot{max-width:1240px; margin:0 auto; padding:26px 40px 40px; color:var(--ink-3);
   font-size:12px; border-top:1px solid var(--rule); display:flex; gap:16px; flex-wrap:wrap}
 @media (max-width:640px){ footer.page-foot{padding:22px 18px 40px} }
+/* ---------- 方案閘（Free 戶用 Humanizer）---------- */
+.gate{margin-top:12px; border:1px solid var(--ochre); border-left-width:3px;
+  background:color-mix(in srgb, var(--ochre) 7%, var(--card)); border-radius:var(--r); padding:13px 15px}
+.gate-head{display:flex; align-items:center; gap:8px; font-weight:600; font-size:13.5px; color:var(--ink)}
+.gate-head .mark{font-family:var(--serif); color:var(--ochre); font-size:15px}
+.gate p{margin:5px 0 0; font-size:12.5px; line-height:1.6; color:var(--ink-2)}
+.gate .gate-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:10px}
+.gate .btn{font-size:12.5px; padding:6px 12px}
+.gate .switch{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-3)}
+.gate .switch input{width:15px; height:15px; accent-color:var(--mark)}
+.counter.over{color:var(--mark); font-weight:600}
+.limit-note{font-family:var(--mono); font-size:11.5px; color:var(--ink-3); margin-left:8px}
+
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
 
@@ -458,6 +471,15 @@ footer.page-foot{max-width:1240px;margin:0 auto;padding:26px 34px 84px;color:var
           </div>
         </div>
         <p class="hint">Rewriter 用即時 SERP 數據 · 1 credit；Humanizer 純自然潤飾 · 0.5 credits。</p>
+        <div class="gate" id="gate-humanizer" hidden>
+          <div class="gate-head"><span class="mark">※</span><span>Humanizer 需要 Pro 方案</span></div>
+          <p>原生行為：<code class="field-key">tariff.group === "Free"</code> 而模式唔係 Rewriter（<code class="field-key">mode !== 1</code>）時，
+             會攜截送出並彈出升級視窗 <code class="field-key">showUpgradeSubscription()</code>。免費戶只可以用 Rewriter 模式。</p>
+          <div class="gate-row">
+            <button class="btn btn-primary" type="button" id="gate-upgrade">查看升級方案</button>
+            <label class="switch"><input type="checkbox" id="plan-switch" role="switch"><span>以此頁示範：Pro 方案</span></label>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -786,8 +808,11 @@ footer.page-foot{max-width:1240px;margin:0 auto;padding:26px 34px 84px;color:var
       <div class="panel-head"><span class="idx">04</span><h2>輸入內文</h2><span class="en">Input Text</span></div>
       <div class="field" data-dname="input_text">
         <div class="field-label">輸入內文 <code class="field-key">input_text</code></div>
-        <textarea id="inp_text" class="inp" maxlength="5000" rows="8" placeholder="Paste the text you want to rewrite…"></textarea>
-        <span class="counter mono" data-for="inp_text">0/5000</span>
+        <textarea id="inp_text" class="inp" rows="8" placeholder="Paste the text you want to rewrite…"></textarea>
+        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+          <span class="counter mono" data-for="inp_text">0 / 5,000 字</span>
+          <span class="limit-note">上限：<b id="limit-lbl">5,000</b> 字（Rewriter 5,000 ／ Humanizer 3,000）</span>
+        </div>
       </div>
     </section>
 
@@ -940,16 +965,42 @@ footer.page-foot{max-width:1240px;margin:0 auto;padding:26px 34px 84px;color:var
   }
 
   /* ---------- counters ---------- */
+  const REWRITE_LIMIT = 5000, HUMANIZE_LIMIT = 3000;   /* 原生：字數上限，兩個模式唔同 */
+  function countWords(v){
+    if (!v) return 0;
+    const cjk = (v.match(/[\u3400-\u4DBF\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF]/g) || []).length;
+    const latin = v.replace(/[\u3400-\u4DBF\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF]/g, ' ')
+                     .trim().split(/\s+/).filter(Boolean).length;
+    return cjk + latin;
+  }
+  function currentLimit(){ return modeValue() === 'humanizer' ? HUMANIZE_LIMIT : REWRITE_LIMIT; }
+  function refreshTextCounter(){
+    const t = $('#inp_text'); if (!t) return {n:0, lim:currentLimit(), over:false};
+    const c = $('.counter[data-for="inp_text"]');
+    const lim = currentLimit(), n = countWords(t.value);
+    if (c){ c.textContent = n.toLocaleString('en-US') + ' / ' + lim.toLocaleString('en-US') + ' 字'; c.classList.toggle('over', n > lim); }
+    const lb = $('#limit-lbl'); if (lb) lb.textContent = lim.toLocaleString('en-US');
+    const over = n > lim;
+    t.setAttribute('aria-invalid', over ? 'true' : 'false');
+    return {n, lim, over};
+  }
   ['inp_text','inp_inst'].forEach(id=>{
     const t = $('#'+id); if(!t) return;
     const c = $('.counter[data-for="'+id+'"]');
-    const upd = ()=>{ if (c) c.textContent = t.value.length + '/5000'; };
+    const upd = ()=>{
+      if (id === 'inp_text'){ refreshTextCounter(); return; }
+      if (c) c.textContent = t.value.length + '/5000';
+    };
     t.addEventListener('input', upd); upd();
   });
 
   /* ---------- credits ---------- */
   function modeValue(){ const s = document.querySelector('[data-dname="mode"] .sel'); return s ? (s.dataset.value || 'rewriter') : 'rewriter'; }
   function creditOf(m){ return m === 'humanizer' ? 0.5 : 1; }
+  /* ---------- 方案闘（原生：Free + mode≠1 → showUpgradeSubscription）---------- */
+  let plan = LS.getItem('sw-plan') === 'Pro' ? 'Pro' : 'Free';
+  function gateOpen(){ return modeValue() === 'humanizer' && plan === 'Free'; }
+
   function updateCredits(){
     const m = modeValue(), c = creditOf(m);
     const total = c + ' credit' + (c!==1?'s':'');
@@ -957,7 +1008,30 @@ footer.page-foot{max-width:1240px;margin:0 auto;padding:26px 34px 84px;color:var
     const a = $('#lg-mode'); if (a) a.textContent = c;
     const b = $('#ledgerPill'); if (b) b.textContent = total;
     const r = $('#rb-lbl'); if (r) r.textContent = lbl;
+
+    const gated = gateOpen();
+    const gate = $('#gate-humanizer');
+    if (gate) gate.hidden = !gated;
+    const run = $('#run');
+    if (run){
+      if (gated){ run.disabled = true; run.textContent = '升級解鎖 Humanizer'; }
+      else { run.disabled = false; run.textContent = m === 'humanizer' ? '人性化 Humanize' : '改寫 Rewrite'; }
+    }
+    const ps = $('#plan-switch'); if (ps) ps.checked = plan === 'Pro';
+    refreshTextCounter();
   }
+
+  /* ---------- 方案開關 / 升級按鈕 ---------- */
+  $('#plan-switch')?.addEventListener('change', e=>{
+    plan = e.target.checked ? 'Pro' : 'Free';
+    LS.setItem('sw-plan', plan);
+    updateCredits(); save();
+  });
+  $('#gate-upgrade')?.addEventListener('click', e=>{
+    const btn = e.currentTarget, t0 = btn.textContent;
+    btn.textContent = '原型未接金流 · 僅示意';
+    setTimeout(()=>{ btn.textContent = t0; }, 1400);
+  });
 
   /* ---------- theme ---------- */
   $('#theme-toggle')?.addEventListener('click', ()=>{
@@ -994,7 +1068,8 @@ footer.page-foot{max-width:1240px;margin:0 auto;padding:26px 34px 84px;color:var
     if (state.inp_text) $('#inp_text').value = state.inp_text;
     if (state.inp_kw) $('#inp_kw').value = state.inp_kw;
     if (state.inp_inst) $('#inp_inst').value = state.inp_inst;
-    ['inp_text','inp_inst'].forEach(id=>{ const c = $('.counter[data-for="'+id+'"]'); if (c) c.textContent = ($('#'+id).value.length) + '/5000'; });
+    const ci = $('.counter[data-for="inp_inst"]'); if (ci) ci.textContent = $('#inp_inst').value.length + '/5000';
+    refreshTextCounter();
   }
   restore(); updateCredits();
 
@@ -1035,10 +1110,26 @@ footer.page-foot{max-width:1240px;margin:0 auto;padding:26px 34px 84px;color:var
   }));
   spy();
 
-  /* ---------- demo action ---------- */
+  /* ---------- demo action（闘：升級 / 超限）---------- */
   $('#run')?.addEventListener('click', ()=>{
-    const btn = $('#run'); btn.disabled = true; btn.textContent = '處理中…';
-    setTimeout(()=>{ btn.disabled = false; btn.textContent = '改寫 Rewrite'; }, 900);
+    const btn = $('#run');
+    if (gateOpen()){
+      $('#gate-humanizer')?.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block: 'center'});
+      return;
+    }
+    const st = refreshTextCounter();
+    if (!st.over) { /* fine */ }
+    else {
+      const c = $('.counter[data-for="inp_text"]');
+      c?.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block: 'center'});
+      const t = btn.textContent;
+      btn.textContent = '超出 ' + st.lim.toLocaleString('en-US') + ' 字上限';
+      setTimeout(()=>{ btn.textContent = t; }, 1600);
+      return;
+    }
+    const t0 = btn.textContent;
+    btn.disabled = true; btn.textContent = '處理中…';
+    setTimeout(()=>{ btn.disabled = false; btn.textContent = t0; }, 900);
   });
 })();
 </script>

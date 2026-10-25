@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<!-- COPY DESC: shell (appbar + masthead + runbar + tokens from 1-click-blog-post-zh.html) -->
-<!-- COPY DESC: builder is a document library, NOT a form: no left flow rail, single column + top stats strip -->
+<!-- COPY DESC: shell (appbar + tokens from 1-click-blog-post-zh.html); this page is static, no app logic -->
+<!-- COPY DESC: builder mirrors the native server-rendered page: tool grid + sidebar counters + empty state -->
 <style>
 
 :root{
@@ -115,32 +115,6 @@ main{max-width:1120px; margin:0 auto; padding:34px 40px 140px; min-width:0}
   max-width:52ch; margin:0 auto 6px}
 .empty p.zh{color:var(--ink-3); font-size:13.5px; max-width:52ch; margin:0 auto 22px}
 
-/* ---------- demo notice ---------- */
-.demo-notice{display:flex; align-items:center; gap:9px; flex-wrap:wrap; background:var(--auto-soft);
-  border:1px dashed var(--auto); color:var(--auto); border-radius:var(--r); padding:9px 12px;
-  font-size:12.5px; margin-bottom:12px}
-.demo-notice .glyph{font-weight:700; font-family:var(--serif)}
-.demo-notice strong{font-weight:600}
-
-/* ---------- demo list ---------- */
-.doc-list{list-style:none; margin:0; padding:0}
-.doc-item{display:grid; grid-template-columns:1fr auto; gap:8px 18px; align-items:center;
-  border:1px solid var(--rule); border-radius:var(--r); background:var(--card);
-  padding:14px 16px; margin-bottom:8px}
-.doc-main{min-width:0}
-.doc-title{font-size:15px; font-weight:600; display:flex; align-items:baseline; gap:9px; flex-wrap:wrap}
-.doc-title .name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.doc-meta{display:flex; gap:16px; flex-wrap:wrap; margin-top:6px; font-size:12px; color:var(--ink-3)}
-.doc-meta .mono{font-variant-numeric:tabular-nums}
-.tool-tag{background:var(--paper-2); border:1px solid var(--rule-2); border-radius:2px;
-  padding:1px 7px; font-size:11.5px; color:var(--ink-2); white-space:nowrap}
-.pill{font-family:var(--mono); font-size:11px; letter-spacing:.05em; border-radius:999px; padding:2px 9px;
-  white-space:nowrap}
-.pill.done{background:var(--ok-soft); color:var(--ok); border:1px solid var(--ok)}
-.pill.run{background:var(--mark-soft); color:var(--mark); border:1px solid var(--mark)}
-.pill.draft{background:var(--auto-soft); color:var(--auto); border:1px dashed var(--auto)}
-.doc-actions{display:flex; gap:8px; align-items:center; justify-content:flex-end; flex-wrap:wrap}
-
 /* ---------- buttons ---------- */
 .btn{font:inherit; font-size:13.5px; border-radius:var(--r); padding:9px 15px; cursor:pointer;
   border:1px solid var(--rule); background:var(--card); color:var(--ink); text-decoration:none;
@@ -154,15 +128,6 @@ main{max-width:1120px; margin:0 auto; padding:34px 40px 140px; min-width:0}
   padding-left:0; padding-right:0}
 .btn-ghost:hover{background:none; border-color:transparent; color:var(--ink)}
 
-/* ---------- runbar ---------- */
-.runbar{position:fixed; left:0; right:0; bottom:0; z-index:35; background:var(--card);
-  border-top:1px solid var(--ink); box-shadow:0 -8px 24px -18px rgba(0,0,0,.5)}
-[data-theme="dark"] .runbar{border-top-color:var(--rule)}
-.runbar-in{max-width:1120px; margin:0 auto; padding:11px 22px; display:flex; align-items:center; gap:18px; flex-wrap:wrap}
-.ledger{display:flex; gap:16px; flex-wrap:wrap; font-family:var(--mono); font-size:12px; color:var(--ink-2)}
-.ledger span.white-space-nowrap{white-space:nowrap}
-.ledger span b{color:var(--ink); font-weight:500}
-.runbar .spacer{flex:1}
 
 footer.page-foot{max-width:1120px; margin:0 auto; padding:26px 40px 96px; color:var(--ink-3);
   font-size:12px; border-top:1px solid var(--rule); display:flex; gap:16px; flex-wrap:wrap}
@@ -178,8 +143,6 @@ footer.page-foot{max-width:1120px; margin:0 auto; padding:26px 40px 96px; color:
   main{padding:20px 18px 128px}
   .credit-chip{display:none}
   .appbar{padding:0 12px; gap:10px}
-  .runbar-in{padding:9px 14px; gap:10px}
-  .runbar .ledger{display:none}
 }
 @media (max-width:640px){
   .doc-item{grid-template-columns:1fr}
@@ -192,6 +155,38 @@ footer.page-foot{max-width:1120px; margin:0 auto; padding:26px 40px 96px; color:
 }
 
 /* ---------- mobile fix: 工具切換器唔可以隱藏，改成可橫向滑動 ---------- */
+
+/* ---------- 靜態區塊（原生 server-rendered 結構）---------- */
+.panel{background:var(--card); border:1px solid var(--rule); border-radius:var(--r-lg);
+  box-shadow:var(--sh); padding:20px 22px; margin:0 0 18px}
+.panel-head{display:flex; align-items:baseline; gap:9px; margin-bottom:14px;
+  padding-bottom:10px; border-bottom:1px solid var(--rule-2)}
+.panel-head .idx{font-family:var(--mono); font-size:11.5px; color:var(--ink-3)}
+.panel-head h2{font-family:var(--serif); font-size:17px; margin:0; font-weight:600}
+.panel-head .en{font-family:var(--mono); font-size:11.5px; color:var(--ink-3); letter-spacing:.02em}
+.hint{margin:10px 0 0; font-size:12px; color:var(--ink-3); line-height:1.6}
+
+.toolgrid{list-style:none; margin:0; padding:0; display:grid; gap:10px;
+  grid-template-columns:repeat(2, minmax(0,1fr))}
+.toolgrid a{display:block; text-decoration:none; color:inherit; border:1px solid var(--rule);
+  border-radius:var(--r); padding:13px 14px; background:var(--paper); transition:border-color .15s, background .15s}
+.toolgrid a:hover{border-color:var(--ink-3); background:var(--card)}
+.toolgrid b{display:block; font-size:13.5px; font-weight:600; margin-bottom:4px}
+.toolgrid span{display:block; font-size:12px; color:var(--ink-2); line-height:1.55}
+.toolgrid em{display:inline-block; margin-top:8px; font-style:normal; font-family:var(--mono);
+  font-size:11px; color:var(--mark); letter-spacing:.02em}
+
+.native-counts{display:flex; gap:10px; flex-wrap:wrap}
+.native-counts > div{flex:1 1 120px; border:1px solid var(--rule); border-radius:var(--r);
+  padding:12px 14px; background:var(--paper)}
+.native-counts b{display:block; font-family:var(--mono); font-size:22px; font-weight:500; line-height:1.1}
+.native-counts span{display:block; margin-top:4px; font-size:11.5px; color:var(--ink-3); font-family:var(--mono)}
+
+@media (max-width:700px){
+  .toolgrid{grid-template-columns:1fr}
+  .panel{padding:16px 14px}
+}
+
 @media (max-width:1180px){
   .tools a:not([aria-current]), .tool:not([aria-current]){display:flex}
   .appbar .tools, .tools{overflow-x:auto; overflow-y:hidden; scrollbar-width:none; -webkit-overflow-scrolling:touch; min-width:0}
@@ -223,125 +218,64 @@ footer.page-foot{max-width:1120px; margin:0 auto; padding:26px 40px 96px; color:
   <p class="eyebrow">Builder</p>
   <div class="masthead">
     <h1>Builder 文件庫</h1>
-    <p class="dek">呢度列出你已建立嘅 document generations。冇任務時，一切由「建立第一篇」開始。</p>
+    <p class="dek">原生呢一頁係 <b>server-rendered PHP</b>；React SPA 載入之後只係即刻 <code class="mono">location.reload()</code> 一次，
+       唔會接管畫面。所以呢頁用<b>純 HTML</b> 呈現，冇表單、冇假互動。</p>
     <p class="auth-note">工具：builder / 文件：0 / 登入：示例帳戶</p>
   </div>
 
-  <!-- 頂部統計條：對應原生側欄 0 Builder / Docs / Voices / News 嘅計數語意 -->
-  <div class="stats">
-    <div class="stat"><div class="num">0</div><div class="lbl">文件 <span class="en">Docs</span></div></div>
-    <div class="stat"><div class="num">0</div><div class="lbl">字 <span class="en">Words</span></div></div>
-    <div class="stat"><div class="num">0</div><div class="lbl">排程 <span class="en">Voices · News</span></div></div>
-  </div>
-
-  <!-- 示範資料 toggle：預設 OFF，唔可以假裝係真數據 -->
-  <div class="sect-head">
-    <h2>文件列表</h2>
-    <span class="count">Document generations</span>
-    <span class="spacer"></span>
-    <label class="toggle" id="demo-toggle" for="demo-switch">
-      <input type="checkbox" id="demo-switch" role="switch">
-      <span>顯示示範資料 <span class="mono">demo</span></span>
-    </label>
-  </div>
-
-  <!-- 空狀態（示範資料 OFF 時顯示；英文原文完整保留 + 中文並列） -->
-  <div id="empty-state" class="empty">
-    <div class="icon" aria-hidden="true">◆</div>
-    <h3>尚未啟動任何文件生成 <span class="en">No document generations have been launched yet!</span></h3>
-    <p class="lead-en">Create Articles That Are SEO-Optimized &amp; Ready To Hit The Top of Google Searches.</p>
-    <p class="zh">建立針對 SEO 優化、準備好登上 Google 搜尋頂端嘅文章。揀下方「建立第一篇」開始。</p>
-    <a class="btn btn-primary" href="#" id="btn-empty">建立第一篇 · Create New</a>
-  </div>
-
-  <!-- 示範資料（toggle 開先顯示；播出 3 行，全部屬虛構範例，唔係真數據） -->
-  <div id="demo-block" hidden>
-    <div class="demo-notice"><span class="glyph">※</span><span><strong>示範資料 · 唔係你真實文件</strong> ——以下 3 行係排版示範，純屬虛構，唔代表你帳號入面嘅任何文件。</span></div>
-    <ul class="doc-list" id="doc-list">
-      <li class="doc-item" data-tool="1-click">
-        <div class="doc-main">
-          <div class="doc-title"><span class="name">示範：SEO 趨勢 2026 總覽</span><span class="tool-tag">一鍵發布</span></div>
-          <div class="doc-meta"><span>狀態：</span><span class="pill draft">草稿</span><span class="mono">2,410 字</span><span>更新：昨日</span></div>
-        </div>
-        <div class="doc-actions"><a class="btn btn-sm" href="#">開卷</a><a class="btn btn-sm btn-ghost" href="#">改寫</a></div>
-      </li>
-      <li class="doc-item" data-tool="bulk">
-        <div class="doc-main">
-          <div class="doc-title"><span class="name">示範：香港餐飲品牌批量文章</span><span class="tool-tag">批量生成</span></div>
-          <div class="doc-meta"><span>狀態：</span><span class="pill done">已發布</span><span class="mono">120 篇 · 348,000 字</span><span>更新：3 日前</span></div>
-        </div>
-        <div class="doc-actions"><a class="btn btn-sm" href="#">開卷</a><a class="btn btn-sm btn-ghost" href="#">改寫</a></div>
-      </li>
-      <li class="doc-item" data-tool="super-page">
-        <div class="doc-main">
-          <div class="doc-title"><span class="name">示範：網站服務落地頁</span><span class="tool-tag">Super Page</span></div>
-          <div class="doc-meta"><span>狀態：</span><span class="pill run">生成中</span><span class="mono">— 字</span><span>更新：喺度跑</span></div>
-        </div>
-        <div class="doc-actions"><a class="btn btn-sm" href="#">開卷</a><a class="btn btn-sm btn-ghost" href="#">取消</a></div>
-      </li>
+  <!-- 原生頁頂：四張工具卡（英文描述照抄，中文並列）-->
+  <section class="panel" id="tools">
+    <div class="panel-head"><span class="idx">01</span><h2>可用工具</h2><span class="en">Tools</span></div>
+    <ul class="toolgrid">
+      <li><a href="1-click-blog-post-zh.html"><b>1-Click Blog Post</b><span>Create and publish an article using just a keyword</span><em>一鍵發布</em></a></li>
+      <li><a href="bulk-generation-zh.html"><b>Bulk Article Generation</b><span>Generate and auto-post up to 100 articles in one click</span><em>批量生成</em></a></li>
+      <li><a href="super-page-zh.html"><b>Super Page</b><span>Create a full CTA page based on SERP</span><em>Super Page</em></a></li>
+      <li><a href="rewriter-zh.html"><b>Rewriter Tool</b><span>Rewrite with SERP insights for higher rankings</span><em>改寫工具</em></a></li>
     </ul>
-  </div>
+  </section>
+
+  <!-- 原生側欄實際只有 Builder 同 Voices 兩個計數 -->
+  <section class="panel" id="counts">
+    <div class="panel-head"><span class="idx">02</span><h2>帳戶現況</h2><span class="en">Native sidebar</span></div>
+    <div class="native-counts">
+      <div><b>0</b><span>Builder</span></div>
+      <div><b>0</b><span>Voices</span></div>
+      <div><b>Free</b><span>方案 · tariff.group</span></div>
+    </div>
+    <p class="hint">原生側欄只有 <code class="mono">Builder 0</code> 同 <code class="mono">Voices 0</code> 兩個數字（Docs／News 冇計數）。</p>
+  </section>
+
+  <!-- 文件列表：空狀態（英文原文完整保留）-->
+  <section class="panel" id="docs">
+    <div class="panel-head"><span class="idx">03</span><h2>文件</h2><span class="en">Documents</span></div>
+    <div class="empty">
+      <div class="icon" aria-hidden="true">◆</div>
+      <h3>尚未啟動任何文件生成 <span class="en">No document generations have been launched yet!</span></h3>
+      <p class="lead-en">Create Articles That Are SEO-Optimized &amp; Ready To Hit The Top of Google Searches.</p>
+      <p class="zh">建立針對 SEO 優化、準備好登上 Google 搜尋頂端嘅文章。揀「建立第一篇」開始。</p>
+      <a class="btn btn-primary" href="#" id="btn-empty">建立第一篇 · Create New</a>
+    </div>
+  </section>
 </main>
 
-<div class="runbar" role="contentinfo">
-  <div class="runbar-in">
-    <div class="ledger">
-      <span><b id="rb-lbl">0 文件</b><span class="mono"> builder</span></span>
-    </div>
-    <span class="spacer"></span>
-    <a class="btn btn-primary" href="#" id="btn-new">建立第一篇 · Create New</a>
-  </div>
-</div>
-
-<footer class="page-foot"><span>重設計原型 · 純前端 · 唔提交伺服器</span><span>資料來源：seowriting.ai Builder</span></footer>
+<footer class="page-foot"><span>重設計原型 · 純 HTML · 零依賴 · 唔提交伺服器</span><span>資料來源：seowriting.ai Builder（server-rendered）</span></footer>
 
 <script>
 (function(){
   'use strict';
-  const $ = (s, r=document) => r.querySelector(s);
   const LS = (() => {
     try { localStorage.setItem('__probe','1'); localStorage.removeItem('__probe'); return localStorage; }
     catch (e) { const mem = {}; return { getItem: k => (k in mem ? mem[k] : null),
       setItem: (k,v) => { mem[k] = String(v); }, removeItem: k => { delete mem[k]; } }; }
   })();
-
-  /* ---------- demo toggle : show / hide the 3 demo rows ---------- */
-  const sw = $('#demo-switch');
-  const empty = $('#empty-state');
-  const block = $('#demo-block');
-  const toggleLbl = $('#demo-toggle');
-  function syncDemo(){
-    const on = sw.checked;
-    if (block) block.hidden = !on;
-    if (empty) empty.hidden = on;
-    if (toggleLbl) toggleLbl.classList.toggle('on', on);
-  }
-  if (sw){ sw.addEventListener('change', ()=>{ syncDemo(); LS.setItem('sw-builder-demo', sw.checked ? '1' : '0'); }); }
-
-  /* ---------- theme ---------- */
-  $('#theme-toggle')?.addEventListener('click', ()=>{
+  /* 只保留全站主題切換；呢頁冇任何應用邏輯 */
+  document.getElementById('theme-toggle')?.addEventListener('click', ()=>{
     const root = document.documentElement;
     root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
     LS.setItem('sw-theme', root.dataset.theme);
   });
   const savedTheme = LS.getItem('sw-theme');
   if (savedTheme) document.documentElement.dataset.theme = savedTheme;
-
-  /* ---------- restore demo toggle ---------- */
-  if (sw && LS.getItem('sw-builder-demo') === '1'){ sw.checked = true; }
-  syncDemo();
-
-  /* ---------- runbar counter ---------- */
-  const rb = $('#rb-lbl');
-  const on = sw.checked;
-  if (rb) rb.textContent = (on ? '3 文件' : '0 文件');
-
-  /* ---------- CTA (demo only, no navigation) ---------- */
-  const cta = (el)=>{ if (el) el.addEventListener('click', (e)=>{
-    e.preventDefault();
-    const b = el; const t = b.textContent; b.textContent = '建立中…'; setTimeout(()=>{ b.textContent = t; }, 800);
-  }); };
-  cta($('#btn-empty')); cta($('#btn-new'));
 })();
 </script>
 </body>
