@@ -702,6 +702,7 @@ footer.page-foot{max-width:1120px; margin:0 auto; padding:26px 40px 100px; color
     const ff = $('#dz-file'); if (ff) ff.hidden = true;
     els = [];
     const nm = $('#bv-name'); if (nm) nm.value = '';
+    const tc = $('#text-count'); if (tc) tc.textContent = '0/10000';   /* 重置時計數器要歸零，否則會殘留上一次字數 */
     showStep(1);
     setTab('text');
     updateCreateState();
