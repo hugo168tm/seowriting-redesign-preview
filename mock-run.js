@@ -52,6 +52,18 @@
     return hit || A.MODELS.find(m => m.id === 111);
   }
 
+  /* 落拉選中嘅真 slug → mock 顯示用（免得抽屜寫 GPT-6 Astra 但用戶揀咗 DeepSeek） */
+  const MOCK_MODEL = {
+    'deepseek/deepseek-v4.1-flash-1017': { label: 'DeepSeek v4.1 Flash', credits: 0.8 },
+    'moonshotai/kimi-k3.1-pro': { label: 'Kimi K3.1 Pro', credits: 2.8 },
+    'minimax/minimax-m3.1-flash': { label: 'MiniMax M3.1 Flash', credits: 1.8 },
+  };
+  function modelFromSlug(slug) {
+    const hit = MOCK_MODEL[String(slug || '').trim()];
+    if (!hit) return null;
+    return { id: -1, label: hit.label, credits: hit.credits };
+  }
+
   /* 手動開關冇開就當自動（空字串）；修：原本讀 #keyword，呢頁根本冇呢個 id */
   function manualKeyword() {
     const field = $('[data-dname="main_keyword"]');
@@ -383,7 +395,7 @@
       const kw = manualKeyword() || 'seo tools';
       const loc = locFromName(selVal('target_country', 'United States'));
       const lc = langFromName(selVal('lang', 'English (US)'));
-      const model = modelFromQuality(selVal('quality'));
+      const model = modelFromSlug(selVal('model', '')) || modelFromQuality(selVal('quality'));
 
       if (!humanize) {
         const serp = A.df.serp({keyword: kw, location_code: loc.location_code, language_code: lc, depth: 10});
