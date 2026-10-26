@@ -55,8 +55,22 @@
   /* 落拉選中嘅真 slug → mock 顯示用（免得抽屜寫 GPT-6 Astra 但用戶揀咗 DeepSeek） */
   const MOCK_MODEL = {
     'deepseek/deepseek-v4.1-flash-1017': { label: 'DeepSeek v4.1 Flash', credits: 0.8 },
-    'moonshotai/kimi-k3.1-pro': { label: 'Kimi K3.1 Pro', credits: 2.8 },
-    'minimax/minimax-m3.1-flash': { label: 'MiniMax M3.1 Flash', credits: 1.8 },
+    'openai/gpt-6-luna': { label: 'GPT-6 Luna', credits: 0.8 },
+    'anthropic/claude-haiku-5.5': { label: 'Claude Haiku 5.5', credits: 0.8 },
+    'z-ai/glm-5.3-flash': { label: 'GLM 5.3 Flash', credits: 0.8 },
+    'google/gemini-3.8-flash': { label: 'Gemini 3.8 Flash', credits: 1.8 },
+    'z-ai/glm-5.3': { label: 'GLM 5.3', credits: 2.8 },
+    'anthropic/claude-sonnet-5.5': { label: 'Claude Sonnet 5.5', credits: 2.8 },
+    'moonshotai/kimi-k3': { label: 'Kimi K3', credits: 2.8 },
+    'openai/gpt-6.1-sol': { label: 'GPT-6.1 Sol', credits: 3.8 },
+    'anthropic/claude-opus-5.5': { label: 'Claude Opus 5.5', credits: 3.8 },
+    'openai/gpt-6-astra': { label: 'GPT-6 Astra', credits: 5.8 },
+    'openai/gpt-6-luna|serp': { label: 'GPT-6 Luna + Real-Time SERP', credits: 1 },
+    'openai/gpt-6-luna|1c': { label: 'GPT-6 Luna (1c)', credits: 1 },
+    'openai/gpt-6.1-sol|serp': { label: 'GPT-6.1 Sol + Real-Time SERP', credits: 4 },
+    'anthropic/claude-opus-5.5|serp': { label: 'Claude Opus 5.5 + Real-Time SERP', credits: 10 },
+    'moonshotai/kimi-k3.1-pro': { label: 'Kimi K3.1 Pro', credits: 1.2 },
+    'minimax/minimax-m3.1-flash': { label: 'MiniMax M3.1 Flash', credits: 0.6 },
   };
   function modelFromSlug(slug) {
     const hit = MOCK_MODEL[String(slug || '').trim()];
