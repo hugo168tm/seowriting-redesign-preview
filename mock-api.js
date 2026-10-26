@@ -56,6 +56,7 @@
     serp_live: 0.002,
     onpage_page: 0.00015,    // instant_pages / content_parsing 每 task
     keyword_task: 0.06,      // Google Ads search_volume 每個 task
+    labs_difficulty: 0.0103, // Labs bulk_keyword_difficulty，每個 request（最多 1,000 字）
     paa_click: 0.00015
   };
 
@@ -379,6 +380,59 @@
     return response;
   }
 
+  /* ---------- DataForSEO Labs：bulk keyword difficulty（原生 app 冇，係新產品要加嘅呼叫）---------- */
+  function labsBulkKeywordDifficulty(keywords, opts) {
+    opts = opts || {};
+    const list = (Array.isArray(keywords) ? keywords : [keywords]).slice(0, 1000);
+    const started = performance.now();
+    charge('labs_keyword_difficulty', 1, COST.labs_difficulty);
+    const items = list.map(k => ({
+      se_type: 'google',
+      keyword: String(k).toLowerCase(),
+      keyword_difficulty: int(3, 92)          // 0-100 對數尺度
+    }));
+    const response = {
+      version: '0.1.mock',
+      status_code: 20000,
+      status_message: 'Ok.',
+      cost: COST.labs_difficulty,
+      tasks_count: 1,
+      tasks_error: 0,
+      tasks: [{
+        id: nextId('labs_'),
+        status_code: 20000,
+        status_message: 'Ok.',
+        path: ['v3', 'dataforseo_labs', 'google', 'bulk_keyword_difficulty', 'live'],
+        data: {
+          api: 'dataforseo_labs',
+          function: 'bulk_keyword_difficulty',
+          se_type: 'google',
+          location_code: opts.location_code || 2840,
+          language_code: opts.language_code || 'en',
+          keywords: list
+        },
+        result: [{
+          se_type: 'google',
+          location_code: opts.location_code || 2840,
+          language_code: opts.language_code || 'en',
+          total_count: items.length,
+          items_count: items.length,
+          items: items
+        }]
+      }]
+    };
+    state.log.push({
+      at: new Date().toISOString(),
+      action: 'labs:bulk_keyword_difficulty',
+      url: 'https://api.dataforseo.com/v3/dataforseo_labs/google/bulk_keyword_difficulty/live',
+      payload: {keywords: list, location_code: opts.location_code || 2840, language_code: opts.language_code || 'en'},
+      response: response,
+      ms: Math.round(performance.now() - started)
+    });
+    callSubs.forEach(fn => { try { fn(state.log[state.log.length - 1]); } catch (e) { /* ignore */ } });
+    return response;
+  }
+
   /* 全部 16 個動作跑一次，回報每個 action 嘅形狀檢查 */
   const DEFAULT_PAYLOADS = {
     run: {prompt: '2026 香港 SEO 指南', target_place: 'Hong Kong'},
@@ -450,6 +504,13 @@
     },
     setLatency: function (ms) { state.latency = Math.max(0, Number(ms) || 0); },
     costs: COST,
+    labsBulkKeywordDifficulty: labsBulkKeywordDifficulty,
+    labs: {
+      bulkKeywordDifficulty: labsBulkKeywordDifficulty,
+      endpoint: 'https://api.dataforseo.com/v3/dataforseo_labs/google/bulk_keyword_difficulty/live',
+      pricePerRequest: 0.0103,
+      maxKeywords: 1000
+    },
     usage: function () {
       const by = {};
       Object.keys(state.usage.by_item).forEach(k => { by[k] = +state.usage.by_item[k].toFixed(6); });
