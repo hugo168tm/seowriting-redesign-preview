@@ -214,6 +214,30 @@ td.mono,th.mono{font-family:var(--mono)}
       </section>
 
       <section class="panel">
+        <div class="panel-head">
+          <h2>生成模型</h2><span class="en">OpenRouter · kie.ai</span>
+          <span class="spacer"></span>
+          <span class="pill idle" id="gen-pill">—</span>
+        </div>
+        <p class="mono" style="font-size:11px;color:var(--ink-3);margin:0 0 10px">
+          文字：11 個模型 + 4 個 <b>+Real-Time SERP</b> 變體（會同步打一次 DataForSEO SERP）　｜　圖片：7 個 kie.ai 模型（async createTask → recordInfo）
+        </p>
+        <div class="row" style="margin-top:0">
+          <select id="gen-model" class="btn" style="padding:7px 10px;max-width:320px" aria-label="文字模型"></select>
+          <button class="btn btn-primary btn-sm" id="gen-text" type="button">生成文章</button>
+        </div>
+        <div class="row">
+          <select id="img-model" class="btn" style="padding:7px 10px;max-width:320px" aria-label="圖片模型"></select>
+          <button class="btn btn-sm" id="gen-img" type="button">生成圖片</button>
+        </div>
+        <div class="row">
+          <button class="btn btn-sm" id="gen-bv" type="button">品牌聲音側寫（10 個 element）</button>
+          <span class="mono" style="font-size:11px;color:var(--ink-3)">最少 1,000 字元</span>
+        </div>
+        <div id="gen-out"><div class="empty">（未跑）</div></div>
+      </section>
+
+      <section class="panel">
         <div class="panel-head"><h2>呼叫紀錄</h2><span class="en">call log</span></div>
         <div id="calls"><div class="empty">（未有任何呼叫）</div></div>
       </section>
@@ -332,6 +356,70 @@ td.mono,th.mono{font-family:var(--mono)}
     btn.disabled = false; btn.textContent = '全部跑一次';
     renderCalls();
   });
+
+  /* ---------- 生成模型（OpenRouter / kie.ai）---------- */
+  (function initGen(){
+    const selM = document.getElementById('gen-model');
+    const selI = document.getElementById('img-model');
+    if (!selM || !selI) return;
+    selM.innerHTML = api.MODELS.map(m =>
+      '<option value="' + m.id + '">' + m.label + ' · ' + m.credits + ' credits' + (m.serp ? ' · +SERP' : '') + '</option>').join('');
+    selI.innerHTML = api.IMAGE_MODELS.map(m =>
+      '<option value="' + m.id + '">' + m.label + ' · ' + m.credits + ' credits</option>').join('');
+    selM.value = '111';   // 預設 GPT-6 Astra
+    selI.value = '1';     // 預設 Z-Image（免費）
+
+    const out = document.getElementById('gen-out');
+    const pill = document.getElementById('gen-pill');
+
+    const esc3 = x => String(x).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+    document.getElementById('gen-text').addEventListener('click', async (e)=>{
+      const btn = e.currentTarget; btn.disabled = true; btn.textContent = '生成中…';
+      const r = await api.providers.openrouter.chat({
+        model: Number(selM.value), prompt: 'seo tools hong kong', location_code: 2019
+      });
+      pill.textContent = r.meta.real_time_serp ? '已注入即時 SERP' : '純生成';
+      pill.className = 'pill ' + (r.meta.real_time_serp ? 'ok' : 'idle');
+      out.innerHTML = '<div class="sum"><b>' + esc3(r.meta.seowriting_label) + '</b> ｜ ' + r.meta.credits +
+        ' credits ｜ ' + r.meta.words + ' 字 ｜ ' + r.usage.total_tokens + ' tokens' +
+        (r.meta.real_time_serp ? ' ｜ SERP $' + r.meta.serp_cost_usd : '') + '</div>' +
+        '<pre style="max-height:200px">' + esc3(r.choices[0].message.content) + '</pre>';
+      renderCost();
+      btn.disabled = false; btn.textContent = '生成文章';
+    });
+
+    document.getElementById('gen-img').addEventListener('click', async (e)=>{
+      const btn = e.currentTarget; btn.disabled = true; btn.textContent = '生成中…';
+      const r = await api.providers.kie.generate({ model: Number(selI.value), prompt: 'a desk with a notebook' });
+      if (r.status === 1 && r.url) {
+        out.innerHTML = '<div class="sum"><b>' + esc3(r.model) + '</b> ｜ ' + r.creditsConsumed +
+          ' credits ｜ 輪詢 ' + r.poll_ms + 'ms</div>' +
+          '<img src="' + r.url + '" alt="mock image" style="max-width:100%;border:1px solid var(--rule);border-radius:3px">';
+        pill.textContent = 'kie.ai 完成'; pill.className = 'pill ok';
+      } else {
+        out.innerHTML = '<pre>' + esc3(JSON.stringify(r, null, 1)) + '</pre>';
+        pill.textContent = 'kie.ai 失敗'; pill.className = 'pill bad';
+      }
+      renderCost();
+      btn.disabled = false; btn.textContent = '生成圖片';
+    });
+
+    document.getElementById('gen-bv').addEventListener('click', async ()=>{
+      const sample = ('這是一段用嚟測試品牌聲音側寫的樣本文字，內容需要夠長。').repeat(40);
+      const r = await api.providers.openrouter.brandVoice({ text: sample, model: 101 });
+      if (r.status !== 1) { out.innerHTML = '<pre>' + esc3(JSON.stringify(r, null, 1)) + '</pre>'; return; }
+      pill.textContent = r.elements_count + ' / ' + r.cap + ' elements';
+      pill.className = 'pill ok';
+      out.innerHTML = '<div class="sum"><b>' + esc3(r.model) + '</b> ｜ ' + r.elements_count +
+        ' elements ｜ ' + r.meta.credits + ' credits ｜ 樣本 ' + r.sample_chars + ' 字元</div>' +
+        '<table><thead><tr><th>#</th><th>element</th><th>傾向</th><th>信心</th></tr></thead><tbody>' +
+        r.elements.map(el => '<tr><td class="mono">' + el.id + '</td><td>' + esc3(el.name) +
+          '</td><td>' + esc3(el.value) + '</td><td class="mono">' + el.confidence + '</td></tr>').join('') +
+        '</tbody></table>';
+      renderCost();
+    });
+  })();
 
   /* ---------- DataForSEO 端點 / pipeline ---------- */
   function esc2(x){ return String(x).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }

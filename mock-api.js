@@ -806,6 +806,191 @@
     return checks;
   }
 
+  /* ==================================================================
+   * 生成類供應商（唔關 DataForSEO）
+   *   OpenRouter → 文章正文（11 模型 + 4 個 +Real-Time SERP 變體）
+   *   OpenRouter → 品牌聲音側寫（10 個 element）
+   *   kie.ai     → AI 圖片（7 個模型，async createTask → recordInfo）
+   * ================================================================== */
+
+  const MODELS = [
+    {id: 100, label: 'SEOWriting Engine', credits: 0.8, family: 'mixed'},
+    {id: 101, label: 'GPT-6 Luna',        credits: 0.8, family: 'openai'},
+    {id: 113, label: 'Claude Haiku 5.5',  credits: 0.8, family: 'anthropic'},
+    {id: 103, label: 'GLM 5.3 Flash',     credits: 0.8, family: 'zhipu'},
+    {id: 105, label: 'Gemini 3.8 Flash',  credits: 1.8, family: 'google'},
+    {id: 106, label: 'GLM 5.3',           credits: 2.8, family: 'zhipu'},
+    {id: 107, label: 'Claude Sonnet 5.5', credits: 2.8, family: 'anthropic'},
+    {id: 108, label: 'Kimi K3',           credits: 2.8, family: 'moonshot'},
+    {id: 109, label: 'GPT-6.1 Sol',       credits: 3.8, family: 'openai'},
+    {id: 110, label: 'Claude Opus 5.5',   credits: 3.8, family: 'anthropic'},
+    {id: 111, label: 'GPT-6 Astra',       credits: 5.8, family: 'openai'},
+    {id: 38,  label: 'GPT-6 Luna + Real-Time SERP', credits: 1,  family: 'openai',    serp: true},
+    {id: 29,  label: 'GPT-6 Luna (1c)',             credits: 1,  family: 'openai'},
+    {id: 39,  label: 'GPT-6 Sol + Real-Time SERP',  credits: 4,  family: 'openai',    serp: true},
+    {id: 41,  label: 'Opus 5.5 + Real-Time SERP',   credits: 10, family: 'anthropic', serp: true}
+  ];
+
+  /* 7 個圖像模型（kie.ai）；credits 用 Super Page 頁價（generation 頁平 6-25 倍）*/
+  const IMAGE_MODELS = [
+    {id: 1, label: 'Z-Image',                    credits: 0,    kie: 'z-image'},
+    {id: 2, label: 'FLUX.1',                     credits: 0,    kie: 'flux-1-schnell'},
+    {id: 3, label: 'GPT Image 2.5 flare medium', credits: 2.5,  kie: 'gpt-image-2-5-flare-medium'},
+    {id: 4, label: 'Nano Banana 2 Lite',         credits: 5,    kie: 'google/nano-banana'},
+    {id: 5, label: 'Nano Banana 2',              credits: 10,   kie: 'nano-banana-pro'},
+    {id: 6, label: 'GPT Image 2.5 flare high',   credits: 10,   kie: 'gpt-image-2-5-flare-high'},
+    {id: 7, label: 'GPT Image 2.5 flare xhigh',  credits: 15,   kie: 'gpt-image-2-5-flare-xhigh'}
+  ];
+
+  const BV_ELEMENTS = [
+    'Tone of voice', 'Point of view', 'Sentence length', 'Vocabulary level', 'Jargon policy',
+    'Formatting habits', 'Call-to-action style', 'Humor / warmth', 'Evidence style', 'Brand taboos'
+  ];
+
+  function chargeCredits(model, credits) {
+    const c = Number(credits) || 0;
+    state.creditsUsed = (state.creditsUsed || 0) + c;
+    state.creditsByModel = state.creditsByModel || {};
+    state.creditsByModel[model] = +((state.creditsByModel[model] || 0) + c).toFixed(3);
+    return c;
+  }
+
+  const PROVIDERS = {
+    openrouter: {
+      endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+      models: MODELS,
+
+      async chat(opts) {
+        opts = opts || {};
+        const m = MODELS.find(x => x.id === Number(opts.model) || x.label === opts.model) || MODELS[9];
+        const prompt = opts.prompt || '寫一篇關於 SEO 的文章';
+        const withSerp = opts.serp !== undefined ? !!opts.serp : !!m.serp;
+
+        let serpInfo = null;
+        if (withSerp) {
+          const r = DF.serp({keyword: prompt, location_code: opts.location_code || 2840,
+                             language_code: opts.language_code || 'en', depth: 10});
+          serpInfo = {used: true, cost_usd: r.cost, items: r.tasks[0].result[0].items.length};
+        }
+
+        const credits = chargeCredits(m.label, m.credits);
+        const words = int(1400, 2600);
+        const content = [
+          '## ' + prompt, '',
+          '（mock 生成內容，模型：' + m.label + '）',
+          withSerp ? '> 已注入即時 SERP top 10 結構（' + (serpInfo ? serpInfo.items : 10) + ' 個結果）。'
+                   : '> 未使用即時 SERP。', '',
+          '段落一：' + prompt + ' 的核心概念與檢索意圖拆解。',
+          '段落二：可執行步驟、常見錯誤、量度方法。',
+          '段落三：結論與下一步。'
+        ].join('\n');
+
+        const pt = int(300, 900), ct = Math.round(words * 1.4);
+        return {
+          id: nextId('chatcmpl_'),
+          object: 'chat.completion',
+          created: Math.floor(Date.now() / 1000),
+          model: 'mock/' + m.label.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          provider: 'openrouter',
+          choices: [{index: 0, message: {role: 'assistant', content: content}, finish_reason: 'stop'}],
+          usage: {prompt_tokens: pt, completion_tokens: ct, total_tokens: pt + ct},
+          meta: {
+            seowriting_model_id: m.id, seowriting_label: m.label, credits: credits,
+            real_time_serp: withSerp, serp_cost_usd: serpInfo ? serpInfo.cost_usd : 0, words: words
+          }
+        };
+      },
+
+      async brandVoice(opts) {
+        opts = opts || {};
+        const text = String(opts.text || '').slice(0, 10000);
+        if (text.length < 1000) {
+          return {status: 0, error: 'Brand voice needs at least 1,000 characters (got ' + text.length + ')'};
+        }
+        const m = MODELS.find(x => x.id === Number(opts.model)) || MODELS[1];
+        const credits = chargeCredits('brand-voice/' + m.label, 0.4);
+        const elements = BV_ELEMENTS.map((name, i) => ({
+          id: i + 1, name: name,
+          description: '由樣本文字側寫（mock）：' + name + ' 嘅傾向。',
+          value: pick(['偏專業', '偏口語', '中性', '偏權威', '偏親切']),
+          confidence: +(0.62 + rand() * 0.33).toFixed(2)
+        }));
+        return {
+          status: 1, provider: 'openrouter', model: m.label,
+          elements: elements, elements_count: elements.length, cap: 10,
+          sample_chars: text.length,
+          meta: {credits: credits, tokens: int(800, 2400)}
+        };
+      }
+    },
+
+    kie: {
+      submitEndpoint: 'https://api.kie.ai/api/v1/jobs/createTask',
+      pollEndpoint: 'https://api.kie.ai/api/v1/jobs/recordInfo',
+      models: IMAGE_MODELS,
+
+      createTask(opts) {
+        opts = opts || {};
+        const m = IMAGE_MODELS.find(x => x.id === Number(opts.model) || x.label === opts.model) || IMAGE_MODELS[0];
+        const taskId = nextId('kie_');
+        const credits = chargeCredits('image/' + m.label, m.credits);
+        state.kieTasks = state.kieTasks || {};
+        state.kieTasks[taskId] = {
+          taskId: taskId, model: m, prompt: opts.prompt || 'a desk with a notebook',
+          state: 'waiting', successFlag: 0, createdAt: Date.now(), creditsConsumed: credits
+        };
+        setTimeout(() => {
+          const t = state.kieTasks[taskId];
+          if (!t) return;
+          t.state = 'success'; t.successFlag = 1;
+          t.resultJson = JSON.stringify({
+            resultUrls: ['data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+              '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400">' +
+              '<rect width="640" height="400" fill="#F4F2EC"/>' +
+              '<rect x="12" y="12" width="616" height="376" fill="none" stroke="#E3DFD6"/>' +
+              '<text x="320" y="186" font-family="monospace" font-size="18" fill="#4C525C" text-anchor="middle">KIE · ' +
+              m.label.replace(/[<>&]/g, '') + '</text>' +
+              '<text x="320" y="216" font-family="monospace" font-size="12" fill="#767C87" text-anchor="middle">' +
+              String(t.prompt).slice(0, 42).replace(/[<>&]/g, '') + '</text></svg>')]
+          });
+        }, Math.max(120, state.latency * 5));
+        return {code: 200, msg: 'success', data: {taskId: taskId}};
+      },
+
+      recordInfo(taskId) {
+        const t = (state.kieTasks || {})[taskId];
+        if (!t) return {code: 422, msg: 'recordInfo is null', data: null};
+        return {
+          code: 200, msg: 'success',
+          data: {
+            taskId: t.taskId, state: t.state, successFlag: t.successFlag,
+            resultJson: t.resultJson || null, creditsConsumed: t.creditsConsumed,
+            model: t.model.kie, paramJson: JSON.stringify({prompt: t.prompt, model: t.model.kie})
+          }
+        };
+      },
+
+      async generate(opts) {
+        const sub = PROVIDERS.kie.createTask(opts);
+        const id = sub.data.taskId;
+        const started = Date.now();
+        for (let i = 0; i < 60; i++) {
+          const r = PROVIDERS.kie.recordInfo(id);
+          if (r.data && (r.data.state === 'success' || r.data.state === 'fail')) {
+            const urls = r.data.resultJson ? (JSON.parse(r.data.resultJson).resultUrls || []) : [];
+            return {
+              status: r.data.state === 'success' ? 1 : 0,
+              taskId: id, model: r.data.model, url: urls[0] || null,
+              creditsConsumed: r.data.creditsConsumed, poll_ms: Date.now() - started
+            };
+          }
+          await sleep(Math.max(20, state.latency / 3));
+        }
+        return {status: 0, taskId: id, error: 'poll timeout'};
+      }
+    }
+  };
+
   global.MockAPI = {
     post: post,
     run: run,
@@ -822,12 +1007,17 @@
       state.log.length = 0;   /* 唔可以重新賦值，MockAPI.log 係同一個 array 嘅引用 */
       state.credits = 100; state.failNext = {}; state.autoEvents = 0;
       state.usage = {total_usd: 0, by_item: {}};
+      state.creditsUsed = 0; state.creditsByModel = {}; state.kieTasks = {};
       rand = rng(20261025);
     },
     setLatency: function (ms) { state.latency = Math.max(0, Number(ms) || 0); },
     costs: COST,
     labsBulkKeywordDifficulty: labsBulkKeywordDifficulty,
     df: DF,
+    providers: PROVIDERS,
+    MODELS: MODELS,
+    IMAGE_MODELS: IMAGE_MODELS,
+    bvElements: BV_ELEMENTS,
     toolPipeline: TOOL_PIPELINE,
     pipeline: pipeline,
     dfSelfTest: dfSelfTest,
@@ -842,7 +1032,12 @@
     usage: function () {
       const by = {};
       Object.keys(state.usage.by_item).forEach(k => { by[k] = +state.usage.by_item[k].toFixed(6); });
-      return {total_usd: +state.usage.total_usd.toFixed(6), by_item: by};
+      return {
+        total_usd: +state.usage.total_usd.toFixed(6),
+        by_item: by,
+        credits: +(state.creditsUsed || 0).toFixed(3),
+        credits_by_model: state.creditsByModel || {}
+      };
     },
     fail: function (aj, code) { state.failNext[aj] = Number(code) || 201; },
     /* 給頁面用：模擬 window.sw 契約 */
