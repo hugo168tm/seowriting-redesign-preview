@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<!-- COPY DESC: shell (tokens + appbar from 1-click-blog-post-zh.html) — 呢頁係開發主控台，唔屬於 6 個工具頁 -->
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API 模擬主控台 · SEOWriting 編輯台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FBFAF7; --paper-2:#F4F2EC; --card:#FFFFFF;
+  --ink:#16181D; --ink-2:#4C525C; --ink-3:#767C87;
+  --rule:#E3DFD6; --rule-2:#EFEBE2;
+  --mark:#9B2C2C; --mark-soft:#F3E4E1;
+  --auto:#8A6100; --auto-soft:#F6EEDA;
+  --ok:#1F6F4A; --ok-soft:#E6F1EA;
+  --focus:#2F5D8A;
+  --r:3px; --r-lg:5px;
+  --sh:0 1px 2px rgba(22,24,29,.05), 0 8px 24px -12px rgba(22,24,29,.18);
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --serif:"Noto Serif TC","Songti TC","PingFang TC",Georgia,serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+[data-theme="dark"]{
+  --paper:#15171B; --paper-2:#1B1E23; --card:#1E2126;
+  --ink:#F2F0EA; --ink-2:#B9BEC7; --ink-3:#8C929C;
+  --rule:#2C3037; --rule-2:#242830;
+  --mark:#E0776F; --mark-soft:#3A2222; --auto:#D8A93A; --auto-soft:#332A16;
+  --ok:#5FBF8E; --ok-soft:#1B2C24;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans);
+  font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased}
+.mono{font-family:var(--mono)}
+code{font-family:var(--mono); font-size:.88em; background:var(--paper-2);
+  border:1px solid var(--rule-2); border-radius:2px; padding:1px 5px}
+
+.appbar{position:sticky; top:0; z-index:40; display:flex; align-items:center; gap:16px;
+  padding:0 20px; height:52px; background:var(--ink); color:#F7F5F0}
+[data-theme="dark"] .appbar{background:#0E1013; border-bottom:1px solid var(--rule)}
+.brand{font-family:var(--serif); font-weight:700; font-size:15px; letter-spacing:.01em; white-space:nowrap}
+.tag{margin-left:auto; font-family:var(--mono); font-size:11px; color:rgba(247,245,240,.62);
+  border:1px solid rgba(247,245,240,.22); border-radius:2px; padding:2px 8px; white-space:nowrap}
+[data-theme="dark"] .tag{color:var(--ink-3); border-color:var(--rule)}
+
+main{max-width:1240px; margin:0 auto; padding:24px 20px 60px}
+h1{font-family:var(--serif); font-size:26px; margin:0 0 6px; font-weight:700}
+.dek{margin:0 0 4px; color:var(--ink-2); font-size:13.5px}
+.auth-note{margin:10px 0 20px; font-family:var(--mono); font-size:11.5px; color:var(--ink-3)}
+
+.grid{display:grid; grid-template-columns:250px minmax(0,1fr); gap:16px; align-items:start}
+@media (max-width:900px){ .grid{grid-template-columns:1fr} }
+
+.panel{background:var(--card); border:1px solid var(--rule); border-radius:var(--r-lg);
+  box-shadow:var(--sh); padding:16px 18px; margin-bottom:16px}
+.panel-head{display:flex; align-items:baseline; gap:9px; margin:-2px 0 12px;
+  padding-bottom:9px; border-bottom:1px solid var(--rule-2)}
+.panel-head h2{font-family:var(--serif); font-size:15.5px; margin:0; font-weight:600}
+.panel-head .en{font-family:var(--mono); font-size:11px; color:var(--ink-3)}
+.panel-head .spacer{flex:1}
+
+.grid > aside{position:sticky; top:68px; max-height:calc(100vh - 92px); overflow:auto}
+@media (max-width:900px){ .grid > aside{position:static; max-height:none; overflow:visible} }
+.actions{list-style:none; margin:0; padding:0}
+.actions li{margin-bottom:2px}
+.actions button{width:100%; display:flex; align-items:center; gap:8px; text-align:left;
+  font:inherit; font-size:12.5px; background:none; border:1px solid transparent; border-radius:var(--r);
+  padding:7px 9px; color:var(--ink-2); cursor:pointer}
+.actions button:hover{background:var(--paper-2); color:var(--ink)}
+.actions button[aria-current="true"]{background:var(--mark-soft); border-color:var(--mark); color:var(--mark); font-weight:600}
+.actions .aj{font-family:var(--mono); font-size:12px}
+.actions .grp{font-family:var(--mono); font-size:10px; color:var(--ink-3); letter-spacing:.06em;
+  text-transform:uppercase; margin:12px 0 5px; padding-left:9px}
+.actions .grp:first-child{margin-top:0}
+
+textarea{width:100%; min-height:150px; font-family:var(--mono); font-size:12.5px; line-height:1.6;
+  background:var(--paper); color:var(--ink); border:1px solid var(--rule); border-radius:var(--r);
+  padding:10px 12px; resize:vertical}
+textarea:focus{outline:2px solid var(--focus); outline-offset:1px}
+
+.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px}
+.btn{font:inherit; font-size:13px; border:1px solid var(--rule); background:var(--card); color:var(--ink);
+  border-radius:var(--r); padding:8px 14px; cursor:pointer}
+.btn:hover{border-color:var(--ink-3)}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--mark); border-color:var(--mark); color:#fff; font-weight:600}
+.btn-primary:hover{background:#872523; border-color:#872523}
+.btn-sm{font-size:12px; padding:5px 10px}
+.btn[disabled]{opacity:.5; cursor:not-allowed}
+.btn-ghost{background:none}
+.hintline{font-size:12px; color:var(--ink-3); margin-left:auto; font-family:var(--mono)}
+
+pre{margin:0; background:var(--paper); border:1px solid var(--rule-2); border-radius:var(--r);
+  padding:12px; overflow:auto; max-height:330px; font-family:var(--mono); font-size:12px; line-height:1.55}
+
+.pill{display:inline-block; font-family:var(--mono); font-size:11px; border-radius:2px; padding:2px 8px; border:1px solid}
+.pill.ok{color:var(--ok); border-color:var(--ok); background:var(--ok-soft)}
+.pill.bad{color:var(--mark); border-color:var(--mark); background:var(--mark-soft)}
+.pill.idle{color:var(--ink-3); border-color:var(--rule)}
+
+table{width:100%; border-collapse:collapse; font-size:12px}
+th,td{text-align:left; padding:6px 8px; border-bottom:1px solid var(--rule-2)}
+th{font-family:var(--mono); font-size:10.5px; color:var(--ink-3); text-transform:uppercase; letter-spacing:.05em}
+td.mono,th.mono{font-family:var(--mono)}
+.events{max-height:220px; overflow:auto}
+.events div{font-family:var(--mono); font-size:11.5px; padding:4px 0; border-bottom:1px dotted var(--rule-2); word-break:break-all}
+.events .pa{color:var(--ink-2)} .events .pb{color:var(--focus)} .events .gt{color:var(--mark)}
+.empty{color:var(--ink-3); font-size:12.5px; font-family:var(--mono); padding:10px 0}
+.sum{font-family:var(--mono); font-size:12.5px; margin-top:10px}
+.sum b{font-size:15px}
+@media (max-width:640px){
+  main{padding:18px 14px 48px}
+  h1{font-size:21px}
+  .panel{padding:14px}
+  .tag{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="appbar">
+  <span class="brand">SEOWriting 編輯台</span>
+  <button id="theme-toggle" class="theme-btn" type="button" aria-label="切換深色模式"
+    style="margin-left:14px; background:none; border:1px solid rgba(255,255,255,.22); color:#F7F5F0; border-radius:3px; width:30px; height:30px; cursor:pointer">◧</button>
+  <span class="tag">開發工具 · 唔屬於 6 個工具頁</span>
+</header>
+
+<main>
+  <h1>API 模擬主控台</h1>
+  <p class="dek">對應 <code>docs/reverse-engineering/DATA-FLOW.md</code>：全站只有一個端點（頁面自己）＋ <code>aj</code> 分派 16 個動作，狀態由 WebSocket 推送。呢頁離線跑，零網絡請求。</p>
+  <p class="auth-note">endpoint: mock:// ／ WS: 本地 frame 模擬 ／ 帳戶：示例帳戶</p>
+
+  <div class="grid">
+    <!-- 左：動作清單 -->
+    <aside class="panel" style="margin-bottom:0">
+      <div class="panel-head"><h2>動作</h2><span class="en">16 actions</span></div>
+      <ul class="actions" id="list"></ul>
+    </aside>
+
+    <!-- 右：工作區 -->
+    <div>
+      <section class="panel">
+        <div class="panel-head">
+          <h2>請求</h2><span class="en">request</span>
+          <span class="spacer"></span>
+          <span class="pill idle" id="act-pill">揀一個動作</span>
+        </div>
+        <label for="payload" class="mono" style="font-size:11.5px;color:var(--ink-3)">payload（可改，JSON）</label>
+        <textarea id="payload" spellcheck="false">{}</textarea>
+        <div class="row">
+          <button class="btn btn-primary" id="send" type="button">送出 <span class="mono" style="opacity:.7">⌘↵</span></button>
+          <button class="btn btn-sm" id="fail201" type="button">注入 201 冇信用點</button>
+          <button class="btn btn-sm" id="fail1" type="button">注入 1 進行中</button>
+          <button class="btn btn-sm btn-ghost" id="reset" type="button">重設</button>
+          <span class="hintline" id="lat">延遲 260ms</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>回應</h2><span class="en">response</span>
+          <span class="spacer"></span>
+          <span id="res-pill" class="pill idle">—</span>
+        </div>
+        <pre id="response">（未送出）</pre>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>WebSocket 推送</h2><span class="en">pa: / pb: / gt:</span>
+          <span class="spacer"></span>
+          <button class="btn btn-sm btn-ghost" id="fire" type="button">推一個 pb: 發布通知</button>
+        </div>
+        <p class="mono" style="font-size:11px;color:var(--ink-3);margin:0 0 8px">
+          <b>pa:</b> 生成任務數（側欄徽章）　<b>pb:</b> 發布通知（ts + short_url）　<b>gt:</b> 任務結果（按 task_id 配對）
+        </p>
+        <div class="events" id="events"><div class="empty">（等事件…）</div></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>全部 16 個動作自測</h2><span class="en">self-test</span>
+          <span class="spacer"></span>
+          <button class="btn btn-primary btn-sm" id="runall" type="button">全部跑一次</button>
+        </div>
+        <div id="runall-out"><div class="empty">（未跑）</div></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>呼叫紀錄</h2><span class="en">call log</span></div>
+        <div id="calls"><div class="empty">（未有任何呼叫）</div></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script src="mock-api.js"></script>
+<script>
+(function(){
+  'use strict';
+  const $ = (s, r=document) => r.querySelector(s);
+  const LS = (() => {
+    try { localStorage.setItem('__p','1'); localStorage.removeItem('__p'); return localStorage; }
+    catch(e){ const m={}; return {getItem:k=>k in m?m[k]:null,setItem:(k,v)=>{m[k]=String(v)},removeItem:k=>{delete m[k]}}; }
+  })();
+
+  const GROUPS = [
+    ['生成', ['run', 'rewrite', 'humanize', 'get-result']],
+    ['版本', ['get-version', 'approve-version', 'reject-version']],
+    ['編輯器', ['update', 'set-score', 'seoscore']],
+    ['SERP', ['get-serp-data', 'refresh-serp', 'get_competitors']],
+    ['媒體', ['text-to-image', 'unsplash']],
+    ['其他', ['location']]
+  ];
+
+  let current = 'rewrite';
+  const api = window.MockAPI;
+  if (!api){ document.body.insertAdjacentHTML('afterbegin','<p style="padding:20px">mock-api.js 載入失敗</p>'); return; }
+
+  /* ---------- 動作清單 ---------- */
+  const list = $('#list');
+  for (const [g, ajs] of GROUPS){
+    const h = document.createElement('li');
+    h.className = 'grp'; h.textContent = g;
+    list.appendChild(h);
+    for (const aj of ajs){
+      if (!api.actions.includes(aj)) continue;
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.type = 'button'; b.dataset.aj = aj;
+      b.innerHTML = '<span class="aj">' + aj + '</span>';
+      b.addEventListener('click', ()=>select(aj));
+      li.appendChild(b); list.appendChild(li);
+    }
+  }
+  function select(aj){
+    current = aj;
+    [...list.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-current', b.dataset.aj===aj ? 'true':'false'));
+    $('#act-pill').textContent = aj;
+    $('#act-pill').className = 'pill idle';
+    const p = api.defaultPayloads[aj] || {};
+    $('#payload').value = JSON.stringify(Object.assign({aj: aj}, p), null, 1);
+    $('#response').textContent = '（未送出）';
+    $('#res-pill').textContent = '—';
+    $('#res-pill').className = 'pill idle';
+  }
+
+  /* ---------- 送出 ---------- */
+  async function send(){
+    let body;
+    try { body = JSON.parse($('#payload').value); }
+    catch(e){ $('#response').textContent = 'JSON 解析失敗：' + e.message; $('#res-pill').textContent='JSON 錯'; $('#res-pill').className='pill bad'; return; }
+    if (!body.aj) body.aj = current;
+    $('#send').disabled = true;
+    const r = await api.post('mock://' + body.aj, body);
+    $('#send').disabled = false;
+
+    $('#response').textContent = JSON.stringify(r, null, 1);
+    const ok = r.status === 1;
+    $('#res-pill').textContent = 'status ' + r.status +
+      (r.error_code ? ' · code ' + r.error_code : '') + (ok ? ' · 成功' : ' · 錯誤');
+    $('#res-pill').className = 'pill ' + (ok ? 'ok' : 'bad');
+    renderCalls();
+  }
+
+  $('#send').addEventListener('click', send);
+  document.addEventListener('keydown', e=>{
+    if ((e.metaKey||e.ctrlKey) && e.key === 'Enter'){ e.preventDefault(); send(); }
+  });
+  $('#fail201').addEventListener('click', ()=>{ api.fail(current, 201); $('#lat').textContent = '已排程：' + current + ' → 201'; });
+  $('#fail1').addEventListener('click', ()=>{ api.fail(current, 1); $('#lat').textContent = '已排程：' + current + ' → 1'; });
+  $('#reset').addEventListener('click', ()=>{ api.reset(); renderCalls(); renderEvents(); $('#runall-out').innerHTML = '<div class="empty">（未跑）</div>'; });
+
+  /* ---------- WS 推送 ---------- */
+  const evBox = $('#events');
+  const frames = [];
+  api.onFrame((frame, prefix) => { frames.unshift({frame, prefix, at: new Date().toLocaleTimeString('en-GB')}); renderEvents(); });
+  function renderEvents(){
+    if (!frames.length){ evBox.innerHTML = '<div class="empty">（等事件…）</div>'; return; }
+    evBox.innerHTML = frames.slice(0, 40).map(f =>
+      '<div class="' + f.prefix.replace(':','') + '">' + f.at + '  ' + esc(f.frame).slice(0, 240) + '</div>').join('');
+  }
+  $('#fire').addEventListener('click', ()=>{
+    api.emitFrame('pb:', {ts: Date.now(), short_url: 'https://seo.example/abc123'});
+  });
+
+  /* ---------- 自測 ---------- */
+  $('#runall').addEventListener('click', async ()=>{
+    const btn = $('#runall'); btn.disabled = true; btn.textContent = '跑緊…';
+    const results = await api.run();
+    const pass = results.filter(r=>r.ok).length;
+    const rows = results.map(r =>
+      '<tr><td class="mono">' + esc(r.ajax) + '</td>' +
+      '<td><span class="pill ' + (r.ok?'ok':'bad') + '">' + (r.ok?'PASS':'FAIL') + '</span></td>' +
+      '<td class="mono">' + r.ms + 'ms</td>' +
+      '<td class="mono" style="word-break:break-all">' + esc(JSON.stringify(r.response)).slice(0, 150) + '</td></tr>').join('');
+    $('#runall-out').innerHTML =
+      '<div class="sum"><b>' + pass + ' / ' + results.length + '</b> 個動作通過</div>' +
+      '<table><thead><tr><th>action</th><th>結果</th><th>耗時</th><th>回應</th></tr></thead><tbody>' + rows + '</tbody></table>';
+    btn.disabled = false; btn.textContent = '全部跑一次';
+    renderCalls();
+  });
+
+  /* ---------- 呼叫紀錄 ---------- */
+  function renderCalls(){
+    const box = $('#calls');
+    if (!api.log.length){ box.innerHTML = '<div class="empty">（未有任何呼叫）</div>'; return; }
+    const rows = api.log.slice().reverse().slice(0, 30).map(c =>
+      '<tr><td class="mono">' + esc(c.at.slice(11,19)) + '</td><td class="mono">' + esc(c.action) + '</td>' +
+      '<td class="mono">' + c.ms + 'ms</td>' +
+      '<td><span class="pill ' + (c.response.status===1?'ok':'bad') + '">' + c.response.status + '</span></td></tr>').join('');
+    box.innerHTML = '<table><thead><tr><th>時間</th><th>action</th><th>耗時</th><th>status</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+  function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  /* ---------- 主題 ---------- */
+  $('#theme-toggle')?.addEventListener('click', ()=>{
+    const r = document.documentElement;
+    r.dataset.theme = r.dataset.theme === 'dark' ? 'light' : 'dark';
+    LS.setItem('sw-theme', r.dataset.theme);
+  });
+  const saved = LS.getItem('sw-theme'); if (saved) document.documentElement.dataset.theme = saved;
+
+  select(current);
+  renderEvents(); renderCalls();
+})();
+</script>
+</body>
+</html>
