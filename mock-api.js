@@ -58,7 +58,8 @@
     keyword_task: 0.06,      // Google Ads search_volume 每個 task
     labs_task: 0.012,        // Labs「ALL OTHER ENDPOINTS」每個 task
     labs_item: 0.00012,      // …而且每個 keyword 再計
-    paa_click: 0.00015
+    paa_click: 0.00015,
+    serp_youtube: 0.002     // YouTube SERP Live（假設同 Google Live 同價，待官方頁確認）
   };
 
   const state = {
@@ -78,6 +79,7 @@
   };
 
   function charge(item, units, unitUsd) {
+    if (typeof unitUsd !== 'number' || !isFinite(unitUsd)) unitUsd = 0;
     const usd = units * unitUsd;
     state.usage.total_usd += usd;
     state.usage.by_item[item] = (state.usage.by_item[item] || 0) + usd;
@@ -486,6 +488,324 @@
     return results;
   }
 
+  /* ==================================================================
+   * DataForSEO 端點層 — 「其他工具」（PHP 表單那批）實際要打嘅呼叫
+   * 每個都回官方 envelope shape：{version,status_code,cost,tasks:[{...,result:[...]}]}
+   * 價格同官方定價頁一致（2026-10-25）
+   * ================================================================== */
+
+  function dfoEnvelope(pathArr, data, result, cost) {
+    return {
+      version: '0.1.mock',
+      status_code: 20000,
+      status_message: 'Ok.',
+      cost: +Number(cost).toFixed(6),
+      tasks_count: 1,
+      tasks_error: 0,
+      tasks: [{
+        id: nextId('dfo_'),
+        status_code: 20000,
+        status_message: 'Ok.',
+        path: pathArr,
+        data: data,
+        result: [result]
+      }]
+    };
+  }
+
+  function hostOf(u) {
+    try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return String(u); }
+  }
+
+  const DF = {
+    /* GET /v3/serp/google/locations — 免費 */
+    locations() {
+      return dfoEnvelope(['v3', 'serp', 'google', 'locations'],
+        {api: 'serp', function: 'locations', se: 'google'},
+        {location_type: 'Country', items: COUNTRIES.map((c, i) => ({
+          location_code: 2000 + i, location_name: c,
+          country_iso_code: c.slice(0, 2).toUpperCase(),
+          location_type: 'Country', location_code_parent: null
+        }))}, 0);
+    },
+
+    /* GET /v3/serp/google/languages — 免費 */
+    languages() {
+      return dfoEnvelope(['v3', 'serp', 'google', 'languages'],
+        {api: 'serp', function: 'languages', se: 'google'},
+        {items: LANGS.map(l => ({language_name: l, language_code: l.slice(0, 2).toLowerCase()}))}, 0);
+    },
+
+    /* POST /v3/serp/google/organic/live/advanced（或 standard task_post）
+       opts: {keyword, location_code=2840, language_code='en', device='desktop',
+              depth=10, priority=1, mode='standard'|'live'} */
+    serp(opts) {
+      opts = opts || {};
+      const depth = Math.min(Number(opts.depth) || 10, 200);
+      const priority = Number(opts.priority) || 1;
+      const mode = opts.mode === 'live' ? 'live' : 'standard';
+      let unit = mode === 'live' ? COST.serp_live : (priority === 2 ? COST.serp_priority : COST.serp_standard);
+      // depth 超過 10：每多一頁（10 個結果）加一個 SERP 費用
+      const pages = Math.ceil(depth / 10);
+      const cost = unit * pages;
+      charge(mode === 'live' ? 'serp_live' : 'serp_standard', pages, unit);
+
+      const items = Array.from({length: depth}, (_, i) => ({
+        type: i === 0 ? 'featured_snippet' : (i === 4 ? 'people_also_ask' : 'organic'),
+        rank_group: i + 1,
+        rank_absolute: i + 1,
+        domain: 'competitor-' + (i + 1) + '.com',
+        title: 'Competitor ' + (i + 1) + ' — ' + (opts.keyword || 'seo'),
+        url: 'https://competitor-' + (i + 1) + '.com/article-' + (i + 1),
+        description: 'Snippet (mock) for rank ' + (i + 1) + '.',
+        breadcrumb: 'competitor-' + (i + 1) + '.com › blog'
+      }));
+      const result = {
+        keyword: opts.keyword || 'seo tools',
+        type: 'organic',
+        se_domain: 'google.com',
+        location_code: Number(opts.location_code) || 2840,
+        language_code: opts.language_code || 'en',
+        check_url: 'https://www.google.com/search?q=' + encodeURIComponent(opts.keyword || 'seo tools'),
+        datetime: nowIso(),
+        spell: null,
+        item_types: ['featured_snippet', 'organic', 'people_also_ask', 'related_searches', 'ai_overview'],
+        se_results_count: 12300000,
+        items: items,
+        people_also_ask: [{type: 'people_also_ask', items: [
+          {type: 'people_also_ask_element', title: 'SEO 工具邊隻好？'},
+          {type: 'people_also_ask_element', title: '免費 SEO 工具夠唔夠？'}
+        ]}],
+        related_searches: ['seo tools free', 'seo tools hong kong', 'seo audit checklist'],
+        ai_overview: {type: 'ai_overview', items: [{type: 'ai_overview_element', text: 'AI Overview (mock).'}]}
+      };
+      return dfoEnvelope(
+        ['v3', 'serp', 'google', 'organic', mode === 'live' ? 'live' : 'task_post', 'advanced'],
+        {api: 'serp', function: 'organic', se: 'google', keyword: opts.keyword,
+         location_code: Number(opts.location_code) || 2840, language_code: opts.language_code || 'en',
+         device: opts.device || 'desktop', depth: depth, priority: priority},
+        result, cost);
+    },
+
+    /* POST /v3/on_page/instant_pages
+       opts: {urls:[...]} — 一 request 最多 20 tasks；同 domain 最多 5 條 */
+    instantPages(opts) {
+      opts = opts || {};
+      const urls = (Array.isArray(opts.urls) ? opts.urls : [opts.urls]).filter(Boolean);
+      const seen = {};
+      const overDomain = [];
+      urls.forEach(u => { const h = hostOf(u); seen[h] = (seen[h] || 0) + 1; if (seen[h] > 5) overDomain.push(h); });
+      if (urls.length > 20) {
+        return {version: '0.1.mock', status_code: 40501, status_message: 'Too many tasks in one request (max 20).',
+                tasks_count: 0, tasks_error: 0, tasks: [], cost: 0};
+      }
+      if (overDomain.length) {
+        return {version: '0.1.mock', status_code: 40501,
+                status_message: 'Duplicate crawl host: more than 5 URLs of the same domain in one request (' + overDomain[0] + '). Split into sequential batches.',
+                tasks_count: 0, tasks_error: 0, tasks: [], cost: 0};
+      }
+      const cost = charge('onpage_page', urls.length, COST.onpage_page);
+      const items = urls.map(u => ({
+        url: u,
+        domain: hostOf(u),
+        onpage_score: int(48, 95),
+        meta: {
+          title: 'Mock page ' + hostOf(u),
+          htags: {h1: [1], h2: Array.from({length: int(5, 14)}, (_, i) => 'H2 ' + (i + 1)),
+                  h3: Array.from({length: int(2, 9)}, (_, i) => 'H3 ' + (i + 1))},
+          images_count: int(0, 18),
+          content: {
+            plain_text_word_count: int(800, 3600),
+            flesch_kincaid_readability_index: +(int(600, 1400) / 100).toFixed(2),
+            automated_readability_index: +(int(600, 1500) / 100).toFixed(2)
+          }
+        }
+      }));
+      return dfoEnvelope(['v3', 'on_page', 'instant_pages'],
+        {api: 'on_page', function: 'instant_pages', urls: urls},
+        {crawl_progress: 'finished', crawl_status: 200, items_count: items.length, items: items}, cost);
+    },
+
+    /* POST /v3/keywords_data/google_ads/search_volume/task_post（Standard 每個 task $0.06）*/
+    keywordVolume(opts) {
+      opts = opts || {};
+      const list = (Array.isArray(opts.keywords) ? opts.keywords : [opts.keywords]).slice(0, 1000);
+      const cost = charge('keyword_task', 1, COST.keyword_task);
+      const items = list.map(k => ({
+        keyword: String(k),
+        location_code: Number(opts.location_code) || 2840,
+        language_code: opts.language_code || 'en',
+        search_volume: int(40, 40000),
+        competition: pick(['LOW', 'MEDIUM', 'HIGH']),
+        competition_index: int(1, 100),
+        low_top_of_page_bid: +(int(10, 400) / 100).toFixed(2),
+        high_top_of_page_bid: +(int(400, 1800) / 100).toFixed(2),
+        cpc: +(int(20, 600) / 100).toFixed(2)
+      }));
+      return dfoEnvelope(['v3', 'keywords_data', 'google_ads', 'search_volume', 'task_post'],
+        {api: 'keywords_data', function: 'search_volume', keywords: list},
+        {location_code: Number(opts.location_code) || 2840, language_code: opts.language_code || 'en',
+         items_count: items.length, items: items}, cost);
+    },
+
+    /* POST /v3/on_page/content_parsing/live（每個 Live 呼叫只 1 個 task）*/
+    contentParsing(opts) {
+      opts = opts || {};
+      const url = Array.isArray(opts.urls) ? opts.urls[0] : (opts.url || String(opts));
+      if (Array.isArray(opts.urls) && opts.urls.length > 1) {
+        return {version: '0.1.mock', status_code: 40501,
+                status_message: 'content_parsing/live accepts exactly one task per request.',
+                tasks_count: 0, tasks_error: 0, tasks: [], cost: 0};
+      }
+      const cost = charge('onpage_page', 1, COST.onpage_page);
+      return dfoEnvelope(['v3', 'on_page', 'content_parsing', 'live'],
+        {api: 'on_page', function: 'content_parsing', url: url, markdown_view: true},
+        {items_count: 1, items: [{
+          url: url, domain: hostOf(url),
+          page_as_markdown: '## ' + hostOf(url) + '\n\nMock article body in markdown…',
+          page_content: {header: 'Mock header', main_topic: ['seo'], plain_text: 'Mock plain text…'}
+        }]}, cost);
+    },
+
+    /* POST /v3/serp/youtube/organic/live/advanced */
+    youtube(opts) {
+      opts = opts || {};
+      const cost = charge('serp_youtube', 1, COST.serp_live);
+      const items = Array.from({length: 5}, (_, i) => ({
+        type: 'youtube_video',
+        rank_group: i + 1, rank_absolute: i + 1,
+        video_id: 'mockVid' + (i + 1) + 'XyZ',
+        title: 'Mock YouTube ' + (i + 1) + ' — ' + (opts.keyword || 'seo'),
+        channel_name: 'Mock Channel ' + (i + 1),
+        views_count: int(1200, 900000),
+        duration_time: '0:' + String(int(10, 59)).padStart(2, '0'),
+        duration_time_seconds: int(60, 1800)
+      }));
+      return dfoEnvelope(['v3', 'serp', 'youtube', 'organic', 'live', 'advanced'],
+        {api: 'serp', function: 'youtube', keyword: opts.keyword, location_code: Number(opts.location_code) || 2840},
+        {keyword: opts.keyword, items_count: items.length, items: items}, cost);
+    }
+  };
+
+  /* ---------- 每個工具實際要嘅呼叫序列 ---------- */
+  const TOOL_PIPELINE = {
+    '1-click': ['serp', 'instantPages', 'keywordVolume', 'bulkKeywordDifficulty', 'youtube'],
+    'bulk': ['serp', 'instantPages', 'keywordVolume', 'bulkKeywordDifficulty'],
+    'super-page': ['serp'],
+    'rewriter': ['serp'],
+    'brand-voice': ['contentParsing']
+  };
+
+  async function pipeline(tool, input) {
+    input = input || {};
+    const steps = TOOL_PIPELINE[tool];
+    if (!steps) throw new Error('未知工具：' + tool);
+    const keyword = input.keyword || 'seo tools';
+    const loc = input.location_code || 2840;
+    const lang = input.language_code || 'en';
+    const out = {tool: tool, keyword: keyword, location_code: loc, language_code: lang, calls: [], cost_usd: 0};
+    let serp = null;
+
+    for (const step of steps) {
+      let res, cost = 0;
+      if (step === 'serp') {
+        res = DF.serp({keyword: keyword, location_code: loc, language_code: lang, depth: 10});
+        cost = res.cost;
+        serp = res.tasks[0].result[0];
+        out.serp = {
+          items: serp.items.map(i => ({rank_absolute: i.rank_absolute, type: i.type, url: i.url, domain: i.domain, title: i.title})),
+          people_also_ask: serp.people_also_ask,
+          related_searches: serp.related_searches,
+          ai_overview: serp.ai_overview
+        };
+      } else if (step === 'instantPages') {
+        const urls = (serp ? serp.items : []).slice(0, 10).map(i => i.url);
+        res = DF.instantPages({urls: urls});
+        cost = res.cost;
+        out.competitors = (res.tasks[0].result[0].items || []).map(it => ({
+          url: it.url, domain: it.domain, onpage_score: it.onpage_score,
+          word_count: it.meta.content.plain_text_word_count,
+          h2_count: it.meta.htags.h2.length,
+          h3_count: it.meta.htags.h3.length,
+          images_count: it.meta.images_count,
+          readability: it.meta.content.flesch_kincaid_readability_index
+        }));
+      } else if (step === 'keywordVolume') {
+        const kws = [keyword].concat(serp ? serp.related_searches.slice(0, 5) : []);
+        res = DF.keywordVolume({keywords: kws, location_code: loc, language_code: lang});
+        cost = res.cost;
+        out.keywords = {volume: res.tasks[0].result[0].items};
+      } else if (step === 'bulkKeywordDifficulty') {
+        const kws = (out.keywords ? out.keywords.volume.map(v => v.keyword) : [keyword]);
+        res = labsBulkKeywordDifficulty(kws, {location_code: loc, language_code: lang});
+        cost = res.cost;
+        out.keywords = out.keywords || {};
+        out.keywords.difficulty = res.tasks[0].result[0].items;
+      } else if (step === 'youtube') {
+        res = DF.youtube({keyword: keyword, location_code: loc, language_code: lang});
+        cost = res.cost;
+        out.youtube = res.tasks[0].result[0].items;
+      } else if (step === 'contentParsing') {
+        const urls = input.urls || ['https://example.com/source-1'];
+        out.parsed = [];
+        for (const u of urls) {
+          const r1 = DF.contentParsing({url: u});
+          cost += r1.cost;
+          out.calls.push({endpoint: 'content_parsing/live', url: u, cost: r1.cost});
+          out.parsed.push(r1.tasks[0].result[0].items[0]);
+        }
+        out.cost_usd = +(out.cost_usd + cost).toFixed(6);
+        continue;
+      } else {
+        continue;
+      }
+      out.calls.push({endpoint: step, cost: cost});
+      out.cost_usd = +(out.cost_usd + cost).toFixed(6);
+    }
+    return out;
+  }
+
+  /* 6 個端點嘅形狀自測 */
+  function dfSelfTest() {
+    const checks = [];
+    const t = (name, fn) => {
+      try { const v = fn(); checks.push({endpoint: name, ok: !!v, okv: v}); }
+      catch (e) { checks.push({endpoint: name, ok: false, error: String(e && e.message || e)}); }
+    };
+    t('serp/google/locations', () => DF.locations().tasks[0].result[0].items.length > 0);
+    t('serp/google/languages', () => DF.languages().tasks[0].result[0].items.length > 0);
+    t('serp/google/organic/advanced', () => {
+      const r = DF.serp({keyword: 'seo', depth: 10});
+      return r.tasks[0].result[0].items.length === 10 && !!r.tasks[0].result[0].people_also_ask;
+    });
+    t('on_page/instant_pages', () => {
+      const r = DF.instantPages({urls: Array.from({length: 10}, (_, i) => 'https://c' + i + '.com/x')});
+      const it = r.tasks[0].result[0].items[0];
+      return typeof it.meta.content.plain_text_word_count === 'number' && Array.isArray(it.meta.htags.h2);
+    });
+    t('on_page/instant_pages (同域>5 → 40501)', () => {
+      const r = DF.instantPages({urls: Array.from({length: 10}, () => 'https://same.com/x')});
+      return r.status_code === 40501;
+    });
+    t('keywords_data/search_volume', () => {
+      const r = DF.keywordVolume({keywords: ['a', 'b', 'c']});
+      return r.tasks[0].result[0].items.length === 3;
+    });
+    t('labs/bulk_keyword_difficulty', () => {
+      const r = labsBulkKeywordDifficulty(['a', 'b']);
+      return typeof r.tasks[0].result[0].items[0].keyword_difficulty === 'number';
+    });
+    t('on_page/content_parsing/live', () => {
+      const r = DF.contentParsing({url: 'https://x.com/a'});
+      return typeof r.tasks[0].result[0].items[0].page_as_markdown === 'string';
+    });
+    t('serp/youtube/organic', () => {
+      const r = DF.youtube({keyword: 'seo'});
+      return r.tasks[0].result[0].items[0].video_id != null;
+    });
+    return checks;
+  }
+
   global.MockAPI = {
     post: post,
     run: run,
@@ -507,6 +827,10 @@
     setLatency: function (ms) { state.latency = Math.max(0, Number(ms) || 0); },
     costs: COST,
     labsBulkKeywordDifficulty: labsBulkKeywordDifficulty,
+    df: DF,
+    toolPipeline: TOOL_PIPELINE,
+    pipeline: pipeline,
+    dfSelfTest: dfSelfTest,
     labs: {
       bulkKeywordDifficulty: labsBulkKeywordDifficulty,
       endpoint: 'https://api.dataforseo.com/v3/dataforseo_labs/google/bulk_keyword_difficulty/live',

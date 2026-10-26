@@ -192,6 +192,28 @@ td.mono,th.mono{font-family:var(--mono)}
       </section>
 
       <section class="panel">
+        <div class="panel-head">
+          <h2>DataForSEO 端點</h2><span class="en">tools' real data needs</span>
+          <span class="spacer"></span>
+          <button class="btn btn-sm" id="dftest" type="button">跑 9 個端點自測</button>
+        </div>
+        <p class="mono" style="font-size:11px;color:var(--ink-3);margin:0 0 10px">
+          locations · languages · organic/advanced · instant_pages · search_volume · bulk_keyword_difficulty · content_parsing · youtube
+        </p>
+        <div class="row" style="margin-top:0">
+          <select id="tool-sel" class="btn" style="padding:7px 10px" aria-label="揀工具">
+            <option value="1-click">一鍵發布（serp→instant_pages→volume→difficulty→youtube）</option>
+            <option value="bulk">批量生成（同上，無 youtube）</option>
+            <option value="super-page">Super Page（serp）</option>
+            <option value="rewriter">改寫工具（serp）</option>
+            <option value="brand-voice">品牌聲音（content_parsing）</option>
+          </select>
+          <button class="btn btn-primary btn-sm" id="runpipe" type="button">跑該工具嘅呼叫序列</button>
+        </div>
+        <div id="df-out"><div class="empty">（未跑）</div></div>
+      </section>
+
+      <section class="panel">
         <div class="panel-head"><h2>呼叫紀錄</h2><span class="en">call log</span></div>
         <div id="calls"><div class="empty">（未有任何呼叫）</div></div>
       </section>
@@ -309,6 +331,51 @@ td.mono,th.mono{font-family:var(--mono)}
       '<table><thead><tr><th>action</th><th>結果</th><th>耗時</th><th>回應</th></tr></thead><tbody>' + rows + '</tbody></table>';
     btn.disabled = false; btn.textContent = '全部跑一次';
     renderCalls();
+  });
+
+  /* ---------- DataForSEO 端點 / pipeline ---------- */
+  function esc2(x){ return String(x).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  document.getElementById('dftest')?.addEventListener('click', (e)=>{
+    const btn = e.currentTarget; btn.disabled = true;
+    setTimeout(()=>{
+      const checks = api.dfSelfTest();
+      const pass = checks.filter(c=>c.ok).length;
+      document.getElementById('df-out').innerHTML =
+        '<div class="sum"><b>' + pass + ' / ' + checks.length + '</b> 個端點形狀通過</div>' +
+        '<table><thead><tr><th>endpoint</th><th>結果</th></tr></thead><tbody>' +
+        checks.map(c => '<tr><td class="mono">' + esc2(c.endpoint) + '</td><td><span class="pill ' +
+          (c.ok?'ok':'bad') + '">' + (c.ok?'PASS':'FAIL') + '</span></td></tr>').join('') +
+        '</tbody></table>';
+      renderCost();
+      btn.disabled = false;
+    }, 30);
+  });
+
+  document.getElementById('runpipe')?.addEventListener('click', async (e)=>{
+    const btn = e.currentTarget; btn.disabled = true; btn.textContent = '跑緊…';
+    const tool = document.getElementById('tool-sel').value;
+    const input = tool === 'brand-voice'
+      ? {urls: ['https://example.com/source-1', 'https://example.com/source-2']}
+      : {keyword: 'seo tools hong kong', location_code: 2019, language_code: 'en'};
+    const out = await api.pipeline(tool, input);
+    const brief = {
+      tool: out.tool, keyword: out.keyword,
+      calls: out.calls, cost_usd: out.cost_usd,
+      serp_items: out.serp ? out.serp.items.length : null,
+      paa: out.serp ? out.serp.people_also_ask.length : null,
+      competitors: out.competitors ? out.competitors.length : null,
+      competitor_sample: out.competitors ? out.competitors[0] : null,
+      keywords: out.keywords ? {volume: out.keywords.volume.length, difficulty: (out.keywords.difficulty||[]).length} : null,
+      youtube: out.youtube ? out.youtube.length : null,
+      parsed: out.parsed ? out.parsed.length : null
+    };
+    document.getElementById('df-out').innerHTML =
+      '<div class="sum"><b>' + esc2(tool) + '</b> ｜ ' + out.calls.length + ' 個呼叫 ｜ <b>$' +
+        out.cost_usd.toFixed(6) + '</b></div>' +
+      '<pre style="max-height:260px">' + esc2(JSON.stringify(brief, null, 1)) + '</pre>';
+    renderCost();
+    btn.disabled = false; btn.textContent = '跑該工具嘅呼叫序列';
   });
 
   /* ---------- 成本累計 ---------- */
