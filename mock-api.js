@@ -49,6 +49,16 @@
   ];
 
   /* ---------- 狀態 ---------- */
+  /* DataForSEO 實價（2026-10-25 官方回覆）*/
+  const COST = {
+    serp_standard: 0.0006,   // Standard priority 1，advanced 唔加價
+    serp_priority: 0.0012,   // Standard priority 2
+    serp_live: 0.002,
+    onpage_page: 0.00015,    // instant_pages / content_parsing 每 task
+    keyword_task: 0.06,      // Google Ads search_volume 每個 task
+    paa_click: 0.00015
+  };
+
   const state = {
     seq: 1000,
     tasks: {},                 // task_id -> {aj, status, started, result}
@@ -61,8 +71,16 @@
     log: [],
     failNext: {},              // aj -> error_code
     latency: 260,
-    autoEvents: 0
+    autoEvents: 0,
+    usage: {total_usd: 0, by_item: {}}
   };
+
+  function charge(item, units, unitUsd) {
+    const usd = units * unitUsd;
+    state.usage.total_usd += usd;
+    state.usage.by_item[item] = (state.usage.by_item[item] || 0) + usd;
+    return +usd.toFixed(6);
+  }
 
   function nextId(prefix) { state.seq += 7; return prefix + state.seq; }
   function nowIso() { return new Date().toISOString(); }
@@ -70,6 +88,8 @@
 
   /* ---------- WebSocket 前綴協議模擬 ---------- */
   const frameSubs = new Set();
+  const callSubs = new Set();
+  function onCall(fn) { callSubs.add(fn); return () => callSubs.delete(fn); }
   function emitFrame(prefix, payload) {
     state.autoEvents++;
     const frame = prefix + JSON.stringify(payload);
@@ -95,6 +115,9 @@
         created_at: nowIso()
       };
       state.docs.unshift(doc);
+      charge('serp_standard', 1, COST.serp_standard);
+      charge('onpage_page', 10, COST.onpage_page);
+      charge('keyword_task', 1, COST.keyword_task);
       const task_id = nextId('task_');
       state.tasks[task_id] = {aj: 'run', status: 'running', doc: doc.id};
       setTimeout(() => {
@@ -187,40 +210,80 @@
     },
 
     get_competitors() {
-      const n = int(3, 6);
+      const n = int(6, 10);
       const competitors = Array.from({length: n}, (_, i) => ({
+        rank_group: i + 1,
+        rank_absolute: i + 1,
+        type: i === 0 ? 'featured_snippet' : 'organic',
         url: 'https://example-' + (i + 1) + '.com/' + pick(['guide', 'review', 'how-to', 'best']),
         domain: 'example-' + (i + 1) + '.com',
-        score: int(35, 88),
+        title: pick(TITLES),
+        description: 'Competitor page snippet (mock).',
         checked: i < 3 ? 1 : 0,
-        words: int(800, 3200)
+        /* 以下三個係 DataForSEO 真實欄位名 */
+        onpage_score: int(48, 92),
+        word_count: int(800, 3200),
+        h2_count: int(5, 14),
+        h3_count: int(2, 9),
+        images_count: int(0, 12),
+        readability: {flesch_kincaid_readability_index: +(int(600, 1400) / 100).toFixed(2)}
       }));
-      return {status: 1, competitors: competitors};
+      const cost_usd = charge('serp_standard', 1, COST.serp_standard) +
+                       charge('onpage_page', n, COST.onpage_page);
+      return {status: 1, competitors: competitors,
+              meta: {engine: 'google', mode: 'standard/advanced + instant_pages', cost_usd: cost_usd}};
     },
 
     'get-serp-data'() {
+      const items = Array.from({length: 10}, (_, i) => ({
+        rank_group: i + 1,
+        rank_absolute: i + 1,
+        type: i === 0 ? 'featured_snippet' : 'organic',
+        url: 'https://serp-example-' + (i + 1) + '.com',
+        domain: 'serp-example-' + (i + 1) + '.com',
+        title: pick(TITLES),
+        description: 'SERP snippet (mock).',
+        breadcrumb: 'serp-example-' + (i + 1) + '.com › blog'
+      }));
+      const cost_usd = charge('serp_standard', 1, COST.serp_standard);
       return {
         status: 1,
         serp: {
-          items: Array.from({length: 10}, (_, i) => ({
-            position: i + 1,
-            url: 'https://serp-example-' + (i + 1) + '.com',
-            title: pick(TITLES),
-            h2: int(6, 14),
-            h3: int(2, 9),
-            words: int(1200, 3400),
-            da: int(18, 82)
-          })),
+          items: items,
+          people_also_ask: [
+            {type: 'people_also_ask', items: [
+              {title: 'SEO 工具邊隻好？', expanded_element: [{type: 'people_also_ask_element', title: '免費 SEO 工具夠唔夠用？'}]},
+              {title: '幾耐做一次 SEO audit？'}
+            ]}
+          ],
+          related_searches: ['seo tools free', 'seo tools hong kong', 'seo audit checklist'],
+          ai_overview: {present: true, items: [{type: 'ai_overview_element', text: 'AI Overview snippet (mock).'}]},
           fetched_at: nowIso()
-        }
+        },
+        meta: {engine: 'google', endpoint: 'organic/live|task_get/advanced', cost_usd: cost_usd}
       };
     },
 
     'refresh-serp'() {
       const task_id = nextId('task_');
       state.tasks[task_id] = {aj: 'refresh-serp', status: 'running'};
+      const cost_usd = charge('serp_standard', 1, COST.serp_standard);
       setTimeout(() => {
-        const result = {task_id: task_id, status: 'completed', serp: {items: Array.from({length: 10}, (_, i) => ({position: i + 1, url: 'https://fresh-' + (i + 1) + '.com', words: int(900, 3100)}))}};
+        const result = {
+          task_id: task_id,
+          status: 'completed',
+          serp: {
+            items: Array.from({length: 10}, (_, i) => ({
+              rank_group: i + 1, rank_absolute: i + 1,
+              type: 'organic',
+              url: 'https://fresh-' + (i + 1) + '.com',
+              domain: 'fresh-' + (i + 1) + '.com',
+              title: pick(TITLES)
+            })),
+            fetched_at: nowIso()
+          },
+          meta: {cost_usd: cost_usd}
+        };
         state.tasks[task_id].status = 'completed';
         state.tasks[task_id].result = result;
         emitFrame('gt:', result);
@@ -303,14 +366,16 @@
       response = HANDLERS[aj](body);
     }
 
-    state.log.push({
+    const entry = {
       at: new Date().toISOString(),
       action: aj || '(none)',
       url: url || '(no url)',
       payload: body,
       response: response,
       ms: Math.round(performance.now() - started)
-    });
+    };
+    state.log.push(entry);
+    callSubs.forEach(fn => { try { fn(entry); } catch (e) { /* ignore */ } });
     return response;
   }
 
@@ -371,16 +436,25 @@
     actions: ACTIONS,
     defaultPayloads: DEFAULT_PAYLOADS,
     onFrame: onFrame,
+    onCall: onCall,
     emitFrame: emitFrame,          // 測試用：手動推一個 pa:/pb:/gt: frame
     expect: EXPECT,
     state: state,
     log: state.log,
     reset: function () {
-      state.seq = 1000; state.tasks = {}; state.docs = []; state.log = [];
+      state.seq = 1000; state.tasks = {}; state.docs = [];
+      state.log.length = 0;   /* 唔可以重新賦值，MockAPI.log 係同一個 array 嘅引用 */
       state.credits = 100; state.failNext = {}; state.autoEvents = 0;
+      state.usage = {total_usd: 0, by_item: {}};
       rand = rng(20261025);
     },
     setLatency: function (ms) { state.latency = Math.max(0, Number(ms) || 0); },
+    costs: COST,
+    usage: function () {
+      const by = {};
+      Object.keys(state.usage.by_item).forEach(k => { by[k] = +state.usage.by_item[k].toFixed(6); });
+      return {total_usd: +state.usage.total_usd.toFixed(6), by_item: by};
+    },
     fail: function (aj, code) { state.failNext[aj] = Number(code) || 201; },
     /* 給頁面用：模擬 window.sw 契約 */
     sw: function (page) {
