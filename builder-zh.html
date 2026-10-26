@@ -171,10 +171,14 @@ footer.page-foot{max-width:1120px; margin:0 auto; padding:26px 40px 96px; color:
 .toolgrid a{display:block; text-decoration:none; color:inherit; border:1px solid var(--rule);
   border-radius:var(--r); padding:13px 14px; background:var(--paper); transition:border-color .15s, background .15s}
 .toolgrid a:hover{border-color:var(--ink-3); background:var(--card)}
-.toolgrid b{display:block; font-size:13.5px; font-weight:600; margin-bottom:4px}
-.toolgrid span{display:block; font-size:12px; color:var(--ink-2); line-height:1.55}
-.toolgrid em{display:inline-block; margin-top:8px; font-style:normal; font-family:var(--mono);
-  font-size:11px; color:var(--mark); letter-spacing:.02em}
+.toolgrid b{display:block; font-size:14px; font-weight:600; margin-bottom:5px; line-height:1.35}
+.toolgrid b .tag-en{font-family:var(--mono); font-size:10.5px; font-weight:400; color:var(--ink-3);
+  letter-spacing:.01em; margin-left:6px; white-space:nowrap}
+.toolgrid span{display:block; font-size:12.5px; color:var(--ink-2); line-height:1.65;
+  word-break:keep-all; line-break:strict; text-wrap:pretty}
+.toolgrid em{display:block; margin-top:8px; font-style:normal; font-family:var(--mono);
+  font-size:11px; color:var(--ink-2); line-height:1.55; letter-spacing:.01em}
+.toolgrid em::before{content:"EN "; color:var(--rule); letter-spacing:.06em}
 
 .native-counts{display:flex; gap:10px; flex-wrap:wrap}
 .native-counts > div{flex:1 1 120px; border:1px solid var(--rule); border-radius:var(--r);
@@ -223,14 +227,30 @@ footer.page-foot{max-width:1120px; margin:0 auto; padding:26px 40px 96px; color:
     <p class="auth-note">工具：builder / 文件：0 / 登入：示例帳戶</p>
   </div>
 
-  <!-- 原生頁頂：四張工具卡（英文描述照抄，中文並列）-->
+  <!-- 原生頁頂：四張工具卡（中文描述為主，英文原文縮細保留做對照）-->
   <section class="panel" id="tools">
     <div class="panel-head"><span class="idx">01</span><h2>可用工具</h2><span class="en">Tools</span></div>
     <ul class="toolgrid">
-      <li><a href="1-click-blog-post-zh.html"><b>1-Click Blog Post</b><span>Create and publish an article using just a keyword</span><em>一鍵發布</em></a></li>
-      <li><a href="bulk-generation-zh.html"><b>Bulk Article Generation</b><span>Generate and auto-post up to 100 articles in one click</span><em>批量生成</em></a></li>
-      <li><a href="super-page-zh.html"><b>Super Page</b><span>Create a full CTA page based on SERP</span><em>Super Page</em></a></li>
-      <li><a href="rewriter-zh.html"><b>Rewriter Tool</b><span>Rewrite with SERP insights for higher rankings</span><em>改寫工具</em></a></li>
+      <li><a href="1-click-blog-post-zh.html">
+        <b>一鍵發布部落格文章 <span class="tag-en">1-Click Blog Post</span></b>
+        <span>只需一個關鍵字，就自動生成並發布一篇完整文章 —— 標題、大綱、內文、圖片全部搞好。</span>
+        <em>Create and publish an article using just a keyword</em>
+      </a></li>
+      <li><a href="bulk-generation-zh.html">
+        <b>批量文章生成 <span class="tag-en">Bulk Article Generation</span></b>
+        <span>一次過生成並自動發布最多 100 篇文章，適合批量鋪內容、鋪地區頁。</span>
+        <em>Generate and auto-post up to 100 articles in one click</em>
+      </a></li>
+      <li><a href="super-page-zh.html">
+        <b>超級頁面 <span class="tag-en">Super Page</span></b>
+        <span>根據搜尋結果（SERP）生成一整版以行動呼籲（CTA）為主嘅落地頁。</span>
+        <em>Create a full CTA page based on SERP</em>
+      </a></li>
+      <li><a href="rewriter-zh.html">
+        <b>改寫工具 <span class="tag-en">Rewriter Tool</span></b>
+        <span>參考 SERP 數據改寫現有文章，保留原意之餘提升排名競爭力。</span>
+        <em>Rewrite with SERP insights for higher rankings</em>
+      </a></li>
     </ul>
   </section>
 
