@@ -408,7 +408,7 @@
         const avgH2 = Math.round(items.reduce((a, c) => a + c.meta.htags.h2.length, 0) / (items.length || 1));
         steps.push({ok: true, label: '競爭結構', detail: '平均 ' + avgW + ' 字 / ' + avgH2 + ' 個 H2'});
 
-        const llm = await A.providers.openrouter.chat({model: model.id, prompt: 'rewrite: ' + (text.slice(0, 120) || kw)});
+        const llm = await A.providers.openrouter.chat({model: model.label, credits: model.credits, prompt: 'rewrite: ' + (text.slice(0, 120) || kw)});
         steps.push({ok: true, label: 'OpenRouter 改寫', detail: model.label + ' · ' + llm.meta.credits + ' credits'});
 
         return {
@@ -419,7 +419,7 @@
       }
 
       steps.push({ok: true, label: 'DataForSEO 呼叫', detail: '0 次（Humanizer 純文風）'});
-      const llm = await A.providers.openrouter.chat({model: model.id, prompt: 'humanize: ' + (text.slice(0, 120) || 'text')});
+      const llm = await A.providers.openrouter.chat({model: model.label, credits: model.credits, prompt: 'humanize: ' + (text.slice(0, 120) || 'text')});
       steps.push({ok: true, label: 'OpenRouter 人性化', detail: model.label + ' · ' + llm.meta.credits + ' credits'});
       return {
         html: section('人性化結果（' + esc(model.label) + '）',

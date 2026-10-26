@@ -662,7 +662,8 @@
         {api: 'on_page', function: 'content_parsing', url: url, markdown_view: true},
         {items_count: 1, items: [{
           url: url, domain: hostOf(url),
-          page_as_markdown: '## ' + hostOf(url) + '\n\nMock article body in markdown…',
+          page_as_markdown: '## ' + hostOf(url) + '\n\n' +
+            ('Mock article body in markdown. 呢段係模擬抓取返嚟嘅正文，用嚟示範品牌聲音側寫需要足夠樣本。\n\n').repeat(20),
           page_content: {header: 'Mock header', main_topic: ['seo'], plain_text: 'Mock plain text…'}
         }]}, cost);
     },
@@ -862,7 +863,10 @@
 
       async chat(opts) {
         opts = opts || {};
-        const m = MODELS.find(x => x.id === Number(opts.model) || x.label === opts.model) || MODELS[9];
+        const m = MODELS.find(x => x.id === Number(opts.model) || x.label === opts.model)
+          || (opts.model && opts.credits
+                ? { label: String(opts.model), credits: Number(opts.credits), serp: !!opts.serp }
+                : MODELS[9]);
         const prompt = opts.prompt || '寫一篇關於 SEO 的文章';
         const withSerp = opts.serp !== undefined ? !!opts.serp : !!m.serp;
 
