@@ -463,7 +463,9 @@ footer.page-foot{max-width:1240px;margin:0 auto;padding:26px 34px 84px;color:var
       <div class="panel-head"><span class="idx">01</span><h2>模式</h2><span class="en">Mode</span></div>
       <div class="field" data-dname="mode">
         <div class="field-label">模式 <code class="field-key">mode</code></div>
-        <div class="sel" data-open="false">
+        <!-- data-value = slug：頁面 init 唔會由 .opt.is-cur 推導，冇呢個屬性 selVal('mode') 就會回 .sel-val 兩個相鄰 span
+             併成嘅「改寫Rewriter」（唔係 slug），後端只認 slug，會 400 invalid_mode。pick() 之後一樣會覆寫。 -->
+        <div class="sel" data-open="false" data-value="rewriter">
           <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>改寫</span><span class="sel-en">Rewriter</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
           <div class="sel-pop" hidden>
             <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋模式…" aria-label="搜尋模式"></div>
@@ -479,6 +481,23 @@ footer.page-foot{max-width:1240px;margin:0 auto;padding:26px 34px 84px;color:var
             <button class="btn btn-primary" type="button" id="gate-upgrade">查看升級方案</button>
             <label class="switch"><input type="checkbox" id="plan-switch" role="switch"><span>以此頁示範：Pro 方案</span></label>
           </div>
+        </div>
+        <div class="field" data-dname="model" style="margin-top:16px">
+          <div class="field-label">模型 <code class="field-key">model</code></div>
+          <!-- data-value = slug：頁面 init 唔會由 .opt.is-cur 推導，冇呢個屬性 selVal('model') 就會回顯示名，
+               後端 findModel() 只認 slug，會 400 unknown_model。pick() 之後一樣會覆寫。 -->
+          <div class="sel" data-open="false" data-value="deepseek/deepseek-v4.1-flash-1017">
+            <button class="sel-btn" type="button" aria-expanded="false"><span class="sel-val"><span>DeepSeek v4.1 Flash</span></span><svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
+            <div class="sel-pop" hidden>
+              <div class="sel-search-wrap"><input class="sel-search" type="text" placeholder="搜尋模型…" aria-label="搜尋模型"></div>
+              <ul class="sel-list">
+                <li class="opt is-cur" data-value="deepseek/deepseek-v4.1-flash-1017" aria-selected="true"><span class="opt-zh">DeepSeek v4.1 Flash</span><span class="opt-en">0.8 credit · 預設</span></li>
+                <li class="opt" data-value="moonshotai/kimi-k3.1-pro"><span class="opt-zh">Kimi K3.1 Pro</span><span class="opt-en">1.2 credits</span></li>
+                <li class="opt" data-value="minimax/minimax-m3.1-flash"><span class="opt-zh">MiniMax M3.1 Flash</span><span class="opt-en">0.6 credits</span></li>
+              </ul>
+            </div>
+          </div>
+          <p class="hint">slug 由 <code class="field-key">/api/models</code> 對照 OpenRouter；真／假供應商見抽出嚟嘅抽屜徽章。</p>
         </div>
       </div>
     </section>
@@ -1133,5 +1152,21 @@ footer.page-foot{max-width:1240px;margin:0 auto;padding:26px 34px 84px;color:var
   });
 })();
 </script>
+<!-- 真 API base：同源時用 '.'（→ /api/rewrite）。file:// 開啟就自動只用 mock。 -->
+<script>
+  /* 真 API 只喺「有後端」嘅環境啟用：本機 adapter（127.0.0.1 / localhost / :8787）或 Vercel。
+     GitHub Pages 等純靜態 host 冇 /api，留空 → 自動用 mock，唔會彈 404。 */
+  window.SW_API_BASE = window.SW_API_BASE || (function () {
+    if (location.protocol === 'file:') return '';
+    var h = location.hostname;
+    if (h === '127.0.0.1' || h === 'localhost' || location.port === '8787') return '.';
+    if (/\.vercel\.app$/.test(h)) return '.';
+    if (window.SW_API_FORCE) return '.';
+    return '';
+  })();
+</script>
+<!-- 模擬 API 層（缺失時頁面照常運作） -->
+<script src="mock-api.js"></script>
+<script src="mock-run.js"></script>
 </body>
 </html>

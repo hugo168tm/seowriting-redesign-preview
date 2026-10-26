@@ -1,0 +1,498 @@
+/*!
+ * mock-run.js — 頁面接線層
+ * 依 docs/reverse-engineering/PAGE-WIRING.md：偵測頁面 → 讀原生欄位 → 跑對應呼叫序列 → 畫結果抽屜
+ * 只依賴 mock-api.js（window.MockAPI）；缺失時靜靜唔做任何事。
+ */
+(function () {
+  'use strict';
+  const A = window.MockAPI;
+  if (!A) return;
+
+  /* ---------------- 頁面偵測 ---------------- */
+  const path = location.pathname + location.search;
+  const PAGE = /1-click|index\.html$|^\/$/.test(path) ? '1-click'
+             : /bulk-generation/.test(path) ? 'bulk'
+             : /super-page/.test(path) ? 'super-page'
+             : /rewriter/.test(path) ? 'rewriter'
+             : /brand-voice/.test(path) ? 'brand-voice'
+             : null;
+  if (!PAGE) return;
+
+  /* ---------------- 欄位讀取 ---------------- */
+  const $ = (s, r) => (r || document).querySelector(s);
+  const txt = (s) => { const e = $(s); return e ? String(e.value || '').trim() : ''; };
+
+  function selVal(name, fallback) {
+    const f = document.querySelector('[data-dname="' + name + '"]');
+    if (!f) return fallback || '';
+    const sel = f.querySelector('.sel');
+    if (sel && sel.dataset && sel.dataset.value) return sel.dataset.value;
+    const v = f.querySelector('.sel-val');
+    if (v) return v.textContent.trim().split('\n')[0];
+    const inp = f.querySelector('input');
+    if (inp && inp.value) return inp.value;
+    return fallback || '';
+  }
+
+  /* 把頁面顯示值（國家名 / 語言名）map 去 mock 嘅 location / language */
+  function locFromName(name) {
+    const locs = A.df.locations().tasks[0].result[0].items;
+    const hit = locs.find(l => l.location_name.toLowerCase() === String(name).toLowerCase());
+    return {location_code: hit ? hit.location_code : 2840, location_name: name || 'United States'};
+  }
+  function langFromName(name) {
+    const langs = A.df.languages().tasks[0].result[0].items;
+    const key = String(name || '').toLowerCase();
+    const hit = langs.find(l => l.language_name.toLowerCase() === key || key.indexOf(l.language_name.toLowerCase()) === 0);
+    return hit ? hit.language_code : 'en';
+  }
+  function modelFromQuality(v) {
+    const s = String(v || '').toLowerCase();
+    const hit = A.MODELS.find(m => s.indexOf(m.label.toLowerCase()) === 0 || s.indexOf(m.label.toLowerCase()) !== -1);
+    return hit || A.MODELS.find(m => m.id === 111);
+  }
+
+  /* 手動開關冇開就當自動（空字串）；修：原本讀 #keyword，呢頁根本冇呢個 id */
+  function manualKeyword() {
+    const field = $('[data-dname="main_keyword"]');
+    if (!field) return '';
+    const wrap = $('[data-role="manual"]', field);
+    if (!wrap || wrap.hidden) return '';
+    return txt('#inp_kw');
+  }
+
+  /* ---------------- 抽屜 UI ---------------- */
+  let drawer, body, headCost;
+  function ensureDrawer() {
+    if (drawer) return;
+    drawer = document.createElement('div');
+    drawer.id = 'mock-drawer';
+    drawer.setAttribute('role', 'dialog');
+    drawer.setAttribute('aria-label', '模擬執行結果');
+    drawer.style.cssText = [
+      'position:fixed', 'right:16px', 'bottom:16px', 'z-index:9999',
+      'width:min(560px, calc(100vw - 32px))', 'max-height:72vh', 'overflow:auto',
+      'background:var(--card,#fff)', 'color:var(--ink,#16181D)',
+      'border:1px solid var(--rule,#E3DFD6)', 'border-right:3px solid var(--mark,#9B2C2C)',
+      'border-radius:5px', 'box-shadow:0 12px 40px -18px rgba(0,0,0,.45)',
+      'font:13px/1.55 "Noto Sans TC",system-ui,sans-serif', 'display:none'
+    ].join(';');
+    drawer.innerHTML =
+      '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--rule-2,#EFEBE2)">' +
+        '<strong style="font-size:13.5px">模擬執行</strong>' +
+        '<span id="mock-cost" style="font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink-3,#767C87)">—</span>' +
+        '<span style="flex:1"></span>' +
+        '<button type="button" id="mock-close" style="border:0;background:none;font-size:16px;cursor:pointer;color:var(--ink-3,#767C87)" aria-label="關閉">×</button>' +
+      '</div><div id="mock-body" style="padding:12px"></div>';
+    document.body.appendChild(drawer);
+    body = drawer.querySelector('#mock-body');
+    headCost = drawer.querySelector('#mock-cost');
+    drawer.querySelector('#mock-close').addEventListener('click', () => { drawer.style.display = 'none'; });
+  }
+  function open() { ensureDrawer(); drawer.style.display = 'block'; }
+  function esc(x) { return String(x).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  function money(n) { return '$' + Number(n || 0).toFixed(6); }
+
+  function stepList(steps) {
+    return '<ol style="list-style:none;margin:0 0 10px;padding:0">' + steps.map(s =>
+      '<li style="display:flex;gap:8px;padding:3px 0;font-size:12.5px">' +
+        '<span style="color:' + (s.ok ? 'var(--ok,#1F6F4A)' : 'var(--mark,#9B2C2C)') + '">' + (s.ok ? '✓' : '✕') + '</span>' +
+        '<span style="min-width:150px;font-family:ui-monospace,monospace">' + esc(s.label) + '</span>' +
+        '<span style="color:var(--ink-3,#767C87);font-family:ui-monospace,monospace">' + esc(s.detail || '') + '</span>' +
+      '</li>').join('') + '</ol>';
+  }
+  function table(cols, rows) {
+    if (!rows || !rows.length) return '';
+    return '<table style="width:100%;border-collapse:collapse;font-size:11.5px;margin:6px 0 10px">' +
+      '<thead><tr>' + cols.map(c => '<th style="text-align:left;padding:4px 6px;border-bottom:1px solid var(--rule-2,#EFEBE2);font-family:ui-monospace,monospace;color:var(--ink-3,#767C87);font-weight:400">' + esc(c) + '</th>').join('') + '</tr></thead><tbody>' +
+      rows.map(r => '<tr>' + r.map((c, i) => '<td style="padding:3px 6px;border-bottom:1px dotted var(--rule-2,#EFEBE2);' + (i === 0 ? 'font-family:ui-monospace,monospace' : '') + '">' + esc(c) + '</td>').join('') + '</tr>').join('') +
+      '</tbody></table>';
+  }
+  function section(title, html) {
+    return '<div style="margin:0 0 6px"><div style="font-family:ui-monospace,monospace;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3,#767C87);margin:10px 0 3px">' + esc(title) + '</div>' + html + '</div>';
+  }
+
+  /* ---------------- 真 API（/api/rewrite）---------------- */
+  async function realRewrite(steps, mode, text) {
+    const body = {
+      mode: mode,
+      text: text,
+      lang: selVal('lang', 'English (US)'),
+      country: selVal('target_country', 'United States'),
+      keyword: manualKeyword(),
+      instructions: txt('#inp_inst'),
+      model: selVal('model', '')
+    };
+    steps.push({ok: true, label: 'POST /api/rewrite', detail: mode + ' · ' + (body.model || '預設模型')});
+
+    let res, json;
+    try {
+      res = await fetch(window.SW_API_BASE + '/api/rewrite', {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify(body)
+      });
+      json = await res.json();
+    } catch (e) {
+      steps.push({ok: false, label: '連線失敗', detail: String((e && e.message) || e)});
+      throw new Error('去唔到 ' + window.SW_API_BASE + '/api/rewrite：' + ((e && e.message) || e) +
+                      '（未開 server-local.js？冇開就設 window.SW_API_BASE = \'\' 用 mock）');
+    }
+
+    if (!json.ok) {
+      const err = json.error || {};
+      steps.push({ok: false, label: err.code || ('HTTP ' + res.status), detail: err.message || ''});
+      if (err.details && err.details.usd_spent) {
+        steps.push({ok: false, label: '已花成本', detail: money(err.details.usd_spent)});
+      }
+      throw new Error((err.message || 'API 出錯') +
+        (err.details && err.details.available ? '　可用模型：' + err.details.available.join(' / ') : ''));
+    }
+
+    const kw = json.keyword, serp = json.serp, cost = json.cost, prov = json.providers || {};
+    const ledger = json.ledger || {};
+    const badge = (v) => v === 'real'
+      ? '<span style="color:var(--ok,#1F6F4A)">真 real</span>'
+      : '<span style="color:var(--ochre,#8A6100)">模擬 mock</span>';
+
+    steps.push({ok: true, label: 'SERP', detail: (prov.serp || '?') + ' · ' + (serp ? serp.items.length + ' 條' : '跳過（humanizer）')});
+    if (kw) {
+      steps.push({ok: true, label: '主關鍵字', detail: kw.source + (kw.cached ? ' · cache 命中' : '') + ' · ' + kw.value +
+        (kw.score != null ? ' · score ' + kw.score : '')});
+    }
+    steps.push({ok: true, label: 'OpenRouter', detail: prov.llm + ' · ' + body.model + ' · ' +
+      json.result.tokens.prompt + ' + ' + json.result.tokens.completion + ' tokens'});
+    steps.push({ok: true, label: '成本', detail: money(cost.usd_total) + '（serp ' + money(cost.breakdown.serp) +
+      ' · volume ' + money(cost.breakdown.volume) + ' · difficulty ' + money(cost.breakdown.difficulty) + ' · llm ' + money(cost.breakdown.llm) + '）'});
+
+    return {
+      headerCost: 'USD ' + money(cost.usd_total) + ' · ' + String(body.model || '').split('/').pop() + ' · ' + (prov.llm || '?'),
+      footerHtml:
+        '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--rule-2,#EFEBE2);font-family:ui-monospace,monospace;font-size:11px;color:var(--ink-3,#767C87)">' +
+          '本次：USD ' + money(cost.usd_total) + '　｜　累計：USD ' + money(ledger.total_usd) +
+          (ledger.warn ? '　<span style="color:var(--mark,#9B2C2C)">※ 累計已過 $5</span>' : '') +
+          '　｜　serp ' + (prov.serp || '?') + ' / llm ' + (prov.llm || '?') + '</div>',
+      html:
+        section('主關鍵字（' + esc(kw ? kw.source + (kw.cached ? ' · cache' : '') : 'humanizer') + '）',
+          kw
+            ? table(['keyword', 'volume', 'difficulty', 'score'], (kw.candidates && kw.candidates.length ? kw.candidates : [kw])
+                .map(c => [c.keyword, c.volume == null ? '—' : c.volume, c.difficulty == null ? '—' : c.difficulty, c.score == null ? '—' : c.score])) +
+              '<div style="font-size:11.5px;font-family:ui-monospace,monospace">' +
+                (kw.cached ? 'cache 命中（今次冇打 volume / difficulty）' : '即時計算') + '</div>'
+            : '<div style="font-size:12px">Humanizer 模式唔抽關鍵字</div>') +
+        section('SERP 目標結構', serp
+          ? table(['#', 'domain', 'title'], serp.items.slice(0, 8).map(i => [i.rank_absolute, i.domain, String(i.title).slice(0, 40)])) +
+            ((serp.paa && serp.paa.length) ? '<div style="font-size:12px">' + serp.paa.map(p => '· ' + esc(p)).join('<br>') + '</div>' : '')
+          : '<div style="font-size:12px">—</div>') +
+        section('改寫結果（' + esc(body.model || '預設模型') + '）',
+          '<pre style="white-space:pre-wrap;font-size:11.5px;max-height:200px;overflow:auto;background:var(--paper-2,#F4F2EC);padding:8px">' +
+            esc(json.result.text) + '</pre>') +
+        section('供應商 / 成本明細',
+          '<div style="font-size:12px">SERP：' + badge(prov.serp) + '　LLM：' + badge(prov.llm) + '</div>' +
+          table(['項目', 'USD'], [['serp', cost.breakdown.serp], ['volume', cost.breakdown.volume],
+            ['difficulty', cost.breakdown.difficulty], ['llm', cost.breakdown.llm], ['合計', cost.usd_total]]
+            .map(r => [r[0], money(r[1])])))
+    };
+  }
+
+  /* ---------------- 各頁流程 ---------------- */
+  const runs = {
+    /* 一鍵發布 */
+    async '1-click'(steps) {
+      const kw = txt('#main_keyword') || 'seo tools';
+      const country = selVal('target_country', 'United States');
+      const langName = selVal('lang', 'English (US)');
+      const live = !!selVal('serp');
+      const loc = locFromName(country), lc = langFromName(langName);
+
+      const t0 = performance.now();
+      const serp = A.df.serp({keyword: kw, location_code: loc.location_code, language_code: lc,
+                              depth: 10, mode: live ? 'live' : 'standard'});
+      const items = serp.tasks[0].result[0].items;
+      steps.push({ok: true, label: 'SERP top 10' + (live ? ' (live)' : ' (standard)'),
+                  detail: kw + ' · ' + country + ' · ' + items.length + ' 條 · ' + (performance.now() - t0 | 0) + 'ms'});
+
+      const urls = items.slice(0, 10).map(i => i.url);
+      const op = A.df.instantPages({urls});
+      const comps = (op.tasks[0].result[0].items || []).map(it => ({
+        domain: it.domain, words: it.meta.content.plain_text_word_count,
+        h2: it.meta.htags.h2.length, h3: it.meta.htags.h3.length,
+        score: it.onpage_score
+      }));
+      steps.push({ok: op.status_code === 20000, label: 'instant_pages ×10',
+                  detail: comps.length + ' 頁 · 平均 ' + Math.round(comps.reduce((a, c) => a + c.words, 0) / (comps.length || 1)) + ' 字'});
+
+      /* AUTO 尺寸由競爭頁分佈推 */
+      const avgW = comps.length ? Math.round(comps.reduce((a, c) => a + c.words, 0) / comps.length) : 0;
+      const avgH2 = comps.length ? Math.round(comps.reduce((a, c) => a + c.h2, 0) / comps.length) : 0;
+
+      /* 關鍵字：一次過（唔可以逐篇打）*/
+      const kws = [kw].concat(serp.tasks[0].result[0].related_searches || []).slice(0, 150);
+      const vol = A.df.keywordVolume({keywords: kws, location_code: loc.location_code, language_code: lc});
+      const dif = A.labsBulkKeywordDifficulty(kws, {location_code: loc.location_code, language_code: lc});
+      steps.push({ok: true, label: 'search_volume + difficulty',
+                  detail: kws.length + ' 字（1 個 task）'});
+
+      /* 搜尋資料：同一個 SERP 回應，唔額外打 */
+      const paa = (serp.tasks[0].result[0].people_also_ask || [])[0];
+      steps.push({ok: true, label: 'PAA / related / ai_overview',
+                  detail: '同一個 SERP 回應（0 額外呼叫）'});
+
+      let yt = null;
+      if (selVal('video_quantity')) {
+        yt = A.df.youtube({keyword: kw, location_code: loc.location_code, language_code: lc}).tasks[0].result[0].items;
+        steps.push({ok: true, label: 'youtube', detail: yt.length + ' 條'});
+      }
+
+      const model = modelFromQuality(selVal('quality'));
+      const llm = await A.providers.openrouter.chat({
+        model: model.id, prompt: kw, location_code: loc.location_code, language_code: lc
+      });
+      steps.push({ok: true, label: 'OpenRouter 正文', detail: model.label + ' · ' + llm.meta.credits + ' credits · ' + llm.meta.words + ' 字'});
+
+      let img = null;
+      if (selVal('images')) {
+        img = await A.providers.kie.generate({model: 1, prompt: kw});
+        steps.push({ok: img.status === 1, label: 'kie.ai 圖片', detail: img.model + ' · ' + img.creditsConsumed + ' credits'});
+      }
+
+      return {
+        html:
+          section('AUTO 由 SERP 推導', '<div style="font-size:12.5px">字數 ≈ <b>' + avgW + '</b>　H2 ≈ <b>' + avgH2 + '</b>（原生 AUTO 顯示 2,400–3,600 字 / 9–12 H2）</div>') +
+          section('SERP top 10', table(['#', 'domain', 'title'], items.slice(0, 10).map(i => [i.rank_absolute, i.domain, String(i.title).slice(0, 42)]))) +
+          section('競爭對手（instant_pages）', table(['domain', '字數', 'H2', 'H3', '分數'], comps.map(c => [c.domain, c.words, c.h2, c.h3, c.score]))) +
+          section('關鍵字（1 個 task）', table(['keyword', 'volume', 'difficulty'],
+            (vol.tasks[0].result[0].items || []).slice(0, 8).map((v, i) => {
+              const d = (dif.tasks[0].result[0].items || [])[i];
+              return [v.keyword, v.search_volume, d ? d.keyword_difficulty : '—'];
+            }))) +
+          (paa ? section('PAA（同一個 SERP）', '<div style="font-size:12px">' + paa.items.map(x => '· ' + esc(x.title)).join('<br>') + '</div>') : '') +
+          (yt ? section('YouTube', table(['#', 'title', 'views'], yt.map(v => [v.rank_absolute, String(v.title).slice(0, 38), v.views_count]))) : '') +
+          section('正文（' + esc(model.label) + '）', '<pre style="white-space:pre-wrap;font-size:11.5px;max-height:160px;overflow:auto;background:var(--paper-2,#F4F2EC);padding:8px;border-radius:3px">' + esc(llm.choices[0].message.content.slice(0, 600)) + '</pre>') +
+          (img && img.url ? section('圖片（' + esc(img.model) + '）', '<img src="' + img.url + '" alt="mock" style="max-width:100%;border:1px solid var(--rule,#E3DFD6);border-radius:3px">') : '')
+      };
+    },
+
+    /* 批量生成 */
+    async bulk(steps) {
+      const raw = txt('#inp_kws');
+      const list = raw.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean).slice(0, 100);
+      const kws = list.length ? list : ['seo tools', 'seo hong kong'];
+      const country = selVal('target_country', 'United States');
+      const langName = selVal('lang', 'English (US)');
+      const loc = locFromName(country), lc = langFromName(langName);
+
+      if (kws.length >= 100) steps.push({ok: true, label: '上限檢查', detail: '100 篇（原生 p<100 硬上限）'});
+
+      /* SERP 逐個（demo 只跑前 3 個，其餘只計數）*/
+      const demo = kws.slice(0, 3);
+      const rows = [];
+      for (const k of demo) {
+        const r = A.df.serp({keyword: k, location_code: loc.location_code, language_code: lc, depth: 10});
+        rows.push({kw: k, items: r.tasks[0].result[0].items});
+      }
+      steps.push({ok: true, label: 'SERP × ' + demo.length + '（示範）',
+                  detail: '實際會打 ' + kws.length + ' 次（每篇 1 次）'});
+
+      /* 關鍵字量 + 難度：全部一次過 */
+      const vol = A.df.keywordVolume({keywords: kws, location_code: loc.location_code, language_code: lc});
+      const dif = A.labsBulkKeywordDifficulty(kws, {location_code: loc.location_code, language_code: lc});
+      steps.push({ok: true, label: 'search_volume（1 task）', detail: kws.length + ' 字 → 只 1 次呼叫'});
+      steps.push({ok: true, label: 'difficulty（1 次）', detail: kws.length + ' 字 → $0.012 + ' + (kws.length * 0.00012).toFixed(4)});
+
+      const firstUrls = rows[0].items.slice(0, 10).map(i => i.url);
+      const op = A.df.instantPages({urls: firstUrls});
+      steps.push({ok: op.status_code === 20000, label: 'instant_pages（第 1 個 keyword）',
+                  detail: (op.tasks[0] && op.tasks[0].result[0].items.length) + ' 頁'});
+
+      /* 預覽 1 篇文章（其餘 N-1 篇同款，唔重複計）*/
+      const model = modelFromQuality(selVal('quality'));
+      const llm = await A.providers.openrouter.chat({
+        model: model.id, prompt: kws[0], location_code: loc.location_code, language_code: lc
+      });
+      steps.push({ok: true, label: 'OpenRouter 預覽文章',
+                  detail: model.label + ' · ' + llm.meta.credits + ' credits × ' + kws.length + ' 篇'});
+
+      const perArticle = 0.0006 + 0.0015;      /* serp + 10 頁 */
+      const total = perArticle * kws.length + 0.06 + (0.012 + kws.length * 0.00012);
+      return {
+        html:
+          section('批量估算', '<div style="font-size:12.5px">' + kws.length + ' 篇 · 關鍵字呼叫 <b>2 次</b>（唔係 ' +
+            (kws.length * 2) + ' 次）· 估算 <b>' + money(total) + '</b></div>') +
+          section('示範 SERP（前 3 個 keyword）', rows.map(r =>
+            '<div style="font-size:12px;margin:4px 0"><b>' + esc(r.kw) + '</b> → ' + r.items.slice(0, 3).map(i => esc(i.domain)).join('、') + ' …</div>').join('')) +
+          section('關鍵字（1 個 task）', table(['keyword', 'volume', 'difficulty'],
+            (vol.tasks[0].result[0].items || []).slice(0, 10).map((v, i) => {
+              const d = (dif.tasks[0].result[0].items || [])[i];
+              return [v.keyword, v.search_volume, d ? d.keyword_difficulty : '—'];
+            }))) +
+          section('預覽文章（' + esc(llm.meta.seowriting_label) + '，其餘 ' + (kws.length - 1) + ' 篇同款）',
+            '<pre style="white-space:pre-wrap;font-size:11.5px;max-height:150px;overflow:auto;background:var(--paper-2,#F4F2EC);padding:8px">' +
+            esc(llm.choices[0].message.content.slice(0, 500)) + '</pre>')
+      };
+    },
+
+    /* Super Page */
+    async 'super-page'(steps) {
+      const kw = txt('#inp_hero') || 'seo tools';
+      const country = selVal('target_country', 'United States');
+      const loc = locFromName(country), lc = langFromName(selVal('lang', 'English (US)'));
+
+      const serp = A.df.serp({keyword: kw, location_code: loc.location_code, language_code: lc, depth: 10});
+      const res = serp.tasks[0].result[0];
+      steps.push({ok: true, label: 'SERP 全景', detail: res.items.length + ' 條 + PAA + related + AI Overview'});
+
+      const model = modelFromQuality(selVal('quality'));
+      const llm = await A.providers.openrouter.chat({model: model.id, prompt: kw + ' CTA page', location_code: loc.location_code});
+      steps.push({ok: true, label: 'OpenRouter 文案', detail: model.label + ' · ' + llm.meta.credits + ' credits'});
+
+      let img = null;
+      if (selVal('images')) {
+        img = await A.providers.kie.generate({model: 1, prompt: kw});
+        steps.push({ok: img.status === 1, label: 'kie.ai 圖片', detail: img.model});
+      }
+
+      return {
+        html:
+          section('SERP top 10', table(['#', 'domain', 'title'], res.items.map(i => [i.rank_absolute, i.domain, String(i.title).slice(0, 40)]))) +
+          section('PAA / related', '<div style="font-size:12px">' +
+            (res.people_also_ask || []).flatMap(g => g.items).map(x => '· ' + esc(x.title)).join('<br>') + '<br>' +
+            (res.related_searches || []).map(x => '· ' + esc(x)).join('<br>') + '</div>') +
+          section('CTA 文案（' + esc(model.label) + '）', '<pre style="white-space:pre-wrap;font-size:11.5px;max-height:150px;overflow:auto;background:var(--paper-2,#F4F2EC);padding:8px">' + esc(llm.choices[0].message.content.slice(0, 500)) + '</pre>') +
+          (img && img.url ? section('圖片', '<img src="' + img.url + '" style="max-width:100%;border:1px solid var(--rule,#E3DFD6)">') : '')
+      };
+    },
+
+    /* 改寫工具 */
+    async rewriter(steps) {
+      const mode = selVal('mode', 'rewriter');
+      const humanize = mode === 'humanizer';
+      const text = txt('#inp_text');
+
+      /* 真 API：同源 /api/rewrite（server-local.js 本機 / Vercel 上線都係同一條路） */
+      if (window.SW_API_BASE) {
+        try {
+          return await realRewrite(steps, mode, text);
+        } catch (e) {
+          /* 後端未起／404：退回本地 mock，唔好令頁面變成死路 */
+          steps.push({ok: false, label: '真 API 失敗 → 改用 mock', detail: String((e && e.message) || e).slice(0, 120)});
+          window.SW_API_BASE = '';
+        }
+      }
+
+      const kw = manualKeyword() || 'seo tools';
+      const loc = locFromName(selVal('target_country', 'United States'));
+      const lc = langFromName(selVal('lang', 'English (US)'));
+      const model = modelFromQuality(selVal('quality'));
+
+      if (!humanize) {
+        const serp = A.df.serp({keyword: kw, location_code: loc.location_code, language_code: lc, depth: 10});
+        steps.push({ok: true, label: 'SERP 目標結構', detail: 'top 10 用嚟定 H2/H3 與字數'});
+
+        const urls = serp.tasks[0].result[0].items.slice(0, 10).map(i => i.url);
+        const op = A.df.instantPages({urls});
+        const items = op.tasks[0].result[0].items || [];
+        const avgW = Math.round(items.reduce((a, c) => a + c.meta.content.plain_text_word_count, 0) / (items.length || 1));
+        const avgH2 = Math.round(items.reduce((a, c) => a + c.meta.htags.h2.length, 0) / (items.length || 1));
+        steps.push({ok: true, label: '競爭結構', detail: '平均 ' + avgW + ' 字 / ' + avgH2 + ' 個 H2'});
+
+        const llm = await A.providers.openrouter.chat({model: model.id, prompt: 'rewrite: ' + (text.slice(0, 120) || kw)});
+        steps.push({ok: true, label: 'OpenRouter 改寫', detail: model.label + ' · ' + llm.meta.credits + ' credits'});
+
+        return {
+          html: section('SERP 目標', table(['#', 'domain', '字數', 'H2'], items.slice(0, 8).map((c, i) => [
+                    i + 1, c.domain, c.meta.content.plain_text_word_count, c.meta.htags.h2.length]))) +
+                section('改寫結果（' + esc(model.label) + '）', '<pre style="white-space:pre-wrap;font-size:11.5px;max-height:170px;overflow:auto;background:var(--paper-2,#F4F2EC);padding:8px">' + esc(llm.choices[0].message.content.slice(0, 600)) + '</pre>')
+        };
+      }
+
+      steps.push({ok: true, label: 'DataForSEO 呼叫', detail: '0 次（Humanizer 純文風）'});
+      const llm = await A.providers.openrouter.chat({model: model.id, prompt: 'humanize: ' + (text.slice(0, 120) || 'text')});
+      steps.push({ok: true, label: 'OpenRouter 人性化', detail: model.label + ' · ' + llm.meta.credits + ' credits'});
+      return {
+        html: section('人性化結果（' + esc(model.label) + '）',
+          '<pre style="white-space:pre-wrap;font-size:11.5px;max-height:200px;overflow:auto;background:var(--paper-2,#F4F2EC);padding:8px">' + esc(llm.choices[0].message.content.slice(0, 700)) + '</pre>')
+      };
+    },
+
+    /* 品牌聲音 */
+    async 'brand-voice'(steps) {
+      const url = txt('#bv-url');
+      const text = txt('#bv-text');
+      let sample = text;
+
+      if (url) {
+        const parsed = A.df.contentParsing({url});
+        sample = parsed.tasks[0].result[0].items[0].page_as_markdown;
+        steps.push({ok: true, label: 'content_parsing', detail: '1 個 request（原生 Live 只收 1 task）'});
+      } else {
+        steps.push({ok: true, label: '樣本來源', detail: '貼上文字（0 個 API 呼叫）'});
+      }
+
+      if (sample.length < 1000) {
+        steps.push({ok: false, label: '樣本長度', detail: sample.length + ' 字元（最少 1,000）'});
+        return {html: section('未能側寫', '<div style="font-size:12.5px">需要最少 1,000 字元樣本；現有 ' + sample.length + '。</div>')};
+      }
+
+      const bv = await A.providers.openrouter.brandVoice({text: sample, model: 101});
+      steps.push({ok: bv.status === 1, label: 'OpenRouter 側寫', detail: bv.elements_count + ' elements · ' + bv.meta.credits + ' credits'});
+
+      return {
+        html: section('品牌聲音（' + bv.elements_count + ' / ' + bv.cap + ' elements）',
+          table(['#', 'element', '傾向', '信心'], bv.elements.map(e => [e.id, e.name, e.value, e.confidence])))
+      };
+    }
+  };
+
+  /* ---------------- 綁定按鈕 ---------------- */
+  /* 品牌聲音頁唔掛原生 #save-voice：頁面自己嘅儲存流程同 mock 同時跑會卡死，
+     改用我哋自己嘅浮動按鈕，唔影響原生行為。 */
+  function injectBrandVoiceButton() {
+    if (document.getElementById('mock-bv-btn')) return;
+    const b = document.createElement('button');
+    b.id = 'mock-bv-btn';
+    b.type = 'button';
+    b.textContent = '模擬側寫';
+    b.style.cssText = [
+      'position:fixed', 'left:16px', 'bottom:16px', 'z-index:9998',
+      'font:13px/1 "Noto Sans TC",system-ui,sans-serif', 'padding:10px 14px',
+      'border:1px solid var(--mark,#9B2C2C)', 'background:var(--mark,#9B2C2C)', 'color:#fff',
+      'border-radius:3px', 'cursor:pointer', 'box-shadow:0 6px 18px -10px rgba(0,0,0,.5)'
+    ].join(';');
+    document.body.appendChild(b);
+    b.addEventListener('click', () => trigger(b));
+    return b;
+  }
+
+  function bindRun() {
+    if (PAGE === 'brand-voice') { injectBrandVoiceButton(); return; }
+    const btn = document.querySelector('#run');
+    if (!btn) return;
+    btn.addEventListener('click', () => trigger(btn), true);   /* capture：先過我哋 */
+  }
+
+  async function trigger(btn) {
+      if (btn.disabled) return;                       /* 頁面自己擋（升級閘 / 超限）就唔跑 */
+      const before = A.usage();
+      const steps = [];
+      open();
+      body.innerHTML = '<div style="font-size:12.5px;color:var(--ink-3,#767C87)">跑緊…</div>';
+      headCost.textContent = '…';
+      try {
+        const out = await runs[PAGE](steps);
+        const after = A.usage();
+        const usd = +(after.total_usd - before.total_usd).toFixed(6);
+        const cr = +(after.credits - before.credits).toFixed(3);
+        headCost.textContent = (out && out.headerCost) ? out.headerCost : 'USD ' + money(usd) + ' · credits ' + cr;
+        body.innerHTML = stepList(steps) + out.html + ((out && out.footerHtml) ? out.footerHtml :
+          '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--rule-2,#EFEBE2);font-family:ui-monospace,monospace;font-size:11px;color:var(--ink-3,#767C87)">' +
+            '本次：USD ' + money(usd) + ' ＋ ' + cr + ' credits　｜　累計：USD ' + money(after.total_usd) + ' ＋ ' + after.credits + ' credits</div>');
+      } catch (e) {
+        headCost.textContent = '錯誤';
+        body.innerHTML = stepList(steps) + '<pre style="font-size:11.5px;color:var(--mark,#9B2C2C);white-space:pre-wrap">' + esc(e && e.message || e) + '</pre>';
+      }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindRun);
+  else bindRun();
+})();
