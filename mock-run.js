@@ -88,7 +88,19 @@
   }
 
   /* ---------------- 抽屜 UI ---------------- */
-  let drawer, body, headCost;
+  let drawer, body, headCost, headMode;
+
+  /**
+   * 抽屜標題要講真話：真 API 跑 = 「真實執行」，mock = 「模擬執行（原因）」。
+   * 之前寫死「模擬執行」，所以真 key 跑完都仲顯示模擬，睇落好似冇接線。
+   */
+  function setDrawerMode(real, note) {
+    headMode = headMode || (drawer && drawer.querySelector('#mock-mode'));
+    if (!headMode) return;
+    headMode.textContent = real ? '真實執行' : ('模擬執行' + (note ? '（' + note + '）' : ''));
+    headMode.style.color = real ? 'var(--ink,#16181D)' : 'var(--ink-3,#767C87)';
+    drawer.setAttribute('aria-label', real ? '真實執行結果' : '模擬執行結果');
+  }
   function ensureDrawer() {
     if (drawer) return;
     drawer = document.createElement('div');
@@ -105,7 +117,7 @@
     ].join(';');
     drawer.innerHTML =
       '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--rule-2,#EFEBE2)">' +
-        '<strong style="font-size:13.5px">模擬執行</strong>' +
+        '<strong id="mock-mode" style="font-size:13.5px">模擬執行</strong>' +
         '<span id="mock-cost" style="font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink-3,#767C87)">—</span>' +
         '<span style="flex:1"></span>' +
         '<button type="button" id="mock-close" style="border:0;background:none;font-size:16px;cursor:pointer;color:var(--ink-3,#767C87)" aria-label="關閉">×</button>' +
@@ -757,11 +769,14 @@
       /* 真 API：同源 /api/rewrite（server-local.js 本機 / Vercel 上線都係同一條路） */
       if (window.SW_API_BASE) {
         try {
-          return await realRewrite(steps, mode, text);
+          const out = await realRewrite(steps, mode, text);
+          setDrawerMode(true, '');
+          return out;
         } catch (e) {
-          /* 後端未起／404：退回本地 mock，唔好令頁面變成死路 */
-          steps.push({ok: false, label: '真 API 失敗 → 改用 mock', detail: String((e && e.message) || e).slice(0, 120)});
-          window.SW_API_BASE = '';
+          /* 後端連唔上：今次先退 mock，但**唔清** SW_API_BASE —— 下次再按會再試真 API。
+             （之前清咗就變永久 mock，令頁面之後一直顯示「模擬執行」。） */
+          steps.push({ok: false, label: '真 API 失敗 → 今次改用模擬', detail: String((e && e.message) || e).slice(0, 120)});
+          setDrawerMode(false, '後端連唔上');
         }
       }
 
@@ -863,6 +878,7 @@
       const before = A.usage();
       const steps = [];
       open();
+      setDrawerMode(false, '');
       body.innerHTML = '<div style="font-size:12.5px;color:var(--ink-3,#767C87)">跑緊…</div>';
       headCost.textContent = '…';
       try {
