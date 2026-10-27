@@ -897,6 +897,24 @@
       }
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindRun);
-  else bindRun();
+  /* 靜態 host（GitHub Pages 等）冇後端 → 一開頁就講清楚，免得用戶以為「按咗但冇反應」。 */
+  function showStaticBanner() {
+    if (window.SW_API_BASE) return;
+    if (document.getElementById('static-note')) return;
+    const el = document.createElement('div');
+    el.id = 'static-note';
+    el.style.cssText = 'position:fixed;left:16px;bottom:16px;z-index:9998;max-width:min(420px,calc(100vw - 32px));' +
+      'padding:8px 10px;border:1px solid var(--rule,#E3DFD6);border-left:3px solid var(--ochre,#8A6100);' +
+      'background:var(--card,#fff);color:var(--ink-2,#3A3F47);font:12px/1.5 "Noto Sans TC",system-ui,sans-serif;border-radius:4px';
+    el.innerHTML = '<strong>靜態預覽</strong>：呢頁冇後端，所以執行結果係模擬。' +
+      '要跑真 API 請用本機 adapter（127.0.0.1:8787）或 Vercel 部署。';
+    document.body.appendChild(el);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => { bindRun(); showStaticBanner(); });
+  } else {
+    bindRun();
+    showStaticBanner();
+  }
 })();
