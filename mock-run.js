@@ -203,15 +203,27 @@
 
   /* 建立（或用 sessionStorage 沿用）job，再 poll 到 done/error；回 result */
   async function realRewrite(steps, mode, text) {
-    const body = {
-      mode: mode,
-      text: text,
-      lang: selVal('lang', 'English (US)'),
-      country: selVal('target_country', 'United States'),
-      keyword: manualKeyword(),
-      instructions: txt('#inp_inst'),
-      model: selVal('model', '')
-    };
+    /* 原生 humanize payload = {text, lang, rm_words, readability}：冇 keyword、冇 instructions。
+       rewrite 才有 main_keyword / instructions。 */
+    const body = mode === 'humanizer'
+      ? {
+          mode,
+          text,
+          lang: selVal('lang', 'English (US)'),
+          country: selVal('target_country', 'United States'),
+          model: selVal('model', ''),
+          readability: Number(window.SW_READABILITY) || 4,
+          rm_words: String(window.SW_RM_WORDS || '')
+        }
+      : {
+          mode,
+          text,
+          lang: selVal('lang', 'English (US)'),
+          country: selVal('target_country', 'United States'),
+          keyword: manualKeyword(),
+          instructions: txt('#inp_inst'),
+          model: selVal('model', '')
+        };
 
     let jobId = readJobId();
     if (jobId) {
