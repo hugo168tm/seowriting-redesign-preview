@@ -410,6 +410,23 @@ footer.page-foot{max-width:1240px;margin:0 auto;padding:26px 34px 84px;color:var
   .tools::-webkit-scrollbar{display:none}
   .tools a, .tools .tool{flex:0 0 auto; white-space:nowrap}
 }
+
+/* ── 版本比較（ADR-11）────────────────────────────────────────
+   390px 保證：所有容器 min-width:0 + flex-wrap:wrap，長句 overflow-wrap:anywhere
+   強制換行，所以 drawer（width:min(560px, 100vw-32px)）內唔會出現橫向滾動；
+   並排只喺 ≥900px 出現（預設 flex:1 1 100% = 單欄堆疊）。 */
+#mock-drawer .v-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0;margin:0 0 4px;padding:5px 6px;border:1px solid var(--rule-2,#EFEBE2);border-radius:3px}
+#mock-drawer .v-name{flex:1 1 96px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#mock-drawer .v-meta{flex:0 0 auto;font-family:ui-monospace,monospace;font-size:11px;color:var(--ink-3,#767C87)}
+#mock-drawer .v-badge{flex:0 0 auto;font-size:11px;padding:1px 6px;border-radius:2px;border:1px solid var(--rule,#E3DFD6)}
+#mock-drawer .v-btn{flex:0 0 auto;font:11.5px/1.4 "Noto Sans TC",system-ui,sans-serif;padding:3px 7px;border:1px solid var(--rule,#E3DFD6);background:var(--card,#fff);color:var(--ink,#16181D);border-radius:3px;cursor:pointer}
+#mock-drawer .v-btn[aria-pressed="true"]{border-color:var(--mark,#9B2C2C);color:var(--mark,#9B2C2C)}
+#mock-drawer .v-diff{display:flex;flex-wrap:wrap;gap:8px;min-width:0;margin-top:6px}
+#mock-drawer .v-side{flex:1 1 100%;min-width:0;overflow-wrap:anywhere;word-break:break-word;font-size:12px;line-height:1.6;background:var(--paper-2,#F4F2EC);padding:8px;border-radius:3px;max-height:220px;overflow-y:auto}
+@media (min-width:900px){#mock-drawer .v-side{flex:1 1 0}}
+#mock-drawer ins{background:#E7F3EA;text-decoration:none}
+#mock-drawer del{background:#F7E7E7;text-decoration:line-through}
+#mock-drawer mark{background:#F6EFD9}
 </style>
 </head>
 <body>
@@ -1181,6 +1198,8 @@ footer.page-foot{max-width:1240px;margin:0 auto;padding:26px 34px 84px;color:var
 </script>
 <!-- 模擬 API 層（缺失時頁面照常運作） -->
 <script src="mock-api.js"></script>
+<!-- 句子級 diff（版本比較用）：一定要喺 mock-run.js 之前，renderVersions() 先攞到 window.SWDiff -->
+<script src="diff.js"></script>
 <script src="mock-run.js"></script>
 </body>
 </html>

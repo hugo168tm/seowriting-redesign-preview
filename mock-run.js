@@ -114,8 +114,22 @@
     body = drawer.querySelector('#mock-body');
     headCost = drawer.querySelector('#mock-cost');
     drawer.querySelector('#mock-close').addEventListener('click', () => { drawer.style.display = 'none'; });
+    /* a11y（ADR-11）：抽屜係 role="dialog" → 要 focus trap（Tab 唔可以走出抽屜）＋ ESC 關 */
+    drawer.tabIndex = -1;
+    drawer.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      const f = drawer.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (!f.length) return;
+      const first = f[0];
+      const last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && drawer.style.display === 'block') drawer.style.display = 'none';
+    });
   }
-  function open() { ensureDrawer(); drawer.style.display = 'block'; }
+  function open() { ensureDrawer(); drawer.style.display = 'block'; try { drawer.focus(); } catch (_) {} }
   function esc(x) { return String(x).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
   function money(n) { return '$' + Number(n || 0).toFixed(6); }
 
@@ -136,6 +150,183 @@
   }
   function section(title, html) {
     return '<div style="margin:0 0 6px"><div style="font-family:ui-monospace,monospace;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3,#767C87);margin:10px 0 3px">' + esc(title) + '</div>' + html + '</div>';
+  }
+
+  /* ---------------- 版本比較（ADR-11）---------------- */
+  const VERDICT_LABEL = { pending: '待決定', approved: '已採用', rejected: '已拒絕', superseded: '已被取代' };
+  const VERDICT_COLOR = { pending: 'var(--ink-3,#767C87)', approved: 'var(--ok,#1F6F4A)', rejected: 'var(--mark,#9B2C2C)', superseded: 'var(--ink-3,#767C87)' };
+  let currentJobId = '';
+  let currentVersions = [];
+  let selectedVersionId = '';
+  let showFull = false;
+  let versionError = '';
+
+  function stamp(iso) {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(11, 16);
+  }
+  function verdictOf(v) {
+    const x = v && v.verdict;
+    return ['pending', 'approved', 'rejected', 'superseded'].includes(x) ? x : 'pending';
+  }
+  function versionText(v) { return (v && v.result && typeof v.result.text === 'string') ? v.result.text : ''; }
+
+  /* A = 最新 approved（冇就最新版本嘅前一個）；B = 揀選嘅（冇就最新版本） */
+  function pairAB() {
+    const list = currentVersions;
+    if (list.length < 2) return null;
+    const latest = list[list.length - 1];
+    let a = null;
+    for (let i = list.length - 1; i >= 0; i -= 1) { if (verdictOf(list[i]) === 'approved') { a = list[i]; break; } }
+    if (!a) a = list[list.length - 2];
+    const picked = list.find((v) => v.id === selectedVersionId);
+    const b = picked && a && picked.id !== a.id ? picked : (latest.id === a.id ? a : latest);
+    return { a, b: b || latest };
+  }
+
+  function starRow(v) {
+    let out = '';
+    for (let s = 1; s <= 5; s += 1) {
+      const on = v.score === s;
+      out += '<button type="button" class="v-btn" data-act="score" data-vid="' + esc(v.id) + '" data-score="' + s +
+             '" aria-pressed="' + (on ? 'true' : 'false') + '" aria-label="' + s + ' 星">' + (on ? '★' : '☆') + '</button>';
+    }
+    return '<span role="group" aria-label="評分" style="display:inline-flex;gap:2px">' + out + '</span>';
+  }
+
+  function versionRow(v) {
+    const vd = verdictOf(v);
+    const picked = v.id === selectedVersionId;
+    return '<li class="v-row" data-vid="' + esc(v.id) + '">' +
+      '<button type="button" class="v-btn" data-act="select" data-vid="' + esc(v.id) + '" aria-pressed="' +
+        (picked ? 'true' : 'false') + '">#' + esc(v.n == null ? '—' : v.n) + '</button>' +
+      '<span class="v-name" title="' + esc(v.model_key || '') + '">' + esc(v.model_key || '（未指定模型）') + '</span>' +
+      '<span class="v-meta">' + esc(v.words == null ? '—' : v.words) + ' 字 · USD ' + money(v.cost && v.cost.usd_total) +
+        (v.created_at ? ' · ' + esc(stamp(v.created_at)) : '') + '</span>' +
+      '<span class="v-badge" style="color:' + VERDICT_COLOR[vd] + '">' + esc(VERDICT_LABEL[vd]) + '</span>' +
+      (vd === 'pending'
+        ? '<button type="button" class="v-btn" data-act="approve" data-vid="' + esc(v.id) + '" aria-pressed="false">批准</button>' +
+          '<button type="button" class="v-btn" data-act="reject" data-vid="' + esc(v.id) + '" aria-pressed="false">拒絕</button>'
+        : '') +
+      starRow(v) +
+      '</li>';
+  }
+
+  function diffPanel() {
+    const pair = pairAB();
+    if (!pair) return '<div class="v-side">至少兩個版本先可以比較。</div>';
+    const Diff = window.SWDiff;
+    if (!Diff || typeof Diff.diffSentences !== 'function') {
+      return '<div class="v-side">diff 模組未載入（ui/diff.js）。</div>';
+    }
+    const ops = Diff.diffSentences(versionText(pair.a), versionText(pair.b));
+    const left = [];
+    const right = [];
+    let changed = 0;
+    for (const op of ops) {
+      if (op.type === 'del') { left.push('<del>' + esc(op.text) + '</del>'); changed += 1; }
+      else if (op.type === 'add') { right.push('<ins>' + esc(op.text) + '</ins>'); changed += 1; }
+      else if (op.type === 'sub') {
+        left.push('<del>' + esc(op.before || '') + '</del>');
+        right.push('<mark>' + esc(op.text) + '</mark>');
+        changed += 1;
+      } else if (showFull) { left.push(esc(op.text)); right.push(esc(op.text)); }
+    }
+    const head = '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0">' +
+      '<span class="v-meta">A #' + esc(pair.a.n == null ? '—' : pair.a.n) + ' ' + esc(pair.a.model_key || '') + '</span>' +
+      '<span class="v-meta">B #' + esc(pair.b.n == null ? '—' : pair.b.n) + ' ' + esc(pair.b.model_key || '') + '</span>' +
+      '<button type="button" class="v-btn" data-act="toggle-full" aria-pressed="' + (showFull ? 'true' : 'false') + '">全文</button>' +
+      '<span class="v-meta">' + changed + ' 句有差異</span></div>';
+    return head + '<div class="v-diff">' +
+      '<div class="v-side">' + (left.join(' ') || '（無）') + '</div>' +
+      '<div class="v-side">' + (right.join(' ') || '（無）') + '</div>' +
+      '</div>';
+  }
+
+  function versionInner() {
+    const rows = currentVersions.slice().reverse();   /* 新 → 舊（ADR-11） */
+    return '<div style="font-family:ui-monospace,monospace;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3,#767C87);margin:10px 0 3px">' +
+        '版本（' + currentVersions.length + '）</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 6px">' +
+        '<button type="button" class="v-btn" data-act="rerun">再改寫（同一個 job）</button>' +
+        (versionError ? '<span class="v-meta" style="color:var(--mark,#9B2C2C)">' + esc(versionError) + '</span>' : '') +
+      '</div>' +
+      '<ul style="list-style:none;margin:0 0 8px;padding:0">' + (rows.map(versionRow).join('') || '<li class="v-row">（冇版本）</li>') + '</ul>' +
+      diffPanel();
+  }
+
+  function versionSection() {
+    return '<div id="mock-versions" style="margin-top:12px;border-top:1px solid var(--rule-2,#EFEBE2);padding-top:8px">' +
+      versionInner() + '</div>';
+  }
+  function renderVersions() {
+    const el = document.getElementById('mock-versions');
+    if (el) el.innerHTML = versionInner();
+  }
+
+  /* 版本操作：approve / reject / score 一律經 POST /api/version（ADR-1） */
+  async function versionAction(payload) {
+    versionError = '';
+    try {
+      const res = await fetch(window.SW_API_BASE + '/api/version', {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!json.ok) {
+        const err = json.error || {};
+        versionError = (err.message || '版本操作失敗') + (err.code ? '（' + err.code + '）' : '');
+      } else {
+        currentVersions = json.versions || [];
+      }
+    } catch (e) {
+      versionError = String((e && e.message) || e);
+    }
+    renderVersions();
+  }
+
+  function onVersionClick(e) {
+    const btn = e.target && e.target.closest ? e.target.closest('button[data-act]') : null;
+    if (!btn) return;
+    const act = btn.dataset.act;
+    const vid = btn.dataset.vid;
+    if (act === 'select') { selectedVersionId = selectedVersionId === vid ? '' : vid; renderVersions(); return; }
+    if (act === 'toggle-full') { showFull = !showFull; renderVersions(); return; }
+    if (act === 'rerun') { rerun(); return; }
+    if (act === 'approve' || act === 'reject') { versionAction({job_id: currentJobId, version_id: vid, action: act}); return; }
+    if (act === 'score') {
+      const hit = currentVersions.find((v) => v.id === vid);
+      versionAction({job_id: currentJobId, version_id: vid, action: 'score',
+                     score: Number(btn.dataset.score), words: hit ? hit.words : undefined});
+    }
+  }
+
+  function bindVersionEvents() {
+    const el = document.getElementById('mock-versions');
+    if (!el || el.dataset.bound === '1') return;
+    el.dataset.bound = '1';
+    el.addEventListener('click', onVersionClick);
+  }
+
+  /* 再改寫（ADR-3 / ADR-9）：帶住同一個 job_id 再跑，後端會先 reject 舊 pending */
+  async function rerun() {
+    const mode = selVal('mode', 'rewriter');
+    const text = txt('#inp_text');
+    const steps = [];
+    open();
+    body.innerHTML = '<div style="font-size:12.5px;color:var(--ink-3,#767C87)">跑緊…</div>';
+    headCost.textContent = '…';
+    try {
+      const out = await realRewrite(steps, mode, text, currentJobId);
+      headCost.textContent = out.headerCost || '';
+      body.innerHTML = stepList(steps) + out.html + (out.footerHtml || '');
+    } catch (e) {
+      headCost.textContent = '錯誤';
+      body.innerHTML = stepList(steps) + '<pre style="font-size:11.5px;color:var(--mark,#9B2C2C);white-space:pre-wrap">' +
+        esc((e && e.message) || e) + '</pre>';
+    }
+    bindVersionEvents();
   }
 
   /* ---------------- 真 API（/api/rewrite，async job mode）---------------- */
@@ -201,8 +392,9 @@
     };
   }
 
-  /* 建立（或用 sessionStorage 沿用）job，再 poll 到 done/error；回 result */
-  async function realRewrite(steps, mode, text) {
+  /* 建立（或用 sessionStorage 沿用）job，再 poll 到 done/error；回 result
+     reuseJobId：再改寫（ADR-3）—— 同一個 job 再跑，後端會先 reject 舊 pending 版本 */
+  async function realRewrite(steps, mode, text, reuseJobId) {
     /* 原生 humanize payload = {text, lang, rm_words, readability}：冇 keyword、冇 instructions。
        rewrite 才有 main_keyword / instructions。 */
     const body = mode === 'humanizer'
@@ -225,7 +417,9 @@
           model: selVal('model', '')
         };
 
-    let jobId = readJobId();
+    if (reuseJobId) body.job_id = reuseJobId;   /* ADR-3：同一個 job 再改寫 */
+
+    let jobId = reuseJobId ? '' : readJobId();
     if (jobId) {
       steps.push({ok: true, label: '重新接駁任務', detail: 'job ' + jobId.slice(0, 8) + '…（reload 後自動續）'});
     } else {
@@ -317,14 +511,35 @@
         throw new Error(msg);
       }
       if (json.status === 'done') {
-        clearJobId();                          /* 完成 → 唔再續 */
+        /* 保留 job_id：版本對比要 reload 之後都睇得返（唔再 poll，只 render）。
+           只有取消／逾時／job 失效／任務出錯才清。 */
+        saveJobId(jobId);
+        currentJobId = jobId;
+        currentVersions = Array.isArray(json.versions) ? json.versions : [];
+        selectedVersionId = '';
+        versionError = '';
         const rb = json.result || {};
         const cost = rb.cost || {};
         steps.push({ok: true, label: '完成', detail: 'USD ' + money(cost.usd_total) + ' · ' +
           ((rb.result && rb.result.text) ? rb.result.text.length + ' 字' : '')});
-        return buildResultFromBody(rb, body);
+        const out = buildResultFromBody(rb, body);
+        out.html += versionSection();
+        prefillInputFromVersion(currentVersions);
+        return out;
       }
     }
+  }
+
+  /* 版本鏈：reload 之後 textarea 係空，令「再改寫」即刻 400 text_missing。
+     所以 render 完如果輸入框空，就用最新版本嘅正文填返（等於「接住上一版繼續改」）。 */
+  function prefillInputFromVersion(versions) {
+    const t = document.querySelector('#inp_text');
+    if (!t || String(t.value || '').trim()) return;
+    const latest = (versions || [])[(versions || []).length - 1];
+    const text = latest && latest.result && latest.result.text;
+    if (!text) return;
+    t.value = text;
+    t.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
   /* reload 自動續：sessionStorage 仲有 active job_id 就重新 poll */
@@ -332,13 +547,32 @@
     const id = readJobId();
     if (!id) return;
     const steps = [];
-    steps.push({ok: true, label: '重新接駁任務', detail: 'job ' + id.slice(0, 8) + '…'});
     open();
     headCost.textContent = '…';
     try {
+      /* 已完成嘅 job：唔再 poll（會多 1.5s），直接攞結果 + 版本鏈 */
+      const probe = await fetch(window.SW_API_BASE + '/api/result?id=' + encodeURIComponent(id));
+      const pj = await probe.json().catch(() => null);
+      if (pj && pj.ok && pj.status === 'done') {
+        currentJobId = id;
+        currentVersions = Array.isArray(pj.versions) ? pj.versions : [];
+        selectedVersionId = '';
+        versionError = '';
+        const rb = pj.result || {};
+        const out = buildResultFromBody(rb, body);
+        out.html += versionSection();
+        steps.push({ok: true, label: '已完成任務', detail: 'job ' + id.slice(0, 8) + ' · ' + currentVersions.length + ' 個版本'});
+        body.innerHTML = stepList(steps) + out.html + (out.footerHtml || '');
+        headCost.textContent = out.headerCost || '';
+        bindVersionEvents();
+        prefillInputFromVersion(currentVersions);
+        return;
+      }
+      steps.push({ok: true, label: '重新接駁任務', detail: 'job ' + id.slice(0, 8) + '…'});
       const out = await pollToDone(steps, {}, id);
       body.innerHTML = stepList(steps) + out.html + (out.footerHtml || '');
       headCost.textContent = out.headerCost || '';
+      bindVersionEvents();
     } catch (e) {
       steps.push({ok: false, label: '重駁失敗', detail: String((e && e.message) || e)});
       headCost.textContent = '錯誤';
@@ -640,6 +874,7 @@
         body.innerHTML = stepList(steps) + out.html + ((out && out.footerHtml) ? out.footerHtml :
           '<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--rule-2,#EFEBE2);font-family:ui-monospace,monospace;font-size:11px;color:var(--ink-3,#767C87)">' +
             '本次：USD ' + money(usd) + ' ＋ ' + cr + ' credits　｜　累計：USD ' + money(after.total_usd) + ' ＋ ' + after.credits + ' credits</div>');
+        bindVersionEvents();
       } catch (e) {
         headCost.textContent = '錯誤';
         body.innerHTML = stepList(steps) + '<pre style="font-size:11.5px;color:var(--mark,#9B2C2C);white-space:pre-wrap">' + esc(e && e.message || e) + '</pre>';
