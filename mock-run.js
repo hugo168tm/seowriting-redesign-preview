@@ -138,59 +138,39 @@
     return '<div style="margin:0 0 6px"><div style="font-family:ui-monospace,monospace;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3,#767C87);margin:10px 0 3px">' + esc(title) + '</div>' + html + '</div>';
   }
 
-  /* ---------------- 真 API（/api/rewrite）---------------- */
-  async function realRewrite(steps, mode, text) {
-    const body = {
-      mode: mode,
-      text: text,
-      lang: selVal('lang', 'English (US)'),
-      country: selVal('target_country', 'United States'),
-      keyword: manualKeyword(),
-      instructions: txt('#inp_inst'),
-      model: selVal('model', '')
-    };
-    steps.push({ok: true, label: 'POST /api/rewrite', detail: mode + ' · ' + (body.model || '預設模型')});
+  /* ---------------- 真 API（/api/rewrite，async job mode）---------------- */
+  const JOB_KEY = 'sw:rewrite:job';
+  const JOB_POLL_MS = 1500;
+  const JOB_MAX_MS = 10 * 60 * 1000;
+  let cancelJob = null;                        /* poll 期間 set；取消時叫 */
 
-    let res, json;
-    try {
-      res = await fetch(window.SW_API_BASE + '/api/rewrite', {
-        method: 'POST',
-        headers: {'content-type': 'application/json'},
-        body: JSON.stringify(body)
-      });
-      json = await res.json();
-    } catch (e) {
-      steps.push({ok: false, label: '連線失敗', detail: String((e && e.message) || e)});
-      throw new Error('去唔到 ' + window.SW_API_BASE + '/api/rewrite：' + ((e && e.message) || e) +
-                      '（未開 server-local.js？冇開就設 window.SW_API_BASE = \'\' 用 mock）');
-    }
+  function saveJobId(id) { try { sessionStorage.setItem(JOB_KEY, id); } catch (_) {} }
+  function clearJobId() { try { sessionStorage.removeItem(JOB_KEY); } catch (_) {} }
+  function readJobId() { try { return sessionStorage.getItem(JOB_KEY) || ''; } catch (_) { return ''; } }
 
-    if (!json.ok) {
-      const err = json.error || {};
-      steps.push({ok: false, label: err.code || ('HTTP ' + res.status), detail: err.message || ''});
-      if (err.details && err.details.usd_spent) {
-        steps.push({ok: false, label: '已花成本', detail: money(err.details.usd_spent)});
-      }
-      throw new Error((err.message || 'API 出錯') +
-        (err.details && err.details.available ? '　可用模型：' + err.details.available.join(' / ') : ''));
-    }
+  /* server step 嘅 detail 可能係物件 → 攤平成字串 */
+  function jobDetail(s) {
+    const d = s && s.detail;
+    if (d == null) return '';
+    if (typeof d === 'string') return d;
+    try { return JSON.stringify(d); } catch (_) { return ''; }
+  }
 
+  /* 將目前 server steps 畫落抽屜＋加「取消」掣（停 poll，唔取消後端） */
+  function renderProgress(steps) {
+    const btn = '<button type="button" id="mock-cancel" style="margin-top:8px;padding:6px 10px;font:12.5px/1 \'Noto Sans TC\',system-ui,sans-serif;border:1px solid var(--rule,#E3DFD6);background:var(--card,#fff);color:var(--ink,#16181D);border-radius:3px;cursor:pointer">取消（停咗輪詢，記錄保留）</button>';
+    body.innerHTML = stepList(steps) + '<div style="font-size:12px;color:var(--ink-3,#767C87)">處理緊…</div>' + btn;
+    const b = document.getElementById('mock-cancel');
+    if (b) b.addEventListener('click', () => { if (cancelJob) cancelJob(); });
+  }
+
+  /* 由 done job 嘅 result body 砌回同一 shape 嘅 {headerCost, footerHtml, html} */
+  function buildResultFromBody(json, body) {
     const kw = json.keyword, serp = json.serp, cost = json.cost, prov = json.providers || {};
     const ledger = json.ledger || {};
     const badge = (v) => v === 'real'
       ? '<span style="color:var(--ok,#1F6F4A)">真 real</span>'
       : '<span style="color:var(--ochre,#8A6100)">模擬 mock</span>';
-
-    steps.push({ok: true, label: 'SERP', detail: (prov.serp || '?') + ' · ' + (serp ? serp.items.length + ' 條' : '跳過（humanizer）')});
-    if (kw) {
-      steps.push({ok: true, label: '主關鍵字', detail: kw.source + (kw.cached ? ' · cache 命中' : '') + ' · ' + kw.value +
-        (kw.score != null ? ' · score ' + kw.score : '')});
-    }
-    steps.push({ok: true, label: 'OpenRouter', detail: prov.llm + ' · ' + body.model + ' · ' +
-      json.result.tokens.prompt + ' + ' + json.result.tokens.completion + ' tokens'});
-    steps.push({ok: true, label: '成本', detail: money(cost.usd_total) + '（serp ' + money(cost.breakdown.serp) +
-      ' · volume ' + money(cost.breakdown.volume) + ' · difficulty ' + money(cost.breakdown.difficulty) + ' · llm ' + money(cost.breakdown.llm) + '）'});
-
     return {
       headerCost: 'USD ' + money(cost.usd_total) + ' · ' + String(body.model || '').split('/').pop() + ' · ' + (prov.llm || '?'),
       footerHtml:
@@ -219,6 +199,139 @@
             ['difficulty', cost.breakdown.difficulty], ['llm', cost.breakdown.llm], ['合計', cost.usd_total]]
             .map(r => [r[0], money(r[1])])))
     };
+  }
+
+  /* 建立（或用 sessionStorage 沿用）job，再 poll 到 done/error；回 result */
+  async function realRewrite(steps, mode, text) {
+    const body = {
+      mode: mode,
+      text: text,
+      lang: selVal('lang', 'English (US)'),
+      country: selVal('target_country', 'United States'),
+      keyword: manualKeyword(),
+      instructions: txt('#inp_inst'),
+      model: selVal('model', '')
+    };
+
+    let jobId = readJobId();
+    if (jobId) {
+      steps.push({ok: true, label: '重新接駁任務', detail: 'job ' + jobId.slice(0, 8) + '…（reload 後自動續）'});
+    } else {
+      steps.push({ok: true, label: 'POST /api/rewrite', detail: mode + ' · ' + (body.model || '預設模型')});
+      let res, json;
+      try {
+        res = await fetch(window.SW_API_BASE + '/api/rewrite', {
+          method: 'POST',
+          headers: {'content-type': 'application/json'},
+          body: JSON.stringify(body)
+        });
+        json = await res.json();
+      } catch (e) {
+        steps.push({ok: false, label: '連線失敗', detail: String((e && e.message) || e)});
+        throw new Error('去唔到 ' + window.SW_API_BASE + '/api/rewrite：' + ((e && e.message) || e) +
+                        '（未開 server-local.js？冇開就設 window.SW_API_BASE = \'\' 用 mock）');
+      }
+      if (!json.ok) {
+        if (json.error && json.error.code === 'already_running' && json.error.details && json.error.details.existing_job_id) {
+          jobId = json.error.details.existing_job_id;
+          steps.push({ok: true, label: '沿用進行中任務', detail: (json.error.message || '') + ' · job ' + jobId.slice(0, 8) + '…'});
+        } else {
+          const err = json.error || {};
+          steps.push({ok: false, label: err.code || ('HTTP ' + res.status), detail: err.message || ''});
+          if (err.details && err.details.usd_spent) {
+            steps.push({ok: false, label: '已花成本', detail: money(err.details.usd_spent)});
+          }
+          throw new Error((err.message || 'API 出錯') +
+            (err.details && err.details.available ? '　可用模型：' + err.details.available.join(' / ') : ''));
+        }
+      } else {
+        jobId = json.job_id || '';
+      }
+    }
+    if (!jobId) throw new Error('API 冇回 job_id');
+    saveJobId(jobId);
+
+    return await pollToDone(steps, body, jobId);
+  }
+
+  /* 1.5s poll /api/result，逐步畫 steps；完成先砌 result、error 就 throw */
+  async function pollToDone(steps, body, jobId) {
+    const started = Date.now();
+    let canceled = false;
+    cancelJob = () => {
+      canceled = true;
+      clearJobId();
+    };
+    renderProgress([...steps]);
+
+    while (true) {
+      if (canceled) throw new Error('已取消');
+      if (Date.now() - started > JOB_MAX_MS) {
+        clearJobId();
+        throw new Error('等待逾時（10 分鐘），請稍後再試或重新提交');
+      }
+      await new Promise((r) => setTimeout(r, JOB_POLL_MS));
+
+      let json;
+      try {
+        const r = await fetch(window.SW_API_BASE + '/api/result?id=' + encodeURIComponent(jobId));
+        json = await r.json();
+      } catch (e) {
+        steps.push({ok: false, label: '輪詢失敗', detail: String((e && e.message) || e)});
+        continue;                              /* 瞬時錯 → 下一 round 再試 */
+      }
+      if (!json || !json.ok) {
+        const code = json && json.error && json.error.code;
+        if (code === 'job_not_found' || code === 'job_expired') {
+          clearJobId();
+          steps.push({ok: false, label: code || 'job 失效', detail: (json.error && json.error.message) || ''});
+          throw new Error((json.error && json.error.message) || '任務已失效，請重新提交');
+        }
+        continue;
+      }
+
+      const prog = (json.steps || []).map((s) => ({ ok: s.ok !== false, label: s.label, detail: jobDetail(s) }));
+      steps.length = 0;
+      steps.push(...prog);
+      renderProgress(steps);
+
+      if (json.status === 'error') {
+        clearJobId();
+        const msg = (json.error && json.error.message) || '任務失敗';
+        steps.push({ok: false, label: '任務失敗', detail: msg});
+        if (json.error && json.error.details && json.error.details.usd_spent) {
+          steps.push({ok: false, label: '已花成本', detail: money(json.error.details.usd_spent)});
+        }
+        throw new Error(msg);
+      }
+      if (json.status === 'done') {
+        clearJobId();                          /* 完成 → 唔再續 */
+        const rb = json.result || {};
+        const cost = rb.cost || {};
+        steps.push({ok: true, label: '完成', detail: 'USD ' + money(cost.usd_total) + ' · ' +
+          ((rb.result && rb.result.text) ? rb.result.text.length + ' 字' : '')});
+        return buildResultFromBody(rb, body);
+      }
+    }
+  }
+
+  /* reload 自動續：sessionStorage 仲有 active job_id 就重新 poll */
+  async function resumeJob() {
+    const id = readJobId();
+    if (!id) return;
+    const steps = [];
+    steps.push({ok: true, label: '重新接駁任務', detail: 'job ' + id.slice(0, 8) + '…'});
+    open();
+    headCost.textContent = '…';
+    try {
+      const out = await pollToDone(steps, {}, id);
+      body.innerHTML = stepList(steps) + out.html + (out.footerHtml || '');
+      headCost.textContent = out.headerCost || '';
+    } catch (e) {
+      steps.push({ok: false, label: '重駁失敗', detail: String((e && e.message) || e)});
+      headCost.textContent = '錯誤';
+      body.innerHTML = stepList(steps) + '<pre style="font-size:11.5px;color:var(--mark,#9B2C2C);white-space:pre-wrap">' + esc((e && e.message) || e) + '</pre>';
+    }
   }
 
   /* ---------------- 各頁流程 ---------------- */
@@ -495,6 +608,8 @@
     const btn = document.querySelector('#run');
     if (!btn) return;
     btn.addEventListener('click', () => trigger(btn), true);   /* capture：先過我哋 */
+    /* ADR-5：reload 之後 sessionStorage 仲有未完 job → 自動接返同一個 job，唔使重新提交 */
+    if (PAGE === 'rewriter' && window.SW_API_BASE && readJobId()) resumeJob();
   }
 
   async function trigger(btn) {
